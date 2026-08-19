@@ -704,8 +704,8 @@
  * properties lives on the element's base rule, above. */
 @media (hover: hover) and (pointer: fine) {
   .btn:hover {
-    transform: scale(1.03);
-    box-shadow: var(--shadow-md);
+    transform: scale(1.08);
+    box-shadow: var(--shadow-md), 0 8px 20px rgba(var(--color-accent-rgb), 0.4);
   }
 
   .btn-primary:hover {
@@ -717,18 +717,20 @@
   }
 
   .fab:hover {
-    transform: scale(1.06);
+    transform: scale(1.1);
+    box-shadow: var(--shadow-md), 0 8px 20px rgba(var(--color-accent-rgb), 0.5);
   }
 
   .habit-card:hover {
-    transform: scale(1.02);
-    box-shadow: var(--shadow-md);
+    transform: scale(1.08);
+    box-shadow: var(--shadow-md), 0 8px 20px rgba(var(--color-accent-rgb), 0.4);
     border-color: var(--color-accent);
   }
 
   .tab-item:hover {
-    transform: scale(1.05);
+    transform: scale(1.1);
     color: var(--color-accent-dark);
+    box-shadow: 0 8px 20px rgba(var(--color-accent-rgb), 0.35);
   }
 
   .modal-close:hover {

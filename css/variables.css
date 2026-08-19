@@ -11,6 +11,7 @@
   --color-accent: #2f9e6e;
   --color-accent-dark: #1f7a53;
   --color-accent-contrast: #ffffff;
+  --color-accent-rgb: 47, 158, 110; /* --color-accent as an r,g,b triplet, for rgba() glow shadows */
   --color-danger: #d9534f;
   --color-warning: #d99a2b;
 
@@ -68,6 +69,7 @@
     --color-accent: #3fbf87;
     --color-accent-dark: #2f9e6e;
     --color-accent-contrast: #08130f;
+    --color-accent-rgb: 63, 191, 135;
 
     --stage-base: #3a6b4c;
     --stage-base-dark: #294f37;
