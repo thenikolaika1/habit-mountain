@@ -85,6 +85,38 @@
   stroke-width: 1;
 }
 
+.milestone-label--success {
+  fill: #f2c14e;
+  font-weight: 800;
+  font-size: 12px;
+  text-anchor: end;
+  paint-order: stroke;
+  stroke: rgba(255, 255, 255, 0.65);
+  stroke-width: 2px;
+  stroke-linejoin: round;
+}
+
+@keyframes summit-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 2px rgba(242, 193, 78, 0.55));
+  }
+
+  50% {
+    filter: drop-shadow(0 0 9px rgba(242, 193, 78, 0.95)) drop-shadow(0 0 16px rgba(242, 193, 78, 0.5));
+  }
+}
+
+.milestone--summit.milestone--reached {
+  animation: summit-glow 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .milestone--summit.milestone--reached {
+    animation: none;
+  }
+}
+
 .mountain-marker {
   transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }

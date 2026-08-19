@@ -29,10 +29,10 @@ const RIDGE = [
 
 export const MILESTONES = [
   { p: 0.1, icon: "👣", label: "Первые шаги" },
-  { p: 0.35, icon: "🏕️", label: "Лагерь в лесу" },
-  { p: 0.6, icon: "👣", label: "Половина пути" },
-  { p: 0.85, icon: "🏕️", label: "Последний привал" },
-  { p: 1.0, icon: "🚩", label: "Вершина!" },
+  { p: 0.35, icon: "🏕️", label: "Продолжай!" },
+  { p: 0.6, icon: "👣", label: "Половина пути уже пройдена!" },
+  { p: 0.85, icon: "🏕️", label: "Ты почти сделал это!" },
+  { p: 1.0, icon: "🚩", label: "Success", isSummit: true },
 ];
 
 // Trees stand at these progress values (foot + forest zone only).
@@ -119,16 +119,64 @@ function treesMarkup() {
   }).join("");
 }
 
+/** Splits a long label into up to 2 roughly-balanced lines at a word boundary. */
+function wrapLabelLines(label) {
+  if (label.length <= 14) return [label];
+  const words = label.split(" ");
+  if (words.length < 2) return [label];
+
+  let bestIdx = 1;
+  let bestDiff = Infinity;
+  let acc = 0;
+  for (let i = 0; i < words.length - 1; i++) {
+    acc += words[i].length + 1; // + the space
+    const diff = Math.abs(acc - label.length / 2);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      bestIdx = i + 1;
+    }
+  }
+  return [words.slice(0, bestIdx).join(" "), words.slice(bestIdx).join(" ")];
+}
+
+/** Renders the milestone caption from already-wrapped lines. The bottom
+ * line normally lands at y=-6 (just above the ground dot) — `lift` raises
+ * the whole caption higher above that, used for the summit so it clears
+ * the climbing marker, which stands on this same ground point. */
+function labelMarkup(lines, labelClass, lift = 0) {
+  const baseY = -6 - lift;
+  if (lines.length === 1) {
+    return `<text class="${labelClass}" x="0" y="${baseY}">${lines[0]}</text>`;
+  }
+  const topY = -16 - lift;
+  return `
+        <text class="${labelClass}" x="0" y="${topY}">
+          <tspan x="0" dy="0">${lines[0]}</tspan>
+          <tspan x="0" dy="10">${lines[1]}</tspan>
+        </text>`;
+}
+
 function milestoneMarkup(overallProgress) {
   return MILESTONES.map((m) => {
     const { x, y } = pointAtProgress(m.p);
     const reached = overallProgress >= m.p - 0.0001;
+    const groupClasses = ["milestone", reached ? "milestone--reached" : "", m.isSummit ? "milestone--summit" : ""]
+      .filter(Boolean)
+      .join(" ");
+    const labelClass = m.isSummit ? "milestone-label milestone-label--success" : "milestone-label";
+    const lines = wrapLabelLines(m.label);
+    // The climbing marker stands on this exact ground point once progress
+    // hits 100%, so lift the summit's flag + caption well clear of it. A
+    // 2-line caption also gets a little extra headroom from its icon.
+    const lift = (m.isSummit ? 24 : 0) + (lines.length > 1 ? 8 : 0);
+    const stemY = -16 - lift;
+    const iconY = -22 - lift;
     return `
-      <g class="milestone ${reached ? "milestone--reached" : ""}" transform="translate(${x},${y})">
-        <line class="milestone-stem" x1="0" y1="0" x2="0" y2="-16" />
+      <g class="${groupClasses}" transform="translate(${x},${y})">
+        <line class="milestone-stem" x1="0" y1="0" x2="0" y2="${stemY}" />
         <circle class="milestone-dot" cx="0" cy="0" r="3" />
-        <text class="milestone-icon" x="0" y="-22">${m.icon}</text>
-        <text class="milestone-label" x="0" y="-6">${m.label}</text>
+        <text class="milestone-icon" x="0" y="${iconY}">${m.icon}</text>
+        ${labelMarkup(lines, labelClass, lift)}
       </g>`;
   }).join("");
 }
