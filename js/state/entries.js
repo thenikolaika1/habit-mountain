@@ -26,7 +26,8 @@ export function setEntry(habitId, dateKey, value) {
   const state = loadState();
   if (!state.entries[habitId]) state.entries[habitId] = {};
 
-  if (value === false || value === null || value === undefined || value === "") {
+  const isEmptySets = Array.isArray(value) && value.length === 0;
+  if (value === false || value === null || value === undefined || value === "" || isEmptySets) {
     delete state.entries[habitId][dateKey];
   } else {
     state.entries[habitId][dateKey] = value;

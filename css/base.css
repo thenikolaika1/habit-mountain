@@ -15,7 +15,7 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  overflow: hidden; /* the document itself never scrolls — only #view-container does */
 }
 
 h1,
@@ -54,27 +54,39 @@ a {
   border: 0;
 }
 
+/* App-shell layout: a full-height flex column where only the middle
+ * (#view-container) scrolls — the tab bar at the bottom is a normal flow
+ * element, always on screen, never needing position:fixed (which breaks
+ * if any ancestor ever gets a transform/filter). */
 #app {
-  min-height: 100%;
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .app-shell {
   max-width: 480px;
   margin: 0 auto;
   width: 100%;
-  min-height: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background: var(--color-bg);
   position: relative;
+  overflow: hidden;
+}
+
+#view-container {
+  flex: 1 1 auto;
+  min-height: 0; /* required for a flex child to actually scroll instead of overflowing */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .view {
-  flex: 1;
-  padding: calc(var(--space-4) + env(safe-area-inset-top)) var(--space-4)
-    calc(var(--tabbar-height) + var(--space-6)) var(--space-4);
+  padding: calc(var(--space-4) + env(safe-area-inset-top)) var(--space-4) var(--space-6) var(--space-4);
 }
 
 .view-header {
@@ -115,6 +127,5 @@ a {
 
   .app-shell {
     box-shadow: var(--shadow-md);
-    min-height: 100vh;
   }
 }

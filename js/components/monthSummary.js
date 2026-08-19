@@ -1,5 +1,5 @@
 import { allKeysInMonth, daysInMonth } from "../logic/dateUtils.js";
-import { isDayComplete } from "../logic/completion.js";
+import { isDayComplete, getNumericTotal } from "../logic/completion.js";
 
 /** Renders the end-of-month summary card for a single habit + viewed month. */
 export function renderMonthSummary(habit, entries, year, month) {
@@ -8,10 +8,7 @@ export function renderMonthSummary(habit, entries, year, month) {
 
   let valueHtml;
   if (habit.type === "numeric") {
-    const sum = keys.reduce((acc, key) => {
-      const v = entries[key];
-      return acc + (typeof v === "number" ? v : 0);
-    }, 0);
+    const sum = keys.reduce((acc, key) => acc + getNumericTotal(entries[key]), 0);
     const unit = habit.unit ? ` ${habit.unit}` : "";
     valueHtml = `${sum}${unit}`;
   } else {

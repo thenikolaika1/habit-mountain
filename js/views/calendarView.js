@@ -1,7 +1,7 @@
 import { getHabit } from "../state/habits.js";
 import { getEntriesForHabit } from "../state/entries.js";
 import { computeCurrentStreak } from "../logic/streaks.js";
-import { isDayComplete } from "../logic/completion.js";
+import { isDayComplete, getNumericTotal } from "../logic/completion.js";
 import { buildMonthGrid, weekdayHeader, monthLabel, prevMonth, nextMonth, todayParts } from "../logic/dateUtils.js";
 import { renderMonthSummary } from "../components/monthSummary.js";
 import { openDayDetail } from "./dayDetailView.js";
@@ -71,7 +71,8 @@ function cellHtml(habit, entries, cell) {
   if (done) classes.push("is-done");
   if (cell.isFuture) classes.push("is-future");
 
-  const valueBadge = habit.type === "numeric" && typeof value === "number" && value > 0 ? `<span class="day-value">${value}</span>` : "";
+  const numericTotal = habit.type === "numeric" ? getNumericTotal(value) : 0;
+  const valueBadge = numericTotal > 0 ? `<span class="day-value">${numericTotal}</span>` : "";
 
   return `
     <div class="calendar-cell">
