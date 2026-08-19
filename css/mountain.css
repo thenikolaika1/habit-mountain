@@ -16,10 +16,6 @@
   fill: var(--stage-base);
 }
 
-.mountain-layer-base-shadow {
-  fill: var(--stage-base-dark);
-}
-
 .mountain-layer-forest {
   fill: var(--stage-forest);
 }
@@ -75,6 +71,18 @@
   font-weight: 700;
   text-anchor: middle;
   fill: var(--color-text);
+}
+
+.milestone-stem {
+  stroke: #fff8e6;
+  stroke-width: 2;
+  opacity: 0.85;
+}
+
+.milestone-dot {
+  fill: #fff8e6;
+  stroke: var(--stage-forest-dark);
+  stroke-width: 1;
 }
 
 .mountain-marker {

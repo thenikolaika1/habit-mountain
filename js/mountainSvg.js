@@ -1,16 +1,30 @@
 // Hand-authored mountain artwork + trail geometry. No geometry library —
-// just a small ordered list of anchor points and linear interpolation
-// between them, which is all that's needed for a marker that climbs a
-// fixed, known path.
+// just a small ordered list of ridge points and a hand-rolled Catmull-Rom
+// -> cubic Bezier conversion, which is all that's needed for a genuinely
+// smooth slope (no library needed for that either).
+//
+// Everything that has to "stand on the mountain" — the trail, the marker,
+// the milestone icons, and the trees — reads its position from the exact
+// same curve that gets drawn as the mountain's silhouette. There is only
+// one source of geometric truth, so nothing can visually drift off the
+// slope.
 
-export const TRAIL_ANCHORS = [
-  { p: 0.0, x: 40, y: 560, stage: "base" },
-  { p: 0.15, x: 95, y: 480, stage: "base" },
-  { p: 0.35, x: 150, y: 380, stage: "forest" },
-  { p: 0.55, x: 210, y: 290, stage: "forest" },
-  { p: 0.72, x: 260, y: 195, stage: "rocks" },
-  { p: 0.88, x: 305, y: 110, stage: "rocks" },
-  { p: 1.0, x: 340, y: 50, stage: "summit" },
+// Ridge points, viewBox 400x600. The two points outside p∈[0,1] only exist
+// to give the curve a natural tangent at the trail's real start/end and to
+// keep drawing a bit of background terrain past them — progress is always
+// clamped to [0,1], so the marker/milestones/trees never reach them.
+const RIDGE = [
+  { p: -0.06, x: 0, y: 585, stage: "base" },
+  { p: 0.0, x: 45, y: 555, stage: "base" },
+  { p: 0.14, x: 100, y: 500, stage: "base" },
+  { p: 0.28, x: 155, y: 425, stage: "forest" },
+  { p: 0.42, x: 205, y: 340, stage: "forest" },
+  { p: 0.56, x: 250, y: 255, stage: "rocks" },
+  { p: 0.7, x: 290, y: 180, stage: "rocks" },
+  { p: 0.83, x: 325, y: 125, stage: "rocks" },
+  { p: 0.93, x: 355, y: 95, stage: "summit" },
+  { p: 1.0, x: 378, y: 85, stage: "summit" },
+  { p: 1.06, x: 400, y: 95, stage: "summit" },
 ];
 
 export const MILESTONES = [
@@ -21,44 +35,88 @@ export const MILESTONES = [
   { p: 1.0, icon: "🚩", label: "Вершина!" },
 ];
 
-/** Linear interpolation of {x,y} along TRAIL_ANCHORS at progress p (0..1). */
-export function pointAtProgress(p) {
-  const clamped = Math.max(0, Math.min(1, p));
-  let a = TRAIL_ANCHORS[0];
-  let b = TRAIL_ANCHORS[TRAIL_ANCHORS.length - 1];
-  for (let i = 0; i < TRAIL_ANCHORS.length - 1; i++) {
-    if (clamped >= TRAIL_ANCHORS[i].p && clamped <= TRAIL_ANCHORS[i + 1].p) {
-      a = TRAIL_ANCHORS[i];
-      b = TRAIL_ANCHORS[i + 1];
-      break;
-    }
+// Trees stand at these progress values (foot + forest zone only).
+const TREE_PROGRESS = [0.05, 0.12, 0.19, 0.27, 0.34, 0.41];
+
+function findSegment(p) {
+  for (let i = 0; i < RIDGE.length - 1; i++) {
+    if (p >= RIDGE[i].p && p <= RIDGE[i + 1].p) return i;
   }
-  const span = b.p - a.p;
-  const t = span === 0 ? 0 : (clamped - a.p) / span;
+  return RIDGE.length - 2;
+}
+
+/** Catmull-Rom control points (tension 1/6) for the segment P1->P2. */
+function segmentControlPoints(i) {
+  const p0 = RIDGE[Math.max(0, i - 1)];
+  const p1 = RIDGE[i];
+  const p2 = RIDGE[i + 1];
+  const p3 = RIDGE[Math.min(RIDGE.length - 1, i + 2)];
   return {
-    x: a.x + (b.x - a.x) * t,
-    y: a.y + (b.y - a.y) * t,
-    stage: t > 0.5 ? b.stage : a.stage,
+    p1,
+    p2,
+    cp1: { x: p1.x + (p2.x - p0.x) / 6, y: p1.y + (p2.y - p0.y) / 6 },
+    cp2: { x: p2.x - (p3.x - p1.x) / 6, y: p2.y - (p3.y - p1.y) / 6 },
   };
 }
 
-const MOUNTAIN_OUTLINE =
-  "0,600 40,555 90,505 130,525 180,435 220,455 260,345 300,365 340,50 380,345 400,600";
-
-const TREES = [
-  { x: 70, y: 445 },
-  { x: 120, y: 415 },
-  { x: 165, y: 450 },
-  { x: 195, y: 390 },
-  { x: 235, y: 400 },
-];
-
-function treeShape({ x, y }) {
-  return `<path class="mountain-tree" d="M${x},${y} l14,26 l-8,0 l10,20 l-32,0 l10,-20 l-8,0 Z" />`;
+function cubicBezierAt(t, p1, cp1, cp2, p2) {
+  const mt = 1 - t;
+  const x = mt * mt * mt * p1.x + 3 * mt * mt * t * cp1.x + 3 * mt * t * t * cp2.x + t * t * t * p2.x;
+  const y = mt * mt * mt * p1.y + 3 * mt * mt * t * cp1.y + 3 * mt * t * t * cp2.y + t * t * t * p2.y;
+  return { x, y };
 }
 
-function trailPath() {
-  return TRAIL_ANCHORS.map((a, i) => `${i === 0 ? "M" : "L"}${a.x},${a.y}`).join(" ");
+/** The exact point on the smoothed ridge curve at progress p (0..1). */
+export function pointAtProgress(p) {
+  const clamped = Math.max(0, Math.min(1, p));
+  const i = findSegment(clamped);
+  const { p1, p2, cp1, cp2 } = segmentControlPoints(i);
+  const span = p2.p - p1.p;
+  const t = span === 0 ? 0 : (clamped - p1.p) / span;
+  const { x, y } = cubicBezierAt(t, p1, cp1, cp2, p2);
+  return { x, y, stage: t > 0.5 ? p2.stage : p1.stage };
+}
+
+function ridgeIndexOf(p) {
+  return RIDGE.findIndex((pt) => Math.abs(pt.p - p) < 1e-6);
+}
+
+/**
+ * Builds an SVG path `d` (M + C...) for the ridge curve between two progress
+ * bounds. Both bounds must exactly match a RIDGE point's `p` (true for every
+ * call in this file) — the curve is then just the untouched, exact sequence
+ * of Catmull-Rom segments between those two points, so it's pixel-identical
+ * to whatever pointAtProgress() would report along the way.
+ */
+function buildRidgePathD(fromP, toP) {
+  const startIdx = ridgeIndexOf(fromP);
+  const endIdx = ridgeIndexOf(toP);
+  let d = `M${RIDGE[startIdx].x},${RIDGE[startIdx].y}`;
+  for (let i = startIdx; i < endIdx; i++) {
+    const { cp1, cp2, p2 } = segmentControlPoints(i);
+    d += ` C${cp1.x},${cp1.y} ${cp2.x},${cp2.y} ${p2.x},${p2.y}`;
+  }
+  return d;
+}
+
+const TREE_HEIGHT_LOWER = 26;
+const TREE_HEIGHT_UPPER = 42;
+
+function treeShape(x, y, index) {
+  const jitter = ((index % 3) - 1) * 5; // deterministic left/right stagger
+  const bx = x + jitter;
+  const by = y + 2; // sink base 2px into the fill so it reads as planted
+  return `
+    <polygon class="mountain-tree" points="${bx - 15},${by} ${bx + 15},${by} ${bx},${by - TREE_HEIGHT_LOWER}" />
+    <polygon class="mountain-tree" points="${bx - 9},${by - 15} ${bx + 9},${by - 15} ${bx},${by - TREE_HEIGHT_UPPER}" />
+  `;
+}
+
+function treesMarkup() {
+  return TREE_PROGRESS.map((p, i) => {
+    const { x, y } = pointAtProgress(p);
+    return treeShape(x, y, i);
+  }).join("");
 }
 
 function milestoneMarkup(overallProgress) {
@@ -66,9 +124,11 @@ function milestoneMarkup(overallProgress) {
     const { x, y } = pointAtProgress(m.p);
     const reached = overallProgress >= m.p - 0.0001;
     return `
-      <g class="milestone ${reached ? "milestone--reached" : ""}" transform="translate(${x},${y - 22})">
-        <text class="milestone-icon" x="0" y="0">${m.icon}</text>
-        <text class="milestone-label" x="0" y="16">${m.label}</text>
+      <g class="milestone ${reached ? "milestone--reached" : ""}" transform="translate(${x},${y})">
+        <line class="milestone-stem" x1="0" y1="0" x2="0" y2="-16" />
+        <circle class="milestone-dot" cx="0" cy="0" r="3" />
+        <text class="milestone-icon" x="0" y="-22">${m.icon}</text>
+        <text class="milestone-label" x="0" y="-6">${m.label}</text>
       </g>`;
   }).join("");
 }
@@ -76,22 +136,23 @@ function milestoneMarkup(overallProgress) {
 /** Builds the full inline SVG markup for the mountain, marker included. */
 export function buildMountainSvg(overallProgress) {
   const marker = pointAtProgress(overallProgress);
+  const silhouetteD = `${buildRidgePathD(-0.06, 1.06)} L400,600 L0,600 Z`;
+
   return `
     <svg class="mountain-svg" viewBox="0 0 400 600" role="img" aria-label="Гора прогресса">
       <defs>
         <clipPath id="mountainClip">
-          <polygon points="${MOUNTAIN_OUTLINE}" />
+          <path d="${silhouetteD}" />
         </clipPath>
       </defs>
       <g clip-path="url(#mountainClip)">
-        <rect class="mountain-layer-base" x="0" y="420" width="400" height="180" />
-        <rect class="mountain-layer-forest" x="0" y="260" width="400" height="160" />
-        <rect class="mountain-layer-rocks" x="0" y="100" width="400" height="160" />
-        <rect class="mountain-layer-summit" x="0" y="0" width="400" height="100" />
+        <rect class="mountain-layer-base" x="0" y="480" width="400" height="120" />
+        <rect class="mountain-layer-forest" x="0" y="290" width="400" height="190" />
+        <rect class="mountain-layer-rocks" x="0" y="140" width="400" height="150" />
+        <rect class="mountain-layer-summit" x="0" y="0" width="400" height="140" />
       </g>
-      <polygon class="mountain-layer-base-shadow" opacity="0.25" points="0,600 40,555 90,505 130,525 60,600" />
-      ${TREES.map(treeShape).join("")}
-      <path class="mountain-trail" d="${trailPath()}" />
+      ${treesMarkup()}
+      <path class="mountain-trail" d="${buildRidgePathD(0, 1)}" />
       ${milestoneMarkup(overallProgress)}
       <g class="mountain-marker" transform="translate(${marker.x},${marker.y - 14})">
         <ellipse cx="0" cy="20" rx="10" ry="3" fill="rgba(0,0,0,0.25)" />
