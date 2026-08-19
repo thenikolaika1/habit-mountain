@@ -27,14 +27,17 @@ const RIDGE = [
   { p: 1.06, x: 400, y: 95, stage: "summit" },
 ];
 
-// Icons are all natural elements — trees, snow, footprints, the summit
-// flag — no tents/camps or other man-made structures on the slope.
+// Only the two footprint waypoints and the summit keep a picture — the
+// motivational-only waypoints show just their caption, no icon. The summit
+// "icon" isn't an emoji at all: it's hand-drawn (see summitFlagMarkup) so
+// it's always a straight, vertical flag rather than a font glyph that can
+// render tilted.
 export const MILESTONES = [
   { p: 0.1, icon: "👣", label: "Первые шаги" },
-  { p: 0.35, icon: "🌲", label: "Продолжай!" },
+  { p: 0.35, icon: null, label: "Продолжай!" },
   { p: 0.6, icon: "👣", label: "Половина пути уже пройдена!" },
-  { p: 0.85, icon: "❄️", label: "Ты почти сделал это!" },
-  { p: 1.0, icon: "🚩", label: "Success", isSummit: true },
+  { p: 0.85, icon: null, label: "Ты почти сделал это!" },
+  { p: 1.0, icon: null, label: "Success", isSummit: true },
 ];
 
 // Trees stand at these progress values (foot + forest zone only).
@@ -158,6 +161,16 @@ function labelMarkup(lines, labelClass, lift = 0) {
         </text>`;
 }
 
+/** Hand-drawn flag on a straight, vertical pole — deliberately not an emoji
+ * glyph, whose "🚩" tends to render at a slant depending on the font. */
+function summitFlagMarkup(iconY) {
+  const poleBottom = iconY + 4;
+  const poleTop = iconY - 22;
+  return `
+        <line class="summit-flagpole" x1="0" y1="${poleBottom}" x2="0" y2="${poleTop}" />
+        <polygon class="summit-flag" points="0,${poleTop} 15,${poleTop + 5} 0,${poleTop + 10}" />`;
+}
+
 function milestoneMarkup(overallProgress) {
   return MILESTONES.map((m) => {
     const { x, y } = pointAtProgress(m.p);
@@ -167,17 +180,30 @@ function milestoneMarkup(overallProgress) {
       .join(" ");
     const labelClass = m.isSummit ? "milestone-label milestone-label--success" : "milestone-label";
     const lines = wrapLabelLines(m.label);
+    const hasIcon = Boolean(m.icon) || m.isSummit;
+
     // The climbing marker stands on this exact ground point once progress
     // hits 100%, so lift the summit's flag + caption well clear of it. A
-    // 2-line caption also gets a little extra headroom from its icon.
-    const lift = (m.isSummit ? 24 : 0) + (lines.length > 1 ? 8 : 0);
-    const stemY = -16 - lift;
+    // 2-line caption with an icon also gets a little extra headroom above it.
+    const lift = (m.isSummit ? 24 : 0) + (m.icon && lines.length > 1 ? 8 : 0);
+    const baseY = -6 - lift;
+    const topY = -16 - lift;
+    const labelTopY = lines.length > 1 ? topY : baseY;
     const iconY = -22 - lift;
+    // The stem reaches up to the icon/flag when there is one, otherwise
+    // just up to the caption itself — either way it's the visible anchor
+    // connecting whatever floats above back down to the ground dot.
+    const stemY = hasIcon ? -16 - lift : labelTopY - 4;
+
+    let iconMarkup = "";
+    if (m.isSummit) iconMarkup = summitFlagMarkup(iconY);
+    else if (m.icon) iconMarkup = `<text class="milestone-icon" x="0" y="${iconY}">${m.icon}</text>`;
+
     return `
       <g class="${groupClasses}" transform="translate(${x},${y})">
         <line class="milestone-stem" x1="0" y1="0" x2="0" y2="${stemY}" />
         <circle class="milestone-dot" cx="0" cy="0" r="3" />
-        <text class="milestone-icon" x="0" y="${iconY}">${m.icon}</text>
+        ${iconMarkup}
         ${labelMarkup(lines, labelClass, lift)}
       </g>`;
   }).join("");
