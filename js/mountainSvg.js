@@ -3,11 +3,12 @@
 // -> cubic Bezier conversion, which is all that's needed for a genuinely
 // smooth slope (no library needed for that either).
 //
-// Everything that has to "stand on the mountain" — the trail, the marker,
-// the milestone icons, and the trees — reads its position from the exact
-// same curve that gets drawn as the mountain's silhouette. There is only
-// one source of geometric truth, so nothing can visually drift off the
-// slope.
+// Everything that has to "stand on the mountain" — the trail, the
+// milestone icons, and the trees — reads its position from the exact same
+// curve that gets drawn as the mountain's silhouette. There is only one
+// source of geometric truth, so nothing can visually drift off the slope.
+// Progress itself has no separate character graphic: it's shown purely by
+// how far up that same curve is colored gold (see buildProgressTrailPaths).
 
 // Ridge points, viewBox 400x600. The two points outside p∈[0,1] only exist
 // to give the curve a natural tangent at the trail's real start/end and to
@@ -102,6 +103,67 @@ function buildRidgePathD(fromP, toP) {
     d += ` C${cp1.x},${cp1.y} ${cp2.x},${cp2.y} ${p2.x},${p2.y}`;
   }
   return d;
+}
+
+function lerpPt(a, b, t) {
+  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+}
+
+/**
+ * De Casteljau split of a cubic bezier (p1,cp1,cp2,p2) at parameter t into
+ * two sub-curves that together retrace the exact same curve — `left` runs
+ * from the original start up to the split point, `right` from the split
+ * point to the original end. This is what lets the trail be cut at an
+ * arbitrary progress value (not just at a RIDGE anchor) without the curve
+ * visibly kinking at the cut.
+ */
+function splitBezierAt(p1, cp1, cp2, p2, t) {
+  const a = lerpPt(p1, cp1, t);
+  const b = lerpPt(cp1, cp2, t);
+  const c = lerpPt(cp2, p2, t);
+  const d = lerpPt(a, b, t);
+  const e = lerpPt(b, c, t);
+  const f = lerpPt(d, e, t);
+  return {
+    left: { p1, cp1: a, cp2: d, p2: f },
+    right: { p1: f, cp1: e, cp2: c, p2 },
+  };
+}
+
+/**
+ * Splits the trail into two path `d` strings at the given progress: the
+ * "walked" portion from p=0 up to `progress` (drawn gold) and the
+ * remaining portion from `progress` to p=1 (drawn as the normal trail).
+ * Every whole segment before/after the cut is reused verbatim (same as
+ * buildRidgePathD) — only the one segment straddling `progress` needs an
+ * actual split.
+ */
+function buildProgressTrailPaths(progress) {
+  const clamped = Math.max(0, Math.min(1, progress));
+  const startIdx = ridgeIndexOf(0);
+  const endIdx = ridgeIndexOf(1);
+  const cutIdx = findSegment(clamped);
+
+  let walkedD = `M${RIDGE[startIdx].x},${RIDGE[startIdx].y}`;
+  let remainingD = "";
+
+  for (let i = startIdx; i < endIdx; i++) {
+    const { p1, p2, cp1, cp2 } = segmentControlPoints(i);
+    if (i < cutIdx) {
+      walkedD += ` C${cp1.x},${cp1.y} ${cp2.x},${cp2.y} ${p2.x},${p2.y}`;
+    } else if (i > cutIdx) {
+      if (remainingD === "") remainingD = `M${p1.x},${p1.y}`;
+      remainingD += ` C${cp1.x},${cp1.y} ${cp2.x},${cp2.y} ${p2.x},${p2.y}`;
+    } else {
+      const span = p2.p - p1.p;
+      const t = span === 0 ? 0 : (clamped - p1.p) / span;
+      const { left, right } = splitBezierAt(p1, cp1, cp2, p2, t);
+      walkedD += ` C${left.cp1.x},${left.cp1.y} ${left.cp2.x},${left.cp2.y} ${left.p2.x},${left.p2.y}`;
+      remainingD = `M${right.p1.x},${right.p1.y} C${right.cp1.x},${right.cp1.y} ${right.cp2.x},${right.cp2.y} ${right.p2.x},${right.p2.y}`;
+    }
+  }
+
+  return { walkedD, remainingD };
 }
 
 const TREE_HEIGHT_LOWER = 26;
@@ -220,14 +282,15 @@ function milestoneMarkup(overallProgress) {
   }).join("");
 }
 
-/** Builds the full inline SVG markup for the mountain, marker included. */
+/**
+ * Builds the full inline SVG markup for the mountain. Progress has no
+ * separate character/marker graphic — it's shown purely by how far the
+ * trail itself is colored gold, from the foot of the mountain up to the
+ * current point; the rest of the trail stays the plain dashed line.
+ */
 export function buildMountainSvg(overallProgress) {
-  const marker = pointAtProgress(overallProgress);
   const silhouetteD = `${buildRidgePathD(-0.06, 1.06)} L400,600 L0,600 Z`;
-  // At the summit the marker's job is done — it simply stops there, shown
-  // only by the flag + "Success" caption. No separate climber figure is
-  // drawn on top of it once progress has actually reached 100%.
-  const atSummit = overallProgress >= 1 - 1e-4;
+  const { walkedD, remainingD } = buildProgressTrailPaths(overallProgress);
 
   return `
     <svg class="mountain-svg" viewBox="0 0 400 600" role="img" aria-label="Гора прогресса">
@@ -243,15 +306,8 @@ export function buildMountainSvg(overallProgress) {
         <rect class="mountain-layer-summit" x="0" y="0" width="400" height="140" />
       </g>
       ${treesMarkup()}
-      <path class="mountain-trail" d="${buildRidgePathD(0, 1)}" />
+      ${remainingD ? `<path class="mountain-trail" d="${remainingD}" />` : ""}
+      <path class="mountain-trail-walked" d="${walkedD}" />
       ${milestoneMarkup(overallProgress)}
-      ${
-        atSummit
-          ? ""
-          : `<g class="mountain-marker" transform="translate(${marker.x},${marker.y - 14})">
-        <ellipse cx="0" cy="20" rx="10" ry="3" fill="rgba(0,0,0,0.25)" />
-        <text class="mountain-marker-emoji" x="0" y="0">🧗</text>
-      </g>`
-      }
     </svg>`;
 }
