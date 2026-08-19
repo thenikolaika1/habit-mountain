@@ -1,7 +1,7 @@
 import { getHabits, addHabit, updateHabit, archiveHabit, deleteHabitPermanently } from "../state/habits.js";
 import { getEntriesForHabit } from "../state/entries.js";
 import { computeCurrentStreak } from "../logic/streaks.js";
-import { openModal, closeModal } from "../components/modal.js";
+import { openModal, closeModal, openConfirm } from "../components/modal.js";
 
 export function renderHabitsView(container) {
   const habits = getHabits();
@@ -142,10 +142,15 @@ function wireHabitForm(sheet, close, { habit } = {}) {
       close();
     });
     sheet.querySelector("#habit-delete").addEventListener("click", () => {
-      if (confirm(`Удалить привычку «${habit.name}» вместе со всей историей? Это необратимо.`)) {
-        deleteHabitPermanently(habit.id);
-        close();
-      }
+      openConfirm({
+        title: "Удалить привычку?",
+        message: `Привычка «${escapeHtml(habit.name)}» и вся её история будут удалены безвозвратно. Это нельзя отменить.`,
+        confirmLabel: "Удалить",
+        danger: true,
+        onConfirm: () => {
+          deleteHabitPermanently(habit.id);
+        },
+      });
     });
   }
 }

@@ -52,3 +52,30 @@ export function openModal({ title, bodyHtml, onMount, onClose }) {
 export function closeModal() {
   if (activeModal) activeModal.close();
 }
+
+/**
+ * A confirm/cancel dialog built on the same in-app modal, instead of the
+ * browser's native window.confirm() — which is silently blocked (calling
+ * it does nothing, no dialog, no return value change) inside a sandboxed
+ * iframe without allow-modals, e.g. an embedded preview. This always
+ * works, and matches the app's own styling.
+ */
+export function openConfirm({ title = "Подтвердите действие", message, confirmLabel = "Подтвердить", cancelLabel = "Отмена", danger = false, onConfirm }) {
+  return openModal({
+    title,
+    bodyHtml: `
+      <p class="modal-message">${message}</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-block" id="confirm-cancel">${cancelLabel}</button>
+        <button type="button" class="btn ${danger ? "btn-danger" : "btn-primary"} btn-block" id="confirm-ok">${confirmLabel}</button>
+      </div>
+    `,
+    onMount: (sheet, close) => {
+      sheet.querySelector("#confirm-cancel").addEventListener("click", close);
+      sheet.querySelector("#confirm-ok").addEventListener("click", () => {
+        close();
+        onConfirm();
+      });
+    },
+  });
+}
