@@ -81,10 +81,14 @@ render();
 // calendar month, then marks that month as seen so it won't show again.
 maybeShowMonthRecap();
 
+// Registered right away rather than gated on window.load: `register()` is
+// async and doesn't compete with rendering, and waiting for `load` ties SW
+// registration to every subresource on the page finishing — including the
+// non-critical Google Fonts stylesheet (see index.html), which would delay
+// (or on a broken connection, indefinitely stall) this offline-critical
+// step for a purely cosmetic one.
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch((err) => {
-      console.warn("Habit Mountain: service worker registration failed.", err);
-    });
+  navigator.serviceWorker.register("./sw.js").catch((err) => {
+    console.warn("Habit Mountain: service worker registration failed.", err);
   });
 }

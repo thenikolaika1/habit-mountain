@@ -316,8 +316,9 @@
 }
 
 .month-recap-pct {
+  font-family: var(--font-display);
   font-size: 40px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--color-accent-dark);
   text-align: center;
   margin-bottom: var(--space-3);
@@ -494,8 +495,9 @@
 }
 
 .stat-pill .stat-value {
+  font-family: var(--font-display);
   font-size: 20px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--color-accent-dark);
 }
 

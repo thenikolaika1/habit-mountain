@@ -94,6 +94,7 @@
 }
 
 .milestone-label {
+  font-family: var(--font-display);
   font-size: 9px;
   font-weight: 700;
   text-anchor: middle;
@@ -130,8 +131,9 @@
 }
 
 .milestone-label--success {
+  font-family: var(--font-display);
   fill: #f2c14e;
-  font-weight: 800;
+  font-weight: 700;
   font-size: 12px;
   text-anchor: end;
   paint-order: stroke;

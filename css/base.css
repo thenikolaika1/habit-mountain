@@ -124,8 +124,9 @@ a {
 }
 
 .view-header h1 {
+  font-family: var(--font-display);
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .mountain-month-subtitle {

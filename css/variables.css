@@ -46,6 +46,10 @@
   --header-height: 56px;
 
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Accent-only display font (screen headings, big stat numbers, mountain
+   * captions) — loaded via Google Fonts in index.html. Falls straight back
+   * to the system stack if it hasn't loaded yet or fails to load. */
+  --font-display: "Fredoka", var(--font-sans);
 
   --z-tabbar: 50;
   --z-modal-backdrop: 100;

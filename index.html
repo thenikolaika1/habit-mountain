@@ -17,6 +17,27 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <link rel="icon" href="./icons/icon-192.png" sizes="192x192" type="image/png" />
 
+    <!-- Accent display font for headings/stats/mountain captions only —
+         see --font-display in css/variables.css. Regular UI text stays on
+         the system font stack for readability.
+         Loaded as non-render-blocking CSS (media="print" swapped to "all"
+         on load — the standard loadCSS pattern): a plain
+         <link rel="stylesheet"> here would make the browser hold off
+         parsing/running the module script below until this external
+         request finishes, so a slow or unreachable Google Fonts would
+         delay the whole app rather than just the accent typeface. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" />
+    </noscript>
+
     <link rel="stylesheet" href="./css/variables.css" />
     <link rel="stylesheet" href="./css/base.css" />
     <link rel="stylesheet" href="./css/components.css" />
