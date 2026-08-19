@@ -71,6 +71,10 @@
   font-weight: 700;
   text-anchor: middle;
   fill: var(--color-text);
+  paint-order: stroke;
+  stroke: rgba(255, 255, 255, 0.75);
+  stroke-width: 2.5px;
+  stroke-linejoin: round;
 }
 
 .milestone-stem {

@@ -146,10 +146,13 @@ function wrapLabelLines(label) {
 
 // Vertical layout of a milestone's stacked elements, measured upward
 // (negative y) from its ground point at (0,0). Bumped up from the original
-// tight spacing so captions clear the slope/trail line for readability.
-const LABEL_GAP = 12; // ground dot -> bottom of a single-line caption
+// tight spacing so captions clear the slope/trail line for readability,
+// and ICON_GAP in particular is generous — an emoji icon's rendered glyph
+// is noticeably taller than its nominal font-size, so a small gap here
+// still let icons and captions visually touch/overlap.
+const LABEL_GAP = 18; // ground dot -> bottom of a single-line caption
 const LABEL_LINE_HEIGHT = 10; // gap between two stacked caption lines
-const ICON_GAP = 16; // caption top -> icon
+const ICON_GAP = 32; // caption top -> icon
 const ICON_LABEL_EXTRA = 8; // extra headroom when an icon sits above a 2-line caption
 const FLAGPOLE_LENGTH = 14;
 const FLAG_LENGTH = 9;
