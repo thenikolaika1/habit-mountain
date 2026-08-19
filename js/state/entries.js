@@ -1,5 +1,5 @@
 import { loadState, saveState } from "./storage.js";
-import { todayKey } from "../logic/dateUtils.js";
+import { isDateEditable } from "../logic/dateUtils.js";
 
 /** Returns the raw stored value for a habit/date, or undefined if not logged. */
 export function getEntry(habitId, dateKey) {
@@ -14,13 +14,14 @@ export function getEntriesForHabit(habitId) {
 }
 
 /**
- * Sets the value for a habit on a given date. Only today or past dates may
- * be edited — future dates are rejected defensively (UI should already
- * prevent this via disabled cells).
+ * Sets the value for a habit on a given date. Only the last 3 days (today,
+ * yesterday, the day before) may be edited — everything else, future or
+ * older, is rejected defensively (UI should already prevent this via
+ * disabled cells).
  */
 export function setEntry(habitId, dateKey, value) {
-  if (dateKey > todayKey()) {
-    console.warn("Habit Mountain: refused to set a future-dated entry.");
+  if (!isDateEditable(dateKey)) {
+    console.warn("Habit Mountain: refused to set an entry outside the editable 3-day window.", dateKey);
     return;
   }
   const state = loadState();

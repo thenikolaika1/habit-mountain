@@ -54,6 +54,21 @@ export function addDaysToKey(dateKey, delta) {
   return dateKeyFromDate(date);
 }
 
+// Only the last 3 days — today, yesterday, and the day before — can be
+// checked off or edited. Everything older is locked, same as future dates.
+const EDITABLE_WINDOW_DAYS = 3;
+
+/** {minKey, maxKey} inclusive bounds of the currently editable date range. */
+export function editableDateRange() {
+  const tKey = todayKey();
+  return { minKey: addDaysToKey(tKey, -(EDITABLE_WINDOW_DAYS - 1)), maxKey: tKey };
+}
+
+export function isDateEditable(dateKey) {
+  const { minKey, maxKey } = editableDateRange();
+  return dateKey >= minKey && dateKey <= maxKey;
+}
+
 export function weekdayHeader() {
   return WEEKDAYS_MON_FIRST.slice();
 }
@@ -76,13 +91,15 @@ export function nextMonth({ year, month }) {
 
 /**
  * Build a flat array of cells for a month grid, Monday-first, padded to full
- * weeks. Each cell is either null (blank filler) or { day, dateKey, isFuture, isToday }.
+ * weeks. Each cell is either null (blank filler) or
+ * { day, dateKey, isFuture, isToday, isTooOld }.
  */
 export function buildMonthGrid(year, month) {
   const first = new Date(year, month, 1);
   const mondayIndex = (first.getDay() + 6) % 7;
   const total = daysInMonth(year, month);
   const tKey = todayKey();
+  const { minKey } = editableDateRange();
 
   const cells = [];
   for (let i = 0; i < mondayIndex; i++) cells.push(null);
@@ -93,6 +110,7 @@ export function buildMonthGrid(year, month) {
       dateKey,
       isFuture: dateKey > tKey,
       isToday: dateKey === tKey,
+      isTooOld: dateKey < minKey,
     });
   }
   const remainder = cells.length % 7;

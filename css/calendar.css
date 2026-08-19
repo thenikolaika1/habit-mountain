@@ -83,7 +83,7 @@
   color: var(--color-accent-contrast);
 }
 
-.calendar-day.is-future {
+.calendar-day.is-locked {
   background: transparent;
   color: var(--color-text-muted);
   opacity: 0.4;

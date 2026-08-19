@@ -66,17 +66,18 @@ function cellHtml(habit, entries, cell) {
   if (!cell) return `<div class="calendar-cell"></div>`;
   const value = entries[cell.dateKey];
   const done = isDayComplete(habit, value);
+  const locked = cell.isFuture || cell.isTooOld;
   const classes = ["calendar-day"];
   if (cell.isToday) classes.push("is-today");
   if (done) classes.push("is-done");
-  if (cell.isFuture) classes.push("is-future");
+  if (locked) classes.push("is-locked");
 
   const numericTotal = habit.type === "numeric" ? getNumericTotal(value) : 0;
   const valueBadge = numericTotal > 0 ? `<span class="day-value">${numericTotal}</span>` : "";
 
   return `
     <div class="calendar-cell">
-      <button type="button" class="${classes.join(" ")}" data-date-key="${cell.dateKey}" ${cell.isFuture ? "disabled aria-disabled=\"true\"" : ""}>
+      <button type="button" class="${classes.join(" ")}" data-date-key="${cell.dateKey}" ${locked ? "disabled aria-disabled=\"true\"" : ""}>
         ${cell.day}${valueBadge}
       </button>
     </div>`;
