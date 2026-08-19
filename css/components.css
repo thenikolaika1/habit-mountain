@@ -310,6 +310,18 @@
   line-height: 1.5;
 }
 
+.modal-message + .modal-message {
+  margin-top: var(--space-2);
+}
+
+.month-recap-pct {
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--color-accent-dark);
+  text-align: center;
+  margin-bottom: var(--space-3);
+}
+
 /* ---------- Day detail ---------- */
 .day-detail-date {
   color: var(--color-text-muted);

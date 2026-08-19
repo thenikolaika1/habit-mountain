@@ -12,6 +12,7 @@ function emptyState() {
     entries: {},
     meta: {
       unlockedAchievements: {},
+      lastSeenMonth: null,
     },
   };
 }
@@ -27,6 +28,7 @@ function migrate(raw) {
       raw.meta.unlockedAchievements && typeof raw.meta.unlockedAchievements === "object"
         ? raw.meta.unlockedAchievements
         : {};
+    state.meta.lastSeenMonth = typeof raw.meta.lastSeenMonth === "string" ? raw.meta.lastSeenMonth : null;
   }
   return state;
 }

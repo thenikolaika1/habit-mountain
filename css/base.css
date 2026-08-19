@@ -102,6 +102,12 @@ a {
   font-weight: 700;
 }
 
+.mountain-month-subtitle {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
 .back-button {
   display: inline-flex;
   align-items: center;

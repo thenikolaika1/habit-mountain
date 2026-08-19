@@ -38,6 +38,11 @@ export function todayKey() {
   return formatDateKey(t.year, t.month, t.day);
 }
 
+/** "YYYY-MM" key for a given month — used to detect a month boundary was crossed. */
+export function monthKey(year, month) {
+  return `${year}-${pad2(month + 1)}`;
+}
+
 export function dateKeyFromDate(date) {
   return formatDateKey(date.getFullYear(), date.getMonth(), date.getDate());
 }

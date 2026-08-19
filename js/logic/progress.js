@@ -1,11 +1,39 @@
 import { computeHabitStats } from "./points.js";
 import { computeCurrentStreak, computeOverallCurrentStreak } from "./streaks.js";
+import { isDayComplete } from "./completion.js";
+import { daysInMonth, formatDateKey, todayParts } from "./dateUtils.js";
 
-/** Total points required to reach the summit (100% mountain progress). */
-export const POINTS_FOR_SUMMIT = 1000;
+/**
+ * Mountain progress for one calendar month: each day contributes
+ * 1/daysInMonth toward the summit, but only if more than half of the
+ * user's active habits were completed that day (e.g. 4 habits -> need at
+ * least 3). This is deliberately NOT the lifetime points total — the
+ * mountain always restarts at the beginning of a month, and can only be
+ * finished by a consistently strong month, not a 15-day burst. Future days
+ * need no special-casing: they simply have no entries yet, so they don't
+ * count until they're actually lived through.
+ */
+export function computeMonthMountainProgress(year, month, habits, entriesByHabit) {
+  if (habits.length === 0) return 0;
+  const total = daysInMonth(year, month);
+  const threshold = habits.length / 2;
 
-export function computeOverallProgress(totalPoints) {
-  return Math.min(1, totalPoints / POINTS_FOR_SUMMIT);
+  // Count qualifying days as an integer and divide once at the end, rather
+  // than summing a fractional step per day — repeatedly adding 1/total can
+  // land a fraction of a ULP short of 1 (e.g. 0.9999999999999998), which
+  // would make a fully-completed month narrowly fail an ">= 1" summit check.
+  // A single integer division is exact when countedDays === total.
+  let countedDays = 0;
+  for (let day = 1; day <= total; day++) {
+    const dateKey = formatDateKey(year, month, day);
+    let completedCount = 0;
+    for (const habit of habits) {
+      const entries = entriesByHabit[habit.id] || {};
+      if (isDayComplete(habit, entries[dateKey])) completedCount++;
+    }
+    if (completedCount > threshold) countedDays++;
+  }
+  return Math.min(1, countedDays / total);
 }
 
 /**
@@ -32,7 +60,8 @@ export function computeAppStats(habits, entriesByHabit) {
   const totalCompletedDays = perHabit.reduce((sum, p) => sum + p.completedDays, 0);
   const bestStreakOverall = perHabit.reduce((max, p) => Math.max(max, p.bestStreak), 0);
   const overallCurrentStreak = computeOverallCurrentStreak(activeHabits, entriesByHabit);
-  const overallProgress = computeOverallProgress(totalPoints);
+  const today = todayParts();
+  const overallProgress = computeMonthMountainProgress(today.year, today.month, activeHabits, entriesByHabit);
 
   return {
     activeHabits,

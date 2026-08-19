@@ -1,6 +1,6 @@
 import { getAppStats } from "../state/derive.js";
 import { setEntry } from "../state/entries.js";
-import { todayKey } from "../logic/dateUtils.js";
+import { todayKey, todayParts, monthLabel } from "../logic/dateUtils.js";
 import { isDayComplete } from "../logic/completion.js";
 import { buildMountainSvg } from "../mountainSvg.js";
 import { stageForProgress } from "../logic/progress.js";
@@ -18,11 +18,15 @@ export function renderMountainView(container) {
 
   const stage = stageForProgress(stats.overallProgress);
   const progressPct = Math.round(stats.overallProgress * 100);
+  const t = todayParts();
 
   container.innerHTML = `
     <section class="view">
       <div class="view-header">
-        <h1>Гора привычек</h1>
+        <div>
+          <h1>Гора привычек</h1>
+          <p class="mountain-month-subtitle">Прогресс за ${monthLabel(t.year, t.month)} · 1-го числа гора обновляется</p>
+        </div>
       </div>
 
       <div class="stats-row">

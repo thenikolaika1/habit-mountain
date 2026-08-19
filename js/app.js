@@ -4,6 +4,7 @@ import { renderMountainView } from "./views/mountainView.js";
 import { renderHabitsView } from "./views/habitsView.js";
 import { renderCalendarView } from "./views/calendarView.js";
 import { renderAchievementsView } from "./views/achievementsView.js";
+import { maybeShowMonthRecap } from "./components/monthRecap.js";
 
 const viewContainer = document.getElementById("view-container");
 const tabbarContainer = document.getElementById("tabbar-container");
@@ -46,6 +47,11 @@ subscribe(render);
 
 if (!location.hash) location.hash = "#/mountain";
 render();
+
+// Runs once per app boot (not on every re-render) — shows a one-time recap
+// of last month's mountain the first time the app is opened in a new
+// calendar month, then marks that month as seen so it won't show again.
+maybeShowMonthRecap();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
