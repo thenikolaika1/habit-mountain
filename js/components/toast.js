@@ -5,34 +5,23 @@ export function showToast(message) {
   if (!toast) {
     toast = document.createElement("div");
     toast.id = "app-toast";
-    toast.style.position = "fixed";
-    toast.style.left = "50%";
-    toast.style.bottom = "calc(var(--tabbar-height) + env(safe-area-inset-bottom) + 16px)";
-    toast.style.transform = "translateX(-50%) translateY(12px)";
-    toast.style.background = "var(--color-accent-dark)";
-    toast.style.color = "var(--color-accent-contrast)";
-    toast.style.padding = "12px 18px";
-    toast.style.borderRadius = "999px";
-    toast.style.fontWeight = "700";
-    toast.style.fontSize = "14px";
-    toast.style.boxShadow = "var(--shadow-md)";
-    toast.style.zIndex = "200";
-    toast.style.opacity = "0";
-    toast.style.transition = "opacity 0.25s ease, transform 0.25s ease";
-    toast.style.maxWidth = "90vw";
-    toast.style.textAlign = "center";
+    toast.className = "app-toast";
     document.body.appendChild(toast);
   }
 
   toast.textContent = message;
+
+  // Remove -> reflow -> re-add so back-to-back toasts (e.g. two achievements
+  // unlocked in quick succession) replay the pop-in transition each time,
+  // instead of silently staying in the already-visible state.
+  toast.classList.remove("is-visible");
+  void toast.offsetWidth;
   requestAnimationFrame(() => {
-    toast.style.opacity = "1";
-    toast.style.transform = "translateX(-50%) translateY(0)";
+    toast.classList.add("is-visible");
   });
 
   clearTimeout(hideTimer);
   hideTimer = setTimeout(() => {
-    toast.style.opacity = "0";
-    toast.style.transform = "translateX(-50%) translateY(12px)";
+    toast.classList.remove("is-visible");
   }, 2600);
 }

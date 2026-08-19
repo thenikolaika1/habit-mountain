@@ -2,11 +2,19 @@ import { getAppStats } from "../state/derive.js";
 import { setEntry } from "../state/entries.js";
 import { todayKey, todayParts, monthLabel } from "../logic/dateUtils.js";
 import { isDayComplete } from "../logic/completion.js";
-import { buildMountainSvg } from "../mountainSvg.js";
+import { buildMountainSvg, buildProgressTrailPaths, MILESTONES } from "../mountainSvg.js";
 import { stageForProgress } from "../logic/progress.js";
 import { ACHIEVEMENTS } from "../logic/achievements.js";
 import { showToast } from "../components/toast.js";
 
+// The mountain screen is re-rendered on every state change (subscribe in
+// app.js), which is most of the time just a habit being ticked while the
+// user is still looking at this same screen. Rebuilding the whole <section>
+// from scratch every time would also throw away the gold trail's <path>
+// node, which is the one place a real CSS `transition` (see mountain.css)
+// can animate smoothly — a transition needs the *same* node to persist
+// across the update. So: build fresh only the first time the screen is
+// mounted, then patch attributes/text in place on every update after that.
 export function renderMountainView(container) {
   const { stats, newlyUnlocked } = getAppStats();
   const tKey = todayKey();
@@ -16,6 +24,14 @@ export function renderMountainView(container) {
     showToast(`🏆 Новая ачивка: ${first ? first.title : ""}`);
   }
 
+  if (container.querySelector(".mountain-wrap svg")) {
+    patchMountainView(container, stats, tKey);
+  } else {
+    renderFreshMountainView(container, stats, tKey);
+  }
+}
+
+function renderFreshMountainView(container, stats, tKey) {
   const stage = stageForProgress(stats.overallProgress);
   const progressPct = Math.round(stats.overallProgress * 100);
   const t = todayParts();
@@ -31,29 +47,62 @@ export function renderMountainView(container) {
 
       <div class="stats-row">
         <div class="stat-pill">
-          <div class="stat-value">${stats.totalPoints}</div>
+          <div class="stat-value" id="stat-points">${stats.totalPoints}</div>
           <div class="stat-label">Очки</div>
         </div>
         <div class="stat-pill">
-          <div class="stat-value">${stats.overallCurrentStreak}</div>
+          <div class="stat-value" id="stat-streak">${stats.overallCurrentStreak}</div>
           <div class="stat-label">Общий стрик</div>
         </div>
         <div class="stat-pill">
-          <div class="stat-value">${progressPct}%</div>
-          <div class="stat-label">${stage.label}</div>
+          <div class="stat-value" id="stat-progress-pct">${progressPct}%</div>
+          <div class="stat-label" id="stat-progress-stage">${stage.label}</div>
         </div>
       </div>
 
       <div class="mountain-wrap">
-        <span class="mountain-progress-caption">${progressPct}% · ${stage.label}</span>
+        <span class="mountain-progress-caption" id="mountain-caption">${progressPct}% · ${stage.label}</span>
         ${buildMountainSvg(stats.overallProgress)}
       </div>
 
       <h3 class="section-heading">Сегодня</h3>
-      ${stats.activeHabits.length === 0 ? emptyTodayHtml() : todayListHtml(stats, tKey)}
+      <div id="today-section">
+        ${stats.activeHabits.length === 0 ? emptyTodayHtml() : todayListHtml(stats, tKey)}
+      </div>
     </section>
   `;
 
+  wireTodayList(container, stats, tKey);
+}
+
+function patchMountainView(container, stats, tKey) {
+  const stage = stageForProgress(stats.overallProgress);
+  const progressPct = Math.round(stats.overallProgress * 100);
+
+  container.querySelector("#stat-points").textContent = stats.totalPoints;
+  container.querySelector("#stat-streak").textContent = stats.overallCurrentStreak;
+  container.querySelector("#stat-progress-pct").textContent = `${progressPct}%`;
+  container.querySelector("#stat-progress-stage").textContent = stage.label;
+  container.querySelector("#mountain-caption").textContent = `${progressPct}% · ${stage.label}`;
+
+  const { walkedD, remainingD } = buildProgressTrailPaths(stats.overallProgress);
+  container.querySelector(".mountain-trail-walked").setAttribute("d", walkedD);
+  const remainingEl = container.querySelector(".mountain-trail");
+  if (remainingD) {
+    remainingEl.setAttribute("d", remainingD);
+    remainingEl.style.display = "";
+  } else {
+    remainingEl.style.display = "none";
+  }
+
+  MILESTONES.forEach((m, i) => {
+    const reached = stats.overallProgress >= m.p - 0.0001;
+    const el = container.querySelector(`[data-milestone-index="${i}"]`);
+    if (el) el.classList.toggle("milestone--reached", reached);
+  });
+
+  const todaySection = container.querySelector("#today-section");
+  todaySection.innerHTML = stats.activeHabits.length === 0 ? emptyTodayHtml() : todayListHtml(stats, tKey);
   wireTodayList(container, stats, tKey);
 }
 
@@ -65,15 +114,58 @@ function emptyTodayHtml() {
     </div>`;
 }
 
+// Diffing state for the "just marked done" bounce animation (see
+// check-pop in components.css). Rebuilt as a plain module-level variable
+// rather than something threaded through render() — the today list is
+// always keyed by the current day (tKey), so a change of day is itself
+// the signal to drop any stale history and not bounce anything on the
+// first render of a new day.
+let previouslyDoneToday = null;
+let previouslyDoneForKey = null;
+// A single user action (e.g. tapping a checkbox) can trigger more than one
+// subscribe(render) pass in the very same tick — e.g. marking a habit done
+// can also unlock an achievement, which persists state again and fires a
+// second notification. If the baseline were updated synchronously inside
+// this function, that second pass would see the first pass's own freshly-
+// applied change as "already old" and render without the bounce class,
+// clobbering the DOM the first pass just produced. So the baseline is only
+// committed once the current synchronous batch of renders has fully
+// drained (queueMicrotask), and every call within that batch diffs against
+// the same pre-batch snapshot.
+let pendingDoneIds = null;
+let baselineUpdateQueued = false;
+
 function todayListHtml(stats, tKey) {
+  if (previouslyDoneForKey !== tKey) {
+    previouslyDoneToday = new Set();
+    previouslyDoneForKey = tKey;
+  }
+
+  const currentDoneIds = new Set();
+  stats.perHabit.forEach(({ habit, entries }) => {
+    if (isDayComplete(habit, entries[tKey])) currentDoneIds.add(habit.id);
+  });
+  const justCompleted = new Set([...currentDoneIds].filter((id) => !previouslyDoneToday.has(id)));
+
+  pendingDoneIds = currentDoneIds;
+  const keyAtSchedule = tKey;
+  if (!baselineUpdateQueued) {
+    baselineUpdateQueued = true;
+    queueMicrotask(() => {
+      baselineUpdateQueued = false;
+      if (previouslyDoneForKey === keyAtSchedule) previouslyDoneToday = pendingDoneIds;
+    });
+  }
+
   const items = stats.perHabit
     .map(({ habit, entries, currentStreak }) => {
       const value = entries[tKey];
       const done = isDayComplete(habit, value);
+      const checkClass = `today-check${justCompleted.has(habit.id) ? " just-completed" : ""}`;
       if (habit.type === "boolean") {
         return `
           <li class="today-item ${done ? "is-done" : ""}" data-habit-id="${habit.id}" data-type="boolean">
-            <button type="button" class="today-check" data-action="toggle">${done ? "✓" : ""}</button>
+            <button type="button" class="${checkClass}" data-action="toggle">${done ? "✓" : ""}</button>
             <div class="today-item-body">
               <div class="today-item-name">${escapeHtml(habit.name)}</div>
               <div class="today-item-streak">${currentStreak > 0 ? `🔥 ${currentStreak} дн. подряд` : "Отметьте сегодня"}</div>
@@ -82,7 +174,7 @@ function todayListHtml(stats, tKey) {
       }
       return `
         <li class="today-item ${done ? "is-done" : ""}" data-habit-id="${habit.id}" data-type="numeric">
-          <button type="button" class="today-check" data-action="toggle" aria-hidden="true">${done ? "✓" : ""}</button>
+          <button type="button" class="${checkClass}" data-action="toggle" aria-hidden="true">${done ? "✓" : ""}</button>
           <div class="today-item-body">
             <div class="today-item-name">${escapeHtml(habit.name)}</div>
             <div class="today-item-streak">${currentStreak > 0 ? `🔥 ${currentStreak} дн. подряд` : habit.unit || "Введите число"}</div>

@@ -138,7 +138,7 @@ function splitBezierAt(p1, cp1, cp2, p2, t) {
  * buildRidgePathD) — only the one segment straddling `progress` needs an
  * actual split.
  */
-function buildProgressTrailPaths(progress) {
+export function buildProgressTrailPaths(progress) {
   const clamped = Math.max(0, Math.min(1, progress));
   const startIdx = ridgeIndexOf(0);
   const endIdx = ridgeIndexOf(1);
@@ -248,7 +248,7 @@ function summitFlagMarkup(poleBottom) {
 }
 
 function milestoneMarkup(overallProgress) {
-  return MILESTONES.map((m) => {
+  return MILESTONES.map((m, i) => {
     const { x, y } = pointAtProgress(m.p);
     const reached = overallProgress >= m.p - 0.0001;
     const groupClasses = ["milestone", reached ? "milestone--reached" : "", m.isSummit ? "milestone--summit" : ""]
@@ -273,7 +273,7 @@ function milestoneMarkup(overallProgress) {
     else if (m.icon) iconMarkup = `<text class="milestone-icon" x="0" y="${iconY}">${m.icon}</text>`;
 
     return `
-      <g class="${groupClasses}" transform="translate(${x},${y})">
+      <g class="${groupClasses}" data-milestone-index="${i}" transform="translate(${x},${y})">
         <line class="milestone-stem" x1="0" y1="0" x2="0" y2="${stemY}" />
         <circle class="milestone-dot" cx="0" cy="0" r="3" />
         ${iconMarkup}
@@ -306,7 +306,7 @@ export function buildMountainSvg(overallProgress) {
         <rect class="mountain-layer-summit" x="0" y="0" width="400" height="140" />
       </g>
       ${treesMarkup()}
-      ${remainingD ? `<path class="mountain-trail" d="${remainingD}" />` : ""}
+      <path class="mountain-trail" d="${remainingD || `M${RIDGE[ridgeIndexOf(1)].x},${RIDGE[ridgeIndexOf(1)].y}`}" style="${remainingD ? "" : "display:none;"}" />
       <path class="mountain-trail-walked" d="${walkedD}" />
       ${milestoneMarkup(overallProgress)}
     </svg>`;

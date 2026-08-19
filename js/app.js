@@ -21,9 +21,16 @@ function parseRoute(hash) {
   return { name: "mountain" };
 }
 
+// Tracks which screen was showing last, so the fade-in transition only
+// plays on an actual tab/screen switch — not on every data-driven
+// re-render of the screen you're already looking at (subscribe(render)
+// fires on every state change, most of which don't change the route).
+let lastRouteKey = null;
+
 function render() {
   const hash = location.hash || "#/mountain";
   const route = parseRoute(hash);
+  const routeKey = route.name + (route.habitId || "");
 
   tabbarContainer.innerHTML = renderTabBar(hash.startsWith("#") ? hash : `#${hash}`);
 
@@ -39,6 +46,27 @@ function render() {
       break;
     default:
       renderMountainView(viewContainer);
+  }
+
+  if (routeKey !== lastRouteKey) {
+    lastRouteKey = routeKey;
+    // Restart the CSS keyframe animation (remove -> reflow -> re-add) so it
+    // reliably replays even if the class was already present from before.
+    viewContainer.classList.remove("view-transition");
+    void viewContainer.offsetWidth;
+    viewContainer.classList.add("view-transition");
+    // Every view's own render function replaces .view wholesale on every
+    // re-render, not just on navigation (subscribe(render) fires on any
+    // state change). If view-transition stayed on #view-container, each of
+    // those unrelated re-renders would create a brand-new .view element
+    // while the ancestor class still matches, replaying the fade every
+    // time data changes rather than only on an actual screen switch. So
+    // the class is only kept around for the duration of the animation
+    // itself, then removed — leaving it absent in the (much more common)
+    // steady state between navigations.
+    viewContainer.addEventListener("animationend", () => viewContainer.classList.remove("view-transition"), {
+      once: true,
+    });
   }
 }
 

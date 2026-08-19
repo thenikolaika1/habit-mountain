@@ -59,6 +59,23 @@
   filter: drop-shadow(0 0 3px rgba(242, 193, 78, 0.55));
 }
 
+/* Only takes effect while the mountain screen stays mounted and gets
+ * patched in place (see patchMountainView in mountainView.js) — a real
+ * transition needs the same <path> node to persist across the update, so
+ * a fresh mount of the screen (fresh nodes) just snaps straight to the
+ * target `d` with no animation, which is fine. */
+.mountain-trail-walked,
+.mountain-trail {
+  transition: d 320ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mountain-trail-walked,
+  .mountain-trail {
+    transition: none;
+  }
+}
+
 .milestone {
   opacity: 0.32;
   filter: grayscale(1);
