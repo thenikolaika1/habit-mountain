@@ -34,7 +34,7 @@ const RIDGE = [
 // render tilted.
 export const MILESTONES = [
   { p: 0.1, icon: "👣", label: "Первые шаги" },
-  { p: 0.35, icon: null, label: "Продолжай!" },
+  { p: 0.35, icon: "👣", label: "Продолжай!" },
   { p: 0.6, icon: "👣", label: "Половина пути уже пройдена!" },
   { p: 0.85, icon: null, label: "Ты почти сделал это!" },
   { p: 1.0, icon: null, label: "Success", isSummit: true },
@@ -144,31 +144,42 @@ function wrapLabelLines(label) {
   return [words.slice(0, bestIdx).join(" "), words.slice(bestIdx).join(" ")];
 }
 
-/** Renders the milestone caption from already-wrapped lines. The bottom
- * line normally lands at y=-6 (just above the ground dot) — `lift` raises
- * the whole caption higher above that, used for the summit so it clears
- * the climbing marker, which stands on this same ground point. */
-function labelMarkup(lines, labelClass, lift = 0) {
-  const baseY = -6 - lift;
+// Vertical layout of a milestone's stacked elements, measured upward
+// (negative y) from its ground point at (0,0). Bumped up from the original
+// tight spacing so captions clear the slope/trail line for readability.
+const LABEL_GAP = 12; // ground dot -> bottom of a single-line caption
+const LABEL_LINE_HEIGHT = 10; // gap between two stacked caption lines
+const ICON_GAP = 16; // caption top -> icon
+const ICON_LABEL_EXTRA = 8; // extra headroom when an icon sits above a 2-line caption
+const FLAGPOLE_LENGTH = 14;
+const FLAG_LENGTH = 9;
+const FLAG_WIDTH = 12;
+
+/** Renders the milestone caption from already-wrapped lines, with its
+ * bottom line at `baseY` (and, for 2 lines, the top line `LABEL_LINE_HEIGHT`
+ * above that). */
+function labelMarkup(lines, labelClass, baseY) {
   if (lines.length === 1) {
     return `<text class="${labelClass}" x="0" y="${baseY}">${lines[0]}</text>`;
   }
-  const topY = -16 - lift;
+  const topY = baseY - LABEL_LINE_HEIGHT;
   return `
         <text class="${labelClass}" x="0" y="${topY}">
           <tspan x="0" dy="0">${lines[0]}</tspan>
-          <tspan x="0" dy="10">${lines[1]}</tspan>
+          <tspan x="0" dy="${LABEL_LINE_HEIGHT}">${lines[1]}</tspan>
         </text>`;
 }
 
-/** Hand-drawn flag on a straight, vertical pole — deliberately not an emoji
- * glyph, whose "🚩" tends to render at a slant depending on the font. */
-function summitFlagMarkup(iconY) {
-  const poleBottom = iconY + 4;
-  const poleTop = iconY - 22;
+/** Hand-drawn flag on a short, straight, vertical pole — deliberately not
+ * an emoji glyph, whose "🚩" tends to render at a slant depending on the
+ * font. Only the flag itself is red; the pole is a neutral, un-flag-like
+ * color so the two read as separate parts. `poleBottom` is where the pole
+ * meets the connecting stem below it. */
+function summitFlagMarkup(poleBottom) {
+  const poleTop = poleBottom - FLAGPOLE_LENGTH;
   return `
         <line class="summit-flagpole" x1="0" y1="${poleBottom}" x2="0" y2="${poleTop}" />
-        <polygon class="summit-flag" points="0,${poleTop} 15,${poleTop + 5} 0,${poleTop + 10}" />`;
+        <polygon class="summit-flag" points="0,${poleTop} ${FLAG_WIDTH},${poleTop + FLAG_LENGTH / 2} 0,${poleTop + FLAG_LENGTH}" />`;
 }
 
 function milestoneMarkup(overallProgress) {
@@ -182,21 +193,18 @@ function milestoneMarkup(overallProgress) {
     const lines = wrapLabelLines(m.label);
     const hasIcon = Boolean(m.icon) || m.isSummit;
 
-    // The climbing marker stands on this exact ground point once progress
-    // hits 100%, so lift the summit's flag + caption well clear of it. A
-    // 2-line caption with an icon also gets a little extra headroom above it.
-    const lift = (m.isSummit ? 24 : 0) + (m.icon && lines.length > 1 ? 8 : 0);
-    const baseY = -6 - lift;
-    const topY = -16 - lift;
-    const labelTopY = lines.length > 1 ? topY : baseY;
-    const iconY = -22 - lift;
+    // A 2-line caption under an icon gets a little extra headroom above it.
+    const extra = m.icon && lines.length > 1 ? ICON_LABEL_EXTRA : 0;
+    const baseY = -LABEL_GAP - extra;
+    const labelTopY = lines.length > 1 ? baseY - LABEL_LINE_HEIGHT : baseY;
+    const iconY = labelTopY - ICON_GAP;
     // The stem reaches up to the icon/flag when there is one, otherwise
     // just up to the caption itself — either way it's the visible anchor
     // connecting whatever floats above back down to the ground dot.
-    const stemY = hasIcon ? -16 - lift : labelTopY - 4;
+    const stemY = hasIcon ? iconY + 6 : labelTopY - 4;
 
     let iconMarkup = "";
-    if (m.isSummit) iconMarkup = summitFlagMarkup(iconY);
+    if (m.isSummit) iconMarkup = summitFlagMarkup(stemY);
     else if (m.icon) iconMarkup = `<text class="milestone-icon" x="0" y="${iconY}">${m.icon}</text>`;
 
     return `
@@ -204,7 +212,7 @@ function milestoneMarkup(overallProgress) {
         <line class="milestone-stem" x1="0" y1="0" x2="0" y2="${stemY}" />
         <circle class="milestone-dot" cx="0" cy="0" r="3" />
         ${iconMarkup}
-        ${labelMarkup(lines, labelClass, lift)}
+        ${labelMarkup(lines, labelClass, baseY)}
       </g>`;
   }).join("");
 }
