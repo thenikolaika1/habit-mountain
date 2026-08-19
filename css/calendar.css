@@ -1,0 +1,106 @@
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.calendar-nav-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-accent-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendar-nav-btn:active {
+  background: var(--color-surface-alt);
+}
+
+.calendar-title {
+  font-size: 17px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: var(--space-2);
+}
+
+.calendar-weekdays span {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.calendar-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendar-day {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--color-surface);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.calendar-day.is-today {
+  box-shadow: inset 0 0 0 2px var(--color-accent);
+}
+
+.calendar-day.is-done {
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+
+.calendar-day.is-future {
+  background: transparent;
+  color: var(--color-text-muted);
+  opacity: 0.4;
+}
+
+.calendar-day .day-value {
+  position: absolute;
+  bottom: 2px;
+  right: 3px;
+  font-size: 8px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.calendar-swipe-hint {
+  text-align: center;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-top: var(--space-2);
+}

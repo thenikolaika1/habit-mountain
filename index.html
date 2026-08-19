@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <title>Habit Mountain — трекер привычек</title>
+    <meta name="description" content="Трекер привычек с игровыми элементами: календарь, стрики, очки, ачивки и гора, по которой вы поднимаетесь." />
+
+    <meta name="theme-color" content="#2f9e6e" />
+    <link rel="manifest" href="./manifest.json" />
+
+    <!-- iOS home-screen install support -->
+    <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon-180.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Habit Mountain" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="icon" href="./icons/icon-192.png" sizes="192x192" type="image/png" />
+
+    <link rel="stylesheet" href="./css/variables.css" />
+    <link rel="stylesheet" href="./css/base.css" />
+    <link rel="stylesheet" href="./css/components.css" />
+    <link rel="stylesheet" href="./css/mountain.css" />
+    <link rel="stylesheet" href="./css/calendar.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div class="app-shell">
+        <main id="view-container"></main>
+        <div id="tabbar-container"></div>
+      </div>
+    </div>
+
+    <script type="module" src="./js/app.js"></script>
+  </body>
+</html>
