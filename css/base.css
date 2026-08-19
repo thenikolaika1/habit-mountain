@@ -147,10 +147,17 @@ a {
   font-weight: 600;
   color: var(--color-accent-dark);
   border-radius: var(--radius-sm);
+  transition: background-color 180ms ease;
 }
 
 .back-button:active {
   background: var(--color-surface-alt);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .back-button:hover {
+    background: var(--color-surface-alt);
+  }
 }
 
 @media (min-width: 640px) {

@@ -18,6 +18,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 180ms ease, background-color 180ms ease;
 }
 
 .calendar-nav-btn:active {
@@ -72,6 +73,7 @@
   align-items: center;
   justify-content: center;
   position: relative;
+  transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
 }
 
 .calendar-day.is-today {
@@ -103,4 +105,23 @@
   font-size: 11px;
   color: var(--color-text-muted);
   margin-top: var(--space-2);
+}
+
+/* Gated to real pointer devices — see the matching comment in
+ * components.css. :not(:disabled) keeps locked/future days from looking
+ * interactive on hover, matching their disabled/unclickable state. */
+@media (hover: hover) and (pointer: fine) {
+  .calendar-nav-btn:hover {
+    transform: scale(1.08);
+    background: var(--color-surface-alt);
+  }
+
+  .calendar-day:not(:disabled):hover {
+    transform: scale(1.08);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .calendar-day.is-done:not(:disabled):hover {
+    background: var(--color-accent-dark);
+  }
 }

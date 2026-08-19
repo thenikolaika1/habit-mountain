@@ -33,7 +33,7 @@
   font-size: 11px;
   font-weight: 600;
   padding: var(--space-2) 0;
-  transition: color 150ms ease;
+  transition: color 150ms ease, transform 150ms ease;
 }
 
 .tab-item .tab-icon {
@@ -58,6 +58,7 @@
   font-size: 15px;
   background: var(--color-surface-alt);
   color: var(--color-text);
+  transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
 }
 
 .btn-primary {
@@ -94,6 +95,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 180ms ease, background-color 180ms ease;
 }
 
 .fab:active {
@@ -131,6 +133,7 @@
   padding: var(--space-3) var(--space-4);
   box-shadow: var(--shadow-sm);
   cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
 
 .habit-dot {
@@ -218,6 +221,7 @@
   font-weight: 600;
   font-size: 14px;
   color: var(--color-text-muted);
+  transition: color 180ms ease;
 }
 
 .segmented button.is-active {
@@ -297,6 +301,7 @@
   align-items: center;
   justify-content: center;
   color: var(--color-text-muted);
+  transition: transform 180ms ease, background-color 180ms ease;
 }
 
 .modal-actions {
@@ -342,6 +347,7 @@
   background: var(--color-surface-alt);
   font-size: 17px;
   font-weight: 700;
+  transition: transform 180ms ease, border-color 180ms ease;
 }
 
 .check-toggle.is-done {
@@ -369,6 +375,7 @@
   font-size: 20px;
   font-weight: 700;
   flex-shrink: 0;
+  transition: transform 180ms ease, background-color 180ms ease;
 }
 
 .stepper input {
@@ -422,6 +429,7 @@
   background: var(--color-surface-alt);
   color: var(--color-text-muted);
   font-size: 14px;
+  transition: transform 180ms ease, color 180ms ease;
   flex-shrink: 0;
 }
 
@@ -539,6 +547,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 180ms ease;
   font-size: 16px;
   color: transparent;
 }
@@ -680,5 +689,73 @@
   .app-toast {
     transition: opacity 150ms ease;
     transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+/* ---------- Hover states ----------
+ * Gated to real pointer devices (a mouse) — without this, touchscreens
+ * would leave the tapped element visually "stuck" in its hover state
+ * until the next tap elsewhere (the classic mobile sticky-hover problem),
+ * and this app is used mostly on the phone. Touch feedback stays exactly
+ * as it already was, via the existing :active rules above. Each selector
+ * here reuses colors/shadows from this file's own :active states so hover
+ * reads as an earlier, lighter stage of the same feedback, not a new
+ * visual language; the `transition` that actually animates each of these
+ * properties lives on the element's base rule, above. */
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover {
+    transform: scale(1.03);
+    box-shadow: var(--shadow-md);
+  }
+
+  .btn-primary:hover {
+    background: var(--color-accent-dark);
+  }
+
+  .btn-danger:hover {
+    background: rgba(217, 83, 79, 0.08);
+  }
+
+  .fab:hover {
+    transform: scale(1.06);
+  }
+
+  .habit-card:hover {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-accent);
+  }
+
+  .tab-item:hover {
+    transform: scale(1.05);
+    color: var(--color-accent-dark);
+  }
+
+  .modal-close:hover {
+    transform: scale(1.1);
+    background: var(--color-border);
+  }
+
+  .segmented button:not(.is-active):hover {
+    color: var(--color-text);
+  }
+
+  .check-toggle:hover {
+    transform: scale(1.02);
+    border-color: var(--color-accent);
+  }
+
+  .stepper button:hover {
+    transform: scale(1.08);
+    background: var(--color-border);
+  }
+
+  .set-row-remove:hover {
+    transform: scale(1.1);
+    color: var(--color-danger);
+  }
+
+  .today-check:hover {
+    transform: scale(1.1);
   }
 }
