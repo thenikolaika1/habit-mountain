@@ -27,11 +27,13 @@ const RIDGE = [
   { p: 1.06, x: 400, y: 95, stage: "summit" },
 ];
 
+// Icons are all natural elements — trees, snow, footprints, the summit
+// flag — no tents/camps or other man-made structures on the slope.
 export const MILESTONES = [
   { p: 0.1, icon: "👣", label: "Первые шаги" },
-  { p: 0.35, icon: "🏕️", label: "Продолжай!" },
+  { p: 0.35, icon: "🌲", label: "Продолжай!" },
   { p: 0.6, icon: "👣", label: "Половина пути уже пройдена!" },
-  { p: 0.85, icon: "🏕️", label: "Ты почти сделал это!" },
+  { p: 0.85, icon: "❄️", label: "Ты почти сделал это!" },
   { p: 1.0, icon: "🚩", label: "Success", isSummit: true },
 ];
 
@@ -185,6 +187,10 @@ function milestoneMarkup(overallProgress) {
 export function buildMountainSvg(overallProgress) {
   const marker = pointAtProgress(overallProgress);
   const silhouetteD = `${buildRidgePathD(-0.06, 1.06)} L400,600 L0,600 Z`;
+  // At the summit the marker's job is done — it simply stops there, shown
+  // only by the flag + "Success" caption. No separate climber figure is
+  // drawn on top of it once progress has actually reached 100%.
+  const atSummit = overallProgress >= 1 - 1e-4;
 
   return `
     <svg class="mountain-svg" viewBox="0 0 400 600" role="img" aria-label="Гора прогресса">
@@ -202,9 +208,13 @@ export function buildMountainSvg(overallProgress) {
       ${treesMarkup()}
       <path class="mountain-trail" d="${buildRidgePathD(0, 1)}" />
       ${milestoneMarkup(overallProgress)}
-      <g class="mountain-marker" transform="translate(${marker.x},${marker.y - 14})">
+      ${
+        atSummit
+          ? ""
+          : `<g class="mountain-marker" transform="translate(${marker.x},${marker.y - 14})">
         <ellipse cx="0" cy="20" rx="10" ry="3" fill="rgba(0,0,0,0.25)" />
         <text class="mountain-marker-emoji" x="0" y="0">🧗</text>
-      </g>
+      </g>`
+      }
     </svg>`;
 }
