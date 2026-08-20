@@ -13,6 +13,7 @@
   --color-accent-contrast: #ffffff;
   --color-accent-rgb: 47, 158, 110; /* --color-accent as an r,g,b triplet, for rgba() glow shadows */
   --color-danger: #d9534f;
+  --color-danger-dark: #b8403c;
   --color-warning: #d99a2b;
   /* The strongest neutral in the current theme — a genuine near-black ink,
    * not the softer --color-text. Used where the brief calls for real

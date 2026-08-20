@@ -3,7 +3,7 @@ import { CHALLENGE_POOL, pickMonthlyChallenges, getCompletedChallengesMap } from
 import { todayParts, monthKey, monthLabel } from "../logic/dateUtils.js";
 import { openModal } from "../components/modal.js";
 import { showToast } from "../components/toast.js";
-import { medalIllustration, statusRing } from "../illustrations.js";
+import { medalIllustration, statusRing, challengeHeroForId } from "../illustrations.js";
 
 export function renderChallengesView(container) {
   const { newlyCompletedChallenges } = getAppStats();
@@ -45,13 +45,13 @@ export function renderChallengesView(container) {
 
 function challengeCardHtml(challenge, done) {
   return `
-    <div class="challenge-card ${done ? "is-done" : ""}" data-challenge-id="${challenge.id}" role="button" tabindex="0">
-      <div class="challenge-card-icon">${challenge.icon}</div>
-      <div class="challenge-card-body">
-        <div class="challenge-card-title">${challenge.title}</div>
-        <div class="challenge-card-desc">${challenge.description}</div>
+    <div class="challenge-card media-card ${done ? "is-done" : ""}" data-challenge-id="${challenge.id}" role="button" tabindex="0">
+      ${challengeHeroForId(challenge.id)}
+      <span class="media-card-badge">${statusRing({ state: done ? "done" : "empty", size: 34 })}</span>
+      <div class="media-card-scrim">
+        <div class="media-card-title">${challenge.title}</div>
+        <div class="media-card-meta">${challenge.description}</div>
       </div>
-      <span class="challenge-card-status">${statusRing({ state: done ? "done" : "empty" })}</span>
     </div>`;
 }
 

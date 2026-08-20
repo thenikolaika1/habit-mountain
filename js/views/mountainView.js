@@ -7,6 +7,7 @@ import { stageForProgress } from "../logic/progress.js";
 import { CHALLENGE_POOL } from "../logic/challenges.js";
 import { showToast } from "../components/toast.js";
 import { openDaySummary } from "./daySummaryView.js";
+import { darkenColor } from "../state/habits.js";
 
 // The mountain screen is re-rendered on every state change (subscribe in
 // app.js), which is most of the time just a habit being ticked while the
@@ -211,25 +212,27 @@ function todayListHtml(stats, tKey) {
       const value = entries[tKey];
       const done = isDayComplete(habit, value);
       const checkClass = `today-check${justCompleted.has(habit.id) ? " just-completed" : ""}`;
-      const nameLabel = `${habit.icon ? `${habit.icon} ` : ""}${escapeHtml(habit.name)}`;
+      const avatar = `<span class="today-item-avatar" style="background:linear-gradient(135deg, ${habit.color}, ${darkenColor(habit.color)})">${habit.icon || ""}</span>`;
       if (habit.type === "boolean") {
         return `
           <li class="today-item ${done ? "is-done" : ""}" data-habit-id="${habit.id}" data-type="boolean">
-            <button type="button" class="${checkClass}" data-action="toggle">${done ? "✓" : ""}</button>
+            ${avatar}
             <div class="today-item-body">
-              <div class="today-item-name">${nameLabel}</div>
+              <div class="today-item-name">${escapeHtml(habit.name)}</div>
               <div class="today-item-streak">${currentStreak > 0 ? `🔥 ${currentStreak} дн. подряд` : "Отметьте сегодня"}</div>
             </div>
+            <button type="button" class="${checkClass}" data-action="toggle">${done ? "✓" : ""}</button>
           </li>`;
       }
       return `
         <li class="today-item ${done ? "is-done" : ""}" data-habit-id="${habit.id}" data-type="numeric">
-          <button type="button" class="${checkClass}" data-action="toggle" aria-hidden="true">${done ? "✓" : ""}</button>
+          ${avatar}
           <div class="today-item-body">
-            <div class="today-item-name">${nameLabel}</div>
+            <div class="today-item-name">${escapeHtml(habit.name)}</div>
             <div class="today-item-streak">${currentStreak > 0 ? `🔥 ${currentStreak} дн. подряд` : habit.unit || "Введите число"}</div>
           </div>
           <input class="today-item-input" type="number" min="0" inputmode="numeric" data-action="number" value="${typeof value === "number" ? value : ""}" placeholder="0" />
+          <button type="button" class="${checkClass}" data-action="toggle" aria-hidden="true">${done ? "✓" : ""}</button>
         </li>`;
     })
     .join("");

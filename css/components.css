@@ -134,49 +134,85 @@
   gap: var(--space-3);
 }
 
-/* "Pill" card — capsule-rounded, a thin gradient accent bar down the left
- * edge (via inset box-shadow, so it doesn't need an extra DOM element)
- * instead of a flat-colored border, closer to the elongated cards from the
- * reference than the previous plain flat rectangle. */
-.habit-card {
+/* ---------- Illustrated "media" card shell ----------
+ * Shared shell for .habit-card, .challenge-card and .achievement-card: a
+ * themed hero illustration fills the card as a background, a bottom scrim
+ * carries white text over it, and small absolutely-positioned controls
+ * (a status badge, an edit/back button) sit on top — the same "photo
+ * banner" language already established by .popular-habit-card, reused at
+ * a wider/shorter aspect ratio for a single-column list instead of a
+ * carousel. (.popular-habit-card keeps its own already-shipped, already-
+ * tested rules rather than being retrofitted onto this shell.) */
+.media-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  border: none;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.media-card .habit-hero-svg {
+  position: absolute;
+  inset: 0;
+}
+
+.media-card-scrim {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: var(--space-3) var(--space-3) var(--space-2);
+  background: linear-gradient(to top, rgba(12, 23, 16, 0.82), rgba(12, 23, 16, 0));
+  color: #ffffff;
+}
+
+.media-card-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  color: #ffffff;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+  line-height: 1.25;
+}
+
+.media-card-meta {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  margin-top: 2px;
+}
+
+.media-card-badge {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 1;
+}
+
+.media-card-icon-btn {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 1;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.88);
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  text-align: left;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-round);
-  padding: var(--space-3) var(--space-4);
-  box-shadow: var(--shadow-sm), inset 3px 0 0 var(--color-accent);
-  cursor: pointer;
-  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
-}
-
-.habit-card-body {
-  flex: 1;
-  min-width: 0;
-}
-
-.habit-card-title {
-  font-weight: 700;
-  font-size: 16px;
-  margin-bottom: 2px;
-}
-
-.habit-card-meta {
+  justify-content: center;
   font-size: 13px;
-  color: var(--color-text-muted);
+  box-shadow: var(--shadow-sm);
+  transition: transform 180ms ease;
 }
 
-.habit-card .modal-close {
-  width: 28px;
-  height: 28px;
-  font-size: 13px;
-}
-
-.habit-card-status {
-  flex-shrink: 0;
+.habit-card {
+  aspect-ratio: 2.6 / 1;
 }
 
 .empty-state {
@@ -637,47 +673,13 @@
 
 /* ---------- Achievements ---------- */
 .achievements-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: var(--space-3);
 }
 
 .achievement-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4) var(--space-3);
-  text-align: center;
-  box-shadow: var(--shadow-sm);
-}
-
-.achievement-card.is-locked {
-  opacity: 0.45;
-  filter: grayscale(1);
-}
-
-.achievement-icon {
-  font-size: 32px;
-  margin-bottom: var(--space-2);
-}
-
-.achievement-title {
-  font-weight: 700;
-  font-size: 13px;
-  margin-bottom: 4px;
-}
-
-.achievement-desc {
-  font-size: 11px;
-  color: var(--color-text-muted);
-  line-height: 1.35;
-}
-
-.achievement-date {
-  font-size: 10px;
-  color: var(--color-accent-dark);
-  font-weight: 700;
-  margin-top: var(--space-2);
+  aspect-ratio: 2.2 / 1;
 }
 
 /* ---------- Achievement toast ----------
@@ -745,10 +747,13 @@
     box-shadow: var(--shadow-md), 0 8px 20px rgba(var(--color-accent-rgb), 0.5);
   }
 
-  .habit-card:hover {
-    transform: scale(1.08);
-    box-shadow: var(--shadow-md), 0 8px 20px rgba(var(--color-accent-rgb), 0.4), inset 3px 0 0 var(--color-accent);
-    border-color: var(--color-accent);
+  .media-card:hover {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-md), 0 8px 20px rgba(var(--color-accent-rgb), 0.4);
+  }
+
+  .media-card-icon-btn:hover {
+    transform: scale(1.1);
   }
 
   .tab-item:hover {
@@ -790,12 +795,6 @@
     box-shadow: var(--shadow-md), 0 8px 20px rgba(var(--color-accent-rgb), 0.35);
   }
 
-  .challenge-card:hover {
-    transform: scale(1.02);
-    box-shadow: var(--shadow-md), 0 8px 20px rgba(var(--color-accent-rgb), 0.35), inset 3px 0 0 var(--color-accent);
-    border-color: var(--color-accent);
-  }
-
   .emoji-picker-item:hover,
   .color-picker-item:hover {
     transform: scale(1.15);
@@ -813,7 +812,8 @@
  * "icon chip" treatment the reference app uses for its category icons,
  * applied here to the emoji the user already picked rather than a new
  * icon set. */
-.habit-avatar {
+.habit-avatar,
+.today-item-avatar {
   width: 34px;
   height: 34px;
   border-radius: var(--radius-md);
@@ -964,56 +964,11 @@
 }
 
 .challenge-card {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-round);
-  padding: var(--space-3) var(--space-4);
-  box-shadow: var(--shadow-sm), inset 3px 0 0 var(--color-accent);
-  cursor: pointer;
-  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  aspect-ratio: 2.2 / 1;
 }
 
 .challenge-card.is-done {
-  border-color: var(--color-accent);
-  background: rgba(var(--color-accent-rgb), 0.08);
-}
-
-.challenge-card-icon {
-  font-size: 24px;
-  flex-shrink: 0;
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--color-surface-alt), var(--color-border));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.14));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.challenge-card-body {
-  flex: 1;
-  min-width: 0;
-}
-
-.challenge-card-title {
-  font-weight: 700;
-  font-size: 14px;
-  margin-bottom: 2px;
-}
-
-.challenge-card-desc {
-  font-size: 12px;
-  color: var(--color-text-muted);
-  line-height: 1.35;
-}
-
-.challenge-card-status {
-  flex-shrink: 0;
+  box-shadow: var(--shadow-sm), 0 0 0 3px var(--color-accent);
 }
 
 /* ---------- Settings ---------- */
@@ -1044,6 +999,33 @@
 
 .settings-row-danger {
   border-color: rgba(217, 83, 79, 0.35);
+}
+
+.settings-row > .modal-message {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-row-icon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-row-icon--danger {
+  background: linear-gradient(135deg, var(--color-danger), var(--color-danger-dark));
+}
+
+.settings-row-icon-svg {
+  width: 19px;
+  height: 19px;
 }
 
 .settings-select {

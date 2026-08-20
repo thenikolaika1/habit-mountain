@@ -214,3 +214,68 @@
   fill: var(--color-ink);
   opacity: 0.12;
 }
+
+/* ---------- Figure parts (habit heroes + challenge climber scenes) ----------
+ * A small shared "vocabulary" of shapes so every detailed scene reads as
+ * the same illustration style: a face is always a light circle (works on
+ * both the day wash and the one night scene), hair/props are ink, and
+ * clothing/accents use the accent green — no new hues added to the
+ * palette, just more shapes composed from the same tokens. */
+.habit-hero-face {
+  fill: var(--stage-summit);
+  stroke: var(--color-ink);
+  stroke-width: 2.5;
+}
+
+.habit-hero-face-detail {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.habit-hero-hair {
+  fill: var(--color-ink);
+}
+
+.habit-hero-limb {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.habit-hero-svg--night .habit-hero-limb {
+  stroke: #ffffff;
+  opacity: 0.9;
+}
+
+.habit-hero-prop-accent {
+  fill: var(--color-accent);
+  opacity: 0.9;
+}
+
+.habit-hero-svg--night .habit-hero-prop-accent {
+  fill: var(--color-accent-dark);
+}
+
+.habit-hero-pupil {
+  fill: var(--color-ink);
+}
+
+.habit-hero-zzz {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.85;
+}
+
+/* Grassy climb slope backing the challenge/achievement climber scenes —
+ * a mid-tone green distinct from both the wash rects behind it, so the
+ * "mountain" reads as its own landform rather than blending into the sky. */
+.habit-hero-slope {
+  fill: var(--stage-base-dark);
+}

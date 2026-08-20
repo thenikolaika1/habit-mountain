@@ -2,7 +2,7 @@ import { loadState, saveState } from "../state/storage.js";
 import { openConfirm } from "../components/modal.js";
 import { showToast } from "../components/toast.js";
 import { UNITS } from "../logic/units.js";
-import { gearIllustration } from "../illustrations.js";
+import { gearIllustration, iconTheme, iconUnit, iconBell, iconDownload, iconTrash, iconInfo } from "../illustrations.js";
 
 const APP_VERSION = "2.0";
 
@@ -25,6 +25,7 @@ export function renderSettingsView(container) {
 
       <h3 class="section-heading">Оформление</h3>
       <div class="card settings-row">
+        <span class="settings-row-icon">${iconTheme()}</span>
         <div class="settings-row-label">
           <div class="settings-row-title">Тема</div>
           <div class="settings-row-desc">Светлая, тёмная или как в системе</div>
@@ -38,6 +39,7 @@ export function renderSettingsView(container) {
 
       <h3 class="section-heading">Привычки</h3>
       <div class="card settings-row">
+        <span class="settings-row-icon">${iconUnit()}</span>
         <div class="settings-row-label">
           <div class="settings-row-title">Единица измерения по умолчанию</div>
           <div class="settings-row-desc">Подставляется в форму новой числовой привычки</div>
@@ -49,6 +51,7 @@ export function renderSettingsView(container) {
 
       <h3 class="section-heading">Уведомления</h3>
       <div class="card settings-row">
+        <span class="settings-row-icon">${iconBell()}</span>
         <div class="settings-row-label">
           <div class="settings-row-title">Напоминания</div>
           <div class="settings-row-desc">Приложение без сервера — фоновые пуш-напоминания недоступны, но можно включить локальное уведомление-подтверждение</div>
@@ -60,6 +63,7 @@ export function renderSettingsView(container) {
 
       <h3 class="section-heading">Данные</h3>
       <div class="card settings-row">
+        <span class="settings-row-icon">${iconDownload()}</span>
         <div class="settings-row-label">
           <div class="settings-row-title">Экспорт данных</div>
           <div class="settings-row-desc">Скачать все привычки и отметки в файле .json</div>
@@ -68,6 +72,7 @@ export function renderSettingsView(container) {
       </div>
 
       <div class="card settings-row settings-row-danger">
+        <span class="settings-row-icon settings-row-icon--danger">${iconTrash()}</span>
         <div class="settings-row-label">
           <div class="settings-row-title">Сбросить аккаунт</div>
           <div class="settings-row-desc">Удаляет все привычки, отметки, ачивки и испытания без возможности восстановления</div>
@@ -76,7 +81,8 @@ export function renderSettingsView(container) {
       </div>
 
       <h3 class="section-heading">О приложении</h3>
-      <div class="card">
+      <div class="card settings-row">
+        <span class="settings-row-icon">${iconInfo()}</span>
         <p class="modal-message">Habit Mountain ${APP_VERSION} — трекер привычек с горой прогресса, испытаниями и достижениями. Данные хранятся только на этом устройстве (localStorage), приложение работает офлайн и устанавливается как обычное приложение.</p>
       </div>
     </section>

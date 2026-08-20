@@ -1,6 +1,6 @@
 import { getAppStats } from "../state/derive.js";
 import { CHALLENGE_POOL, getCompletedChallengesMap } from "../logic/challenges.js";
-import { trophyIllustration } from "../illustrations.js";
+import { trophyIllustration, challengeHeroForId } from "../illustrations.js";
 
 export function renderAchievementsView(container) {
   // Recompute stats so anything earned this instant shows immediately.
@@ -31,11 +31,12 @@ export function renderAchievementsView(container) {
 function achievementCardHtml(a, info) {
   const date = formatShortDate(info.unlockedAt);
   return `
-    <div class="achievement-card">
-      <div class="achievement-icon">${a.icon}</div>
-      <div class="achievement-title">${a.title}</div>
-      <div class="achievement-desc">${a.description}</div>
-      <div class="achievement-date">Получено ${date}</div>
+    <div class="achievement-card media-card">
+      ${challengeHeroForId(a.id)}
+      <div class="media-card-scrim">
+        <div class="media-card-title">${a.title}</div>
+        <div class="media-card-meta">Получено ${date}</div>
+      </div>
     </div>`;
 }
 

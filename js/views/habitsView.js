@@ -1,4 +1,4 @@
-import { getHabits, addHabit, updateHabit, archiveHabit, deleteHabitPermanently, darkenColor, PALETTE, EMOJI_CHOICES } from "../state/habits.js";
+import { getHabits, addHabit, updateHabit, archiveHabit, deleteHabitPermanently, PALETTE, EMOJI_CHOICES } from "../state/habits.js";
 import { getEntriesForHabit } from "../state/entries.js";
 import { computeCurrentStreak } from "../logic/streaks.js";
 import { openModal, closeModal, openConfirm } from "../components/modal.js";
@@ -123,14 +123,14 @@ function habitsListHtml(habits) {
       const doneToday = isDayComplete(habit, entries[tKey]);
       return `
         <li>
-          <div class="habit-card" role="button" tabindex="0" data-habit-id="${habit.id}">
-            <span class="habit-avatar" style="background:linear-gradient(135deg, ${habit.color}, ${darkenColor(habit.color)})">${habit.icon || ""}</span>
-            <span class="habit-card-body">
-              <span class="habit-card-title">${escapeHtml(habit.name)}</span>
-              <span class="habit-card-meta">${meta}${streak > 0 ? ` · 🔥 ${streak}` : ""}</span>
-            </span>
-            <button type="button" class="modal-close" data-action="edit" aria-label="Изменить привычку">✏️</button>
-            <span class="habit-card-status">${statusRing({ state: doneToday ? "done" : "empty" })}</span>
+          <div class="habit-card media-card" role="button" tabindex="0" data-habit-id="${habit.id}">
+            ${heroIllustrationForHabit(habit)}
+            <button type="button" class="media-card-icon-btn" data-action="edit" aria-label="Изменить привычку">✏️</button>
+            <span class="media-card-badge">${statusRing({ state: doneToday ? "done" : "empty", size: 34 })}</span>
+            <div class="media-card-scrim">
+              <div class="media-card-title">${escapeHtml(habit.name)}</div>
+              <div class="media-card-meta">${meta}${streak > 0 ? ` · 🔥 ${streak}` : ""}</div>
+            </div>
           </div>
         </li>`;
     })

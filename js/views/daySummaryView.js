@@ -1,5 +1,6 @@
 import { isDayComplete, getNumericTotal } from "../logic/completion.js";
 import { openModal } from "../components/modal.js";
+import { darkenColor } from "../state/habits.js";
 
 const MONTH_GENITIVE = [
   "января", "февраля", "марта", "апреля", "мая", "июня",
@@ -28,11 +29,12 @@ export function openDaySummary(dateKey, perHabit) {
         habit.type === "numeric" && done ? `${getNumericTotal(value)}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""}` : "";
       return `
         <li class="today-item ${done ? "is-done" : ""}">
-          <span class="today-check" aria-hidden="true">${done ? "✓" : ""}</span>
+          <span class="today-item-avatar" style="background:linear-gradient(135deg, ${habit.color}, ${darkenColor(habit.color)})">${habit.icon || ""}</span>
           <div class="today-item-body">
-            <div class="today-item-name">${habit.icon ? `${habit.icon} ` : ""}${escapeHtml(habit.name)}</div>
+            <div class="today-item-name">${escapeHtml(habit.name)}</div>
           </div>
           ${valueLabel ? `<span class="summary-value">${valueLabel}</span>` : ""}
+          <span class="today-check" aria-hidden="true">${done ? "✓" : ""}</span>
         </li>`;
     })
     .join("");
