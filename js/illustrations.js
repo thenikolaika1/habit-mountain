@@ -120,6 +120,10 @@ export function iconAchievements() {
   return `<svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none"><path d="M7 5H17L16 12C16 15 14 17 12 17C10 17 8 15 8 12Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 6C5 6 4.5 8 6 9.5C6.8 10.3 7.6 10.4 8 10.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M17 6C19 6 19.5 8 18 9.5C17.2 10.3 16.4 10.4 16 10.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><rect x="10.5" y="17" width="3" height="2.5" fill="currentColor"/><rect x="8.5" y="19.3" width="7" height="2" rx="1" fill="currentColor"/></svg>`;
 }
 
+export function iconSearch() {
+  return `<svg class="search-field-icon-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="1.8"/><line x1="15.3" y1="15.3" x2="20" y2="20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+}
+
 export function iconSettings() {
   return `<svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="1.6" fill="currentColor" fill-opacity="0.18"/><path d="M12 4.5V6.3M12 17.7V19.5M19.5 12H17.7M6.3 12H4.5M17.5 6.5 16.2 7.8M7.8 16.2 6.5 17.5M17.5 17.5 16.2 16.2M7.8 7.8 6.5 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`;
 }

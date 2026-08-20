@@ -43,12 +43,11 @@ export function renderCalendarView(container, { habitId }) {
         <button type="button" class="habit-hero-back" id="calendar-back" aria-label="К привычкам">‹</button>
         <div class="habit-hero-scrim">
           <h1 class="habit-hero-title">${escapeHtml(habit.name)}</h1>
+          <div class="habit-hero-badges">
+            <span class="habit-hero-badge">${meta}</span>
+            ${streak > 0 ? `<span class="habit-hero-badge">🔥 ${streak} дн. подряд</span>` : ""}
+          </div>
         </div>
-      </div>
-
-      <div class="card habit-detail-stats">
-        <span>${meta}</span>
-        ${streak > 0 ? `<span>🔥 ${streak} дн. подряд</span>` : ""}
       </div>
 
       <div class="calendar-header">

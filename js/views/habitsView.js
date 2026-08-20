@@ -1,10 +1,10 @@
-import { getHabits, addHabit, updateHabit, archiveHabit, deleteHabitPermanently, PALETTE, EMOJI_CHOICES } from "../state/habits.js";
+import { getHabits, addHabit, updateHabit, archiveHabit, deleteHabitPermanently, darkenColor, PALETTE, EMOJI_CHOICES } from "../state/habits.js";
 import { getEntriesForHabit } from "../state/entries.js";
 import { computeCurrentStreak } from "../logic/streaks.js";
 import { openModal, closeModal, openConfirm } from "../components/modal.js";
 import { UNITS } from "../logic/units.js";
 import { loadState } from "../state/storage.js";
-import { sproutIllustration, statusRing } from "../illustrations.js";
+import { sproutIllustration, statusRing, heroIllustrationForHabit, iconSearch } from "../illustrations.js";
 import { isDayComplete } from "../logic/completion.js";
 import { todayKey } from "../logic/dateUtils.js";
 
@@ -27,13 +27,14 @@ export function renderHabitsView(container) {
       </div>
 
       <div class="field habit-search-field">
+        ${iconSearch()}
         <input type="search" id="habit-search" placeholder="Найти привычку" />
       </div>
 
       <div id="habits-list-section">${habits.length === 0 ? emptyStateHtml() : habitsListHtml(habits)}</div>
 
       <h3 class="section-heading">Популярные привычки</h3>
-      <div class="popular-habits-grid">${popularHabitsHtml()}</div>
+      <div class="popular-habits-row">${popularHabitsHtml()}</div>
     </section>
     <button type="button" class="fab" id="add-habit-fab" aria-label="Добавить привычку">+</button>
   `;
@@ -53,7 +54,7 @@ export function renderHabitsView(container) {
     wireHabitsList(container, filtered);
   });
 
-  container.querySelectorAll(".popular-habit-add").forEach((btn) => {
+  container.querySelectorAll(".popular-habit-card").forEach((btn) => {
     btn.addEventListener("click", () => {
       const preset = POPULAR_HABITS[Number(btn.dataset.index)];
       addHabit(preset);
@@ -99,10 +100,12 @@ function emptyStateHtml() {
 function popularHabitsHtml() {
   return POPULAR_HABITS.map(
     (p, i) => `
-      <button type="button" class="popular-habit-add" data-index="${i}">
-        <span class="popular-habit-avatar" style="background:${p.color}">${p.icon}</span>
-        <span class="popular-habit-name">${escapeHtml(p.name)}</span>
-        <span class="popular-habit-plus">+</span>
+      <button type="button" class="popular-habit-card" data-index="${i}">
+        ${heroIllustrationForHabit(p)}
+        <span class="popular-habit-card-plus" aria-hidden="true">+</span>
+        <span class="popular-habit-card-scrim">
+          <span class="popular-habit-card-name">${escapeHtml(p.name)}</span>
+        </span>
       </button>`
   ).join("");
 }
@@ -121,7 +124,7 @@ function habitsListHtml(habits) {
       return `
         <li>
           <div class="habit-card" role="button" tabindex="0" data-habit-id="${habit.id}">
-            <span class="habit-avatar" style="background:${habit.color}">${habit.icon || ""}</span>
+            <span class="habit-avatar" style="background:linear-gradient(135deg, ${habit.color}, ${darkenColor(habit.color)})">${habit.icon || ""}</span>
             <span class="habit-card-body">
               <span class="habit-card-title">${escapeHtml(habit.name)}</span>
               <span class="habit-card-meta">${meta}${streak > 0 ? ` · 🔥 ${streak}` : ""}</span>
