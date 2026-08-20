@@ -100,7 +100,12 @@
   text-anchor: middle;
   fill: var(--color-text);
   paint-order: stroke;
-  stroke: rgba(255, 255, 255, 0.75);
+  /* The halo needs to contrast with the label's OWN fill color, not just
+   * the mountain artwork behind it — using the page background (which
+   * flips light/dark with the theme, unlike a fixed white) keeps the
+   * label legible in dark mode too, where --color-text is itself pale and
+   * a fixed white halo would blur into it instead of framing it. */
+  stroke: var(--color-bg);
   stroke-width: 2.5px;
   stroke-linejoin: round;
 }
@@ -137,7 +142,7 @@
   font-size: 12px;
   text-anchor: end;
   paint-order: stroke;
-  stroke: rgba(255, 255, 255, 0.65);
+  stroke: var(--color-bg);
   stroke-width: 2px;
   stroke-linejoin: round;
 }
