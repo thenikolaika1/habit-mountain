@@ -4,7 +4,6 @@ import { todayKey, todayParts, monthLabel, weekdayHeader, buildMonthGrid } from 
 import { isDayComplete } from "../logic/completion.js";
 import { buildMountainSvg, buildProgressTrailPaths, MILESTONES } from "../mountainSvg.js";
 import { stageForProgress } from "../logic/progress.js";
-import { ACHIEVEMENTS } from "../logic/achievements.js";
 import { CHALLENGE_POOL } from "../logic/challenges.js";
 import { showToast } from "../components/toast.js";
 import { openDaySummary } from "./daySummaryView.js";
@@ -18,13 +17,15 @@ import { openDaySummary } from "./daySummaryView.js";
 // across the update. So: build fresh only the first time the screen is
 // mounted, then patch attributes/text in place on every update after that.
 export function renderMountainView(container) {
-  const { stats, newlyUnlocked, newlyCompletedChallenges, monthStats } = getAppStats();
+  // newlyUnlocked (permanent achievements) is still computed and persisted
+  // by getAppStats() — see js/logic/achievements.js — but no longer shown
+  // anywhere (Достижения only lists challenges now), so it's intentionally
+  // not toasted here: a celebration for something invisible would just be
+  // confusing.
+  const { stats, newlyCompletedChallenges, monthStats } = getAppStats();
   const tKey = todayKey();
 
-  if (newlyUnlocked.length > 0) {
-    const first = ACHIEVEMENTS.find((a) => a.id === newlyUnlocked[0]);
-    showToast(`🏆 Новая ачивка: ${first ? first.title : ""}`);
-  } else if (newlyCompletedChallenges.length > 0) {
+  if (newlyCompletedChallenges.length > 0) {
     const first = CHALLENGE_POOL.find((c) => c.id === newlyCompletedChallenges[0]);
     showToast(`🏅 Испытание пройдено: ${first ? first.title : ""}`);
   }
