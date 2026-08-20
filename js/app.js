@@ -1,24 +1,29 @@
-import { subscribe } from "./state/storage.js";
+import { subscribe, loadState } from "./state/storage.js";
 import { renderTabBar } from "./components/tabBar.js";
 import { renderMountainView } from "./views/mountainView.js";
 import { renderHabitsView } from "./views/habitsView.js";
 import { renderCalendarView } from "./views/calendarView.js";
 import { renderAchievementsView } from "./views/achievementsView.js";
+import { renderChallengesView } from "./views/challengesView.js";
+import { renderSettingsView } from "./views/settingsView.js";
 import { maybeShowMonthRecap } from "./components/monthRecap.js";
+import { applyTheme } from "./logic/theme.js";
 
 const viewContainer = document.getElementById("view-container");
 const tabbarContainer = document.getElementById("tabbar-container");
 
 function parseRoute(hash) {
-  const clean = (hash || "#/mountain").replace(/^#/, "") || "/mountain";
+  const clean = (hash || "#/progress").replace(/^#/, "") || "/progress";
   const parts = clean.split("/").filter(Boolean); // e.g. ['habits', 'hb_123']
 
   if (parts[0] === "habits" && parts[1]) {
     return { name: "habit-detail", habitId: parts[1] };
   }
   if (parts[0] === "habits") return { name: "habits" };
+  if (parts[0] === "challenges") return { name: "challenges" };
   if (parts[0] === "achievements") return { name: "achievements" };
-  return { name: "mountain" };
+  if (parts[0] === "settings") return { name: "settings" };
+  return { name: "progress" };
 }
 
 // Tracks which screen was showing last, so the fade-in transition only
@@ -26,15 +31,21 @@ function parseRoute(hash) {
 // re-render of the screen you're already looking at (subscribe(render)
 // fires on every state change, most of which don't change the route).
 let lastRouteKey = null;
+let viewTransitionTimer = null;
 
 function render() {
-  const hash = location.hash || "#/mountain";
+  applyTheme(loadState());
+
+  const hash = location.hash || "#/progress";
   const route = parseRoute(hash);
   const routeKey = route.name + (route.habitId || "");
 
   tabbarContainer.innerHTML = renderTabBar(hash.startsWith("#") ? hash : `#${hash}`);
 
   switch (route.name) {
+    case "challenges":
+      renderChallengesView(viewContainer);
+      break;
     case "habits":
       renderHabitsView(viewContainer);
       break;
@@ -43,6 +54,9 @@ function render() {
       break;
     case "achievements":
       renderAchievementsView(viewContainer);
+      break;
+    case "settings":
+      renderSettingsView(viewContainer);
       break;
     default:
       renderMountainView(viewContainer);
@@ -63,17 +77,22 @@ function render() {
     // time data changes rather than only on an actual screen switch. So
     // the class is only kept around for the duration of the animation
     // itself, then removed — leaving it absent in the (much more common)
-    // steady state between navigations.
-    viewContainer.addEventListener("animationend", () => viewContainer.classList.remove("view-transition"), {
-      once: true,
-    });
+    // steady state between navigations. A fixed timeout (not the first
+    // "animationend") because the entrance is now a per-child stagger
+    // (see view-fade-in in base.css) — many elements animate, each firing
+    // its own animationend at a different time, and removing the class on
+    // the first one to finish would abruptly cut off the ones still
+    // mid-stagger. 500ms comfortably covers the worst case (160ms max
+    // delay + 320ms duration = 480ms).
+    clearTimeout(viewTransitionTimer);
+    viewTransitionTimer = setTimeout(() => viewContainer.classList.remove("view-transition"), 500);
   }
 }
 
 window.addEventListener("hashchange", render);
 subscribe(render);
 
-if (!location.hash) location.hash = "#/mountain";
+if (!location.hash) location.hash = "#/progress";
 render();
 
 // Runs once per app boot (not on every re-render) — shows a one-time recap

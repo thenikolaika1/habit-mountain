@@ -1,0 +1,105 @@
+/* Hand-authored hero illustrations (js/illustrations.js) — colored via CSS
+ * so they follow the light/dark theme automatically, same as everything
+ * else in the app. Each screen's header illustration sits in a soft
+ * rounded frame that echoes .mountain-wrap's card treatment. */
+.illustration-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  margin: 0 auto var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-alt);
+  box-shadow: var(--shadow-sm);
+}
+
+.illustration {
+  width: 72px;
+  height: 72px;
+}
+
+/* ---------- Medal (Испытания) ---------- */
+.illustration-ribbon-a,
+.illustration-ribbon-b {
+  fill: var(--color-accent);
+}
+
+.illustration-medal-disc {
+  fill: var(--stage-base);
+}
+
+.illustration-medal-ring {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 3;
+}
+
+.illustration-medal-star {
+  fill: var(--color-ink);
+}
+
+/* ---------- Trophy (Достижения) ---------- */
+.illustration-trophy-handle {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.illustration-trophy-cup {
+  fill: var(--color-accent);
+  stroke: var(--color-ink);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.illustration-trophy-stem,
+.illustration-trophy-base {
+  fill: var(--color-ink);
+}
+
+.illustration-trophy-star {
+  fill: #ffffff;
+}
+
+/* ---------- Sprout (Привычки empty state) ---------- */
+.illustration-sprout-leaf-a,
+.illustration-sprout-leaf-b {
+  fill: var(--color-accent);
+}
+
+.illustration-sprout-stem {
+  stroke: var(--color-ink);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.illustration-sprout-pot {
+  fill: var(--color-ink);
+}
+
+.illustration-sprout-pot-rim {
+  stroke: var(--color-ink);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+/* ---------- Gear (Настройки) ---------- */
+.illustration-gear-body {
+  fill: var(--color-surface);
+  stroke: var(--color-ink);
+  stroke-width: 2.5;
+}
+
+.illustration-gear-tooth {
+  fill: var(--color-ink);
+}
+
+.illustration-gear-hole {
+  fill: var(--color-bg);
+}
+
+.illustration-gear-leaf {
+  fill: var(--color-accent);
+}

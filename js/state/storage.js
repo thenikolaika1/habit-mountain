@@ -3,7 +3,9 @@
 // go through loadState()/saveState() so schema shape stays consistent.
 
 const STORAGE_KEY = "habit-mountain:v1";
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
+
+const DEFAULT_ICONS = ["⭐", "🌱", "💧", "📚", "🏃", "🧘", "🎯", "☀️"];
 
 function emptyState() {
   return {
@@ -12,23 +14,42 @@ function emptyState() {
     entries: {},
     meta: {
       unlockedAchievements: {},
+      completedChallenges: {},
       lastSeenMonth: null,
+      settings: { theme: "system", notificationsEnabled: false, defaultUnit: "раз" },
     },
   };
 }
 
 function migrate(raw) {
-  // Placeholder for future schema migrations. Currently only v1 exists.
+  // Manual, defensive migration — every field is individually type-checked
+  // so older data (missing fields this version added) still loads cleanly
+  // instead of throwing or silently losing everything.
   if (!raw || typeof raw !== "object") return emptyState();
   const state = emptyState();
-  if (Array.isArray(raw.habits)) state.habits = raw.habits;
+  if (Array.isArray(raw.habits)) {
+    state.habits = raw.habits.map((h, i) => ({
+      ...h,
+      icon: typeof h.icon === "string" && h.icon ? h.icon : DEFAULT_ICONS[i % DEFAULT_ICONS.length],
+    }));
+  }
   if (raw.entries && typeof raw.entries === "object") state.entries = raw.entries;
   if (raw.meta && typeof raw.meta === "object") {
     state.meta.unlockedAchievements =
       raw.meta.unlockedAchievements && typeof raw.meta.unlockedAchievements === "object"
         ? raw.meta.unlockedAchievements
         : {};
+    state.meta.completedChallenges =
+      raw.meta.completedChallenges && typeof raw.meta.completedChallenges === "object"
+        ? raw.meta.completedChallenges
+        : {};
     state.meta.lastSeenMonth = typeof raw.meta.lastSeenMonth === "string" ? raw.meta.lastSeenMonth : null;
+    const rawSettings = raw.meta.settings && typeof raw.meta.settings === "object" ? raw.meta.settings : {};
+    state.meta.settings = {
+      theme: ["system", "light", "dark"].includes(rawSettings.theme) ? rawSettings.theme : "system",
+      notificationsEnabled: rawSettings.notificationsEnabled === true,
+      defaultUnit: typeof rawSettings.defaultUnit === "string" && rawSettings.defaultUnit ? rawSettings.defaultUnit : "раз",
+    };
   }
   return state;
 }

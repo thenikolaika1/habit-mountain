@@ -14,17 +14,23 @@
   --color-accent-rgb: 47, 158, 110; /* --color-accent as an r,g,b triplet, for rgba() glow shadows */
   --color-danger: #d9534f;
   --color-warning: #d99a2b;
+  /* The strongest neutral in the current theme — a genuine near-black ink,
+   * not the softer --color-text. Used where the brief calls for real
+   * black as a palette member (icon strokes, strong labels), not just
+   * dark green-grey body text. */
+  --color-ink: #0c1710;
 
-  /* mountain stage palette */
-  --stage-base: #8fd4a1;
-  --stage-base-dark: #5fb87d;
-  --stage-forest: #2f7a4f;
-  --stage-forest-dark: #1e5c39;
-  --stage-rocks: #8d97a1;
-  --stage-rocks-dark: #6b747d;
-  --stage-summit: #f4f9ff;
-  --stage-summit-dark: #cfe0f0;
-  --stage-sky-top: #bfe4ff;
+  /* Mountain stage palette — white / near-black / green, no blue sky or
+   * grey rock: the redesign's core palette applied to the illustration. */
+  --stage-base: #aee8bd;
+  --stage-base-dark: #74cd93;
+  --stage-forest: #1f6b42;
+  --stage-forest-dark: #123322;
+  --stage-rocks: #333a33;
+  --stage-rocks-dark: #1c211c;
+  --stage-summit: #ffffff;
+  --stage-summit-dark: #dfe8e0;
+  --stage-sky-top: #ffffff;
   --stage-sky-bottom: #eaf6ef;
 
   /* spacing scale */
@@ -57,8 +63,15 @@
   --z-modal: 101;
 }
 
+/* Dark tokens are defined twice on purpose (see artifact-design's
+ * three-state rule, applied here to the real app, not just the preview
+ * bundle): the media query covers "system" theme with no explicit choice,
+ * and the [data-theme="dark"] selector covers an explicit choice made in
+ * Settings (js/views/settingsView.js), which stamps data-theme on <html>.
+ * :not([data-theme="light"]) lets an explicit light choice override the
+ * OS-level preference. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     color-scheme: dark;
     --color-bg: #101715;
     --color-surface: #182220;
@@ -70,19 +83,49 @@
     --color-accent-dark: #2f9e6e;
     --color-accent-contrast: #08130f;
     --color-accent-rgb: 63, 191, 135;
+    --color-ink: #f5faf7;
 
-    --stage-base: #3a6b4c;
-    --stage-base-dark: #294f37;
-    --stage-forest: #204a34;
-    --stage-forest-dark: #163425;
-    --stage-rocks: #4d565f;
-    --stage-rocks-dark: #363d44;
+    --stage-base: #2c5a3e;
+    --stage-base-dark: #1d4029;
+    --stage-forest: #163a26;
+    --stage-forest-dark: #0c2116;
+    --stage-rocks: #161915;
+    --stage-rocks-dark: #0a0c0a;
     --stage-summit: #e7eef5;
     --stage-summit-dark: #b9c8d6;
-    --stage-sky-top: #16222c;
+    --stage-sky-top: #0c1512;
     --stage-sky-bottom: #101715;
 
     --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
   }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg: #101715;
+  --color-surface: #182220;
+  --color-surface-alt: #1e2a26;
+  --color-border: #2a3a34;
+  --color-text: #eaf3ee;
+  --color-text-muted: #93a89d;
+  --color-accent: #3fbf87;
+  --color-accent-dark: #2f9e6e;
+  --color-accent-contrast: #08130f;
+  --color-accent-rgb: 63, 191, 135;
+  --color-ink: #f5faf7;
+
+  --stage-base: #2c5a3e;
+  --stage-base-dark: #1d4029;
+  --stage-forest: #163a26;
+  --stage-forest-dark: #0c2116;
+  --stage-rocks: #161915;
+  --stage-rocks-dark: #0a0c0a;
+  --stage-summit: #e7eef5;
+  --stage-summit-dark: #b9c8d6;
+  --stage-sky-top: #0c1512;
+  --stage-sky-bottom: #101715;
+
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
 }

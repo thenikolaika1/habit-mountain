@@ -1,7 +1,11 @@
+import { iconMedal, iconHabits, iconProgress, iconAchievements, iconSettings } from "../illustrations.js";
+
 const TABS = [
-  { hash: "#/mountain", icon: "🏔️", label: "Гора" },
-  { hash: "#/habits", icon: "✅", label: "Привычки" },
-  { hash: "#/achievements", icon: "🏆", label: "Ачивки" },
+  { hash: "#/challenges", icon: iconMedal, label: "Испытания" },
+  { hash: "#/habits", icon: iconHabits, label: "Привычки" },
+  { hash: "#/progress", icon: iconProgress, label: "Прогресс" },
+  { hash: "#/achievements", icon: iconAchievements, label: "Достижения" },
+  { hash: "#/settings", icon: iconSettings, label: "Настройки" },
 ];
 
 export function renderTabBar(activeHash) {
@@ -13,7 +17,7 @@ export function renderTabBar(activeHash) {
         ${TABS.map(
           (tab) => `
           <a class="tab-item ${isActive(tab.hash) ? "is-active" : ""}" href="${tab.hash}">
-            <span class="tab-icon">${tab.icon}</span>
+            <span class="tab-icon">${tab.icon()}</span>
             <span>${tab.label}</span>
           </a>`
         ).join("")}
