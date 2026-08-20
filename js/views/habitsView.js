@@ -4,7 +4,9 @@ import { computeCurrentStreak } from "../logic/streaks.js";
 import { openModal, closeModal, openConfirm } from "../components/modal.js";
 import { UNITS } from "../logic/units.js";
 import { loadState } from "../state/storage.js";
-import { sproutIllustration } from "../illustrations.js";
+import { sproutIllustration, statusRing } from "../illustrations.js";
+import { isDayComplete } from "../logic/completion.js";
+import { todayKey } from "../logic/dateUtils.js";
 
 const POPULAR_HABITS = [
   { name: "Пить воду", type: "boolean", icon: "💧", color: "#3a7bd5" },
@@ -106,6 +108,7 @@ function popularHabitsHtml() {
 }
 
 function habitsListHtml(habits) {
+  const tKey = todayKey();
   const items = habits
     .map((habit) => {
       const entries = getEntriesForHabit(habit.id);
@@ -114,6 +117,7 @@ function habitsListHtml(habits) {
         habit.type === "numeric"
           ? `Числовая${habit.unit ? " · " + escapeHtml(habit.unit) : ""}`
           : "Простая · галочка";
+      const doneToday = isDayComplete(habit, entries[tKey]);
       return `
         <li>
           <div class="habit-card" role="button" tabindex="0" data-habit-id="${habit.id}">
@@ -122,8 +126,8 @@ function habitsListHtml(habits) {
               <span class="habit-card-title">${escapeHtml(habit.name)}</span>
               <span class="habit-card-meta">${meta}${streak > 0 ? ` · 🔥 ${streak}` : ""}</span>
             </span>
-            <button type="button" class="modal-close" data-action="edit" aria-label="Изменить привычку" style="width:28px;height:28px;font-size:13px;">✏️</button>
-            <span class="habit-card-chevron">›</span>
+            <button type="button" class="modal-close" data-action="edit" aria-label="Изменить привычку">✏️</button>
+            <span class="habit-card-status">${statusRing({ state: doneToday ? "done" : "empty" })}</span>
           </div>
         </li>`;
     })

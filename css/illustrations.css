@@ -19,6 +19,38 @@
   height: 72px;
 }
 
+/* ---------- Status ring (habit list, challenges, day pills) ---------- */
+.status-ring {
+  flex-shrink: 0;
+  display: block;
+}
+
+.status-ring-track {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 3;
+}
+
+.status-ring-fill {
+  fill: var(--color-accent);
+}
+
+.status-ring-check {
+  fill: none;
+  stroke: var(--color-accent-contrast);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.status-ring-dot {
+  fill: var(--color-border);
+}
+
+.status-ring--locked .status-ring-track {
+  opacity: 0.5;
+}
+
 /* ---------- Medal (Испытания) ---------- */
 .illustration-ribbon-a,
 .illustration-ribbon-b {
@@ -102,4 +134,83 @@
 
 .illustration-gear-leaf {
   fill: var(--color-accent);
+}
+
+/* ---------- Habit detail hero (js/illustrations.js heroXxx functions) ----------
+ * Two background rects (bg-a below, bg-b with a diagonal-cut clip on top)
+ * stand in for a gradient wash without needing an SVG <linearGradient>
+ * per theme — every hero shares the same two-tone treatment, themed by
+ * the motif shape alone (which is what actually carries the "this is a
+ * water/reading/sleep habit" meaning). --night swaps the wash to a dark
+ * ink tone for the sleep hero, the one intentionally "night-time" scene. */
+.habit-hero-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.habit-hero-bg-a {
+  fill: var(--stage-base);
+}
+
+.habit-hero-bg-b {
+  fill: var(--color-accent);
+  clip-path: polygon(35% 0, 100% 0, 100% 100%, 60% 100%);
+  opacity: 0.55;
+}
+
+.habit-hero-svg--night .habit-hero-bg-a {
+  fill: var(--color-ink);
+}
+
+.habit-hero-svg--night .habit-hero-bg-b {
+  fill: var(--color-accent-dark);
+  opacity: 0.5;
+}
+
+.habit-hero-accent-soft {
+  fill: #ffffff;
+  opacity: 0.25;
+}
+
+.habit-hero-svg--night .habit-hero-accent-soft {
+  opacity: 0.12;
+}
+
+.habit-hero-motif {
+  fill: var(--color-ink);
+  opacity: 0.85;
+}
+
+.habit-hero-svg--night .habit-hero-motif {
+  fill: #ffffff;
+  opacity: 0.92;
+}
+
+.habit-hero-motif-shine,
+.habit-hero-motif-line {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.6;
+}
+
+.habit-hero-motif-leaf {
+  fill: var(--stage-base);
+}
+
+.habit-hero-dot {
+  fill: #ffffff;
+  opacity: 0.85;
+}
+
+.habit-hero-star {
+  fill: #ffffff;
+  opacity: 0.8;
+}
+
+.habit-hero-ground-shadow {
+  fill: var(--color-ink);
+  opacity: 0.12;
 }

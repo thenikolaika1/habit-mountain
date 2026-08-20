@@ -3,7 +3,7 @@ import { CHALLENGE_POOL, pickMonthlyChallenges, getCompletedChallengesMap } from
 import { todayParts, monthKey, monthLabel } from "../logic/dateUtils.js";
 import { openModal } from "../components/modal.js";
 import { showToast } from "../components/toast.js";
-import { medalIllustration } from "../illustrations.js";
+import { medalIllustration, statusRing } from "../illustrations.js";
 
 export function renderChallengesView(container) {
   const { newlyCompletedChallenges } = getAppStats();
@@ -51,7 +51,7 @@ function challengeCardHtml(challenge, done) {
         <div class="challenge-card-title">${challenge.title}</div>
         <div class="challenge-card-desc">${challenge.description}</div>
       </div>
-      <button type="button" class="btn ${done ? "btn-block" : "btn-primary"} challenge-card-cta">${done ? "✓ Пройдено" : "Начать"}</button>
+      <span class="challenge-card-status">${statusRing({ state: done ? "done" : "empty" })}</span>
     </div>`;
 }
 

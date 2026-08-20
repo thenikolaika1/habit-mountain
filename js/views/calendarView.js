@@ -2,9 +2,12 @@ import { getHabit } from "../state/habits.js";
 import { getEntriesForHabit } from "../state/entries.js";
 import { computeCurrentStreak } from "../logic/streaks.js";
 import { isDayComplete, getNumericTotal } from "../logic/completion.js";
-import { buildMonthGrid, weekdayHeader, monthLabel, prevMonth, nextMonth, todayParts } from "../logic/dateUtils.js";
+import { buildMonthGrid, monthLabel, prevMonth, nextMonth, todayParts } from "../logic/dateUtils.js";
 import { renderMonthSummary } from "../components/monthSummary.js";
 import { openDayDetail } from "./dayDetailView.js";
+import { heroIllustrationForHabit, statusRing } from "../illustrations.js";
+
+const WEEKDAY_SHORT = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"]; // JS Date#getDay(): 0 = Sunday
 
 // Remembers which month is being viewed per habit for the lifetime of the
 // page (not persisted) so switching tabs and coming back keeps your place.
@@ -26,20 +29,26 @@ export function renderCalendarView(container, { habitId }) {
   }
   const current = viewMonthByHabit.get(habitId);
 
-  const grid = buildMonthGrid(current.year, current.month);
-  const weekdays = weekdayHeader();
+  // buildMonthGrid pads to full weeks with null filler cells (for the
+  // 7-column calendar grid used elsewhere) — this screen is a plain
+  // vertical list of real days, so the filler cells are simply dropped.
+  const days = buildMonthGrid(current.year, current.month).filter(Boolean);
+  const meta =
+    habit.type === "numeric" ? `Числовая${habit.unit ? " · " + escapeHtml(habit.unit) : ""}` : "Простая · галочка";
 
   container.innerHTML = `
-    <section class="view">
-      <div class="view-header">
-        <button type="button" class="back-button" id="calendar-back">‹ Привычки</button>
-      </div>
-      <div class="card" style="margin-bottom: var(--space-4); display:flex; align-items:center; gap:12px;">
-        <span class="habit-avatar" style="background:${habit.color}">${habit.icon || ""}</span>
-        <div>
-          <div class="habit-card-title">${escapeHtml(habit.name)}</div>
-          <div class="habit-card-meta">${habit.type === "numeric" ? `Числовая${habit.unit ? " · " + escapeHtml(habit.unit) : ""}` : "Простая · галочка"}${streak > 0 ? ` · 🔥 ${streak} дн. подряд` : ""}</div>
+    <section class="view view--habit-detail">
+      <div class="habit-hero">
+        ${heroIllustrationForHabit(habit)}
+        <button type="button" class="habit-hero-back" id="calendar-back" aria-label="К привычкам">‹</button>
+        <div class="habit-hero-scrim">
+          <h1 class="habit-hero-title">${escapeHtml(habit.name)}</h1>
         </div>
+      </div>
+
+      <div class="card habit-detail-stats">
+        <span>${meta}</span>
+        ${streak > 0 ? `<span>🔥 ${streak} дн. подряд</span>` : ""}
       </div>
 
       <div class="calendar-header">
@@ -48,10 +57,8 @@ export function renderCalendarView(container, { habitId }) {
         <button type="button" class="calendar-nav-btn" id="cal-next" aria-label="Следующий месяц">›</button>
       </div>
 
-      <div class="calendar-weekdays">${weekdays.map((w) => `<span>${w}</span>`).join("")}</div>
-
-      <div class="calendar-grid" id="cal-grid">
-        ${grid.map((cell) => cellHtml(habit, entries, cell)).join("")}
+      <div class="day-pill-list" id="day-pill-list">
+        ${days.map((cell) => dayPillHtml(habit, entries, cell)).join("")}
       </div>
       <p class="calendar-swipe-hint">Свайп или стрелки — соседний месяц</p>
 
@@ -62,25 +69,33 @@ export function renderCalendarView(container, { habitId }) {
   wireEvents(container, habit, entries, habitId);
 }
 
-function cellHtml(habit, entries, cell) {
-  if (!cell) return `<div class="calendar-cell"></div>`;
+function dayPillHtml(habit, entries, cell) {
   const value = entries[cell.dateKey];
   const done = isDayComplete(habit, value);
   const locked = cell.isFuture || cell.isTooOld;
-  const classes = ["calendar-day"];
+  const classes = ["day-pill"];
   if (cell.isToday) classes.push("is-today");
-  if (done) classes.push("is-done");
   if (locked) classes.push("is-locked");
 
+  // Built from the y/m/d numbers, not new Date(cell.dateKey) — parsing an
+  // "YYYY-MM-DD" string is UTC per spec and can roll the weekday over in
+  // negative-UTC-offset timezones (see dateUtils.js's own note on this).
+  const [dy, dm, dd] = cell.dateKey.split("-").map(Number);
+  const weekday = WEEKDAY_SHORT[new Date(dy, dm - 1, dd).getDay()];
   const numericTotal = habit.type === "numeric" ? getNumericTotal(value) : 0;
-  const valueBadge = numericTotal > 0 ? `<span class="day-value">${numericTotal}</span>` : "";
+  const valueLabel = numericTotal > 0 ? `${numericTotal}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""}` : "";
+
+  const ringState = locked ? "locked" : done ? "done" : "empty";
 
   return `
-    <div class="calendar-cell">
-      <button type="button" class="${classes.join(" ")}" data-date-key="${cell.dateKey}" ${locked ? "disabled aria-disabled=\"true\"" : ""}>
-        ${cell.day}${valueBadge}
-      </button>
-    </div>`;
+    <button type="button" class="${classes.join(" ")}" data-date-key="${cell.dateKey}" ${locked ? 'disabled aria-disabled="true"' : ""}>
+      <span class="day-pill-date">
+        <span class="day-pill-daynum">${cell.day}</span>
+        <span class="day-pill-weekday">${weekday}</span>
+      </span>
+      <span class="day-pill-body">${valueLabel}</span>
+      <span class="day-pill-status">${statusRing({ state: ringState, size: 36 })}</span>
+    </button>`;
 }
 
 function wireEvents(container, habit, entries, habitId) {
@@ -97,14 +112,14 @@ function wireEvents(container, habit, entries, habitId) {
   container.querySelector("#cal-prev").addEventListener("click", () => goToMonth(prevMonth));
   container.querySelector("#cal-next").addEventListener("click", () => goToMonth(nextMonth));
 
-  container.querySelectorAll(".calendar-day:not([disabled])").forEach((btn) => {
+  container.querySelectorAll(".day-pill:not([disabled])").forEach((btn) => {
     btn.addEventListener("click", () => {
       const dateKey = btn.dataset.dateKey;
       openDayDetail(habit, dateKey, entries[dateKey]);
     });
   });
 
-  wireSwipe(container.querySelector("#cal-grid"), {
+  wireSwipe(container.querySelector("#day-pill-list"), {
     onSwipeLeft: () => goToMonth(nextMonth),
     onSwipeRight: () => goToMonth(prevMonth),
   });

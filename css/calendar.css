@@ -1,3 +1,143 @@
+/* ---------- Habit detail: hero photo banner + vertical day-pill list ----------
+ * (js/views/calendarView.js). Replaces the old 7-column grid for this
+ * screen only — the grid classes above stay untouched, the "Прогресс"
+ * screen's cross-habit month calendar still uses them. */
+.habit-hero {
+  position: relative;
+  /* Bleeds to the screen edges by canceling .view's own padding, so the
+   * banner reads as a full-width photo like the reference instead of an
+   * inset card. */
+  margin: calc(-1 * (var(--space-4) + env(safe-area-inset-top))) calc(-1 * var(--space-4)) var(--space-4);
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--stage-base);
+}
+
+.habit-hero-back {
+  position: absolute;
+  top: calc(var(--space-3) + env(safe-area-inset-top));
+  left: var(--space-3);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--color-ink);
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+  transition: transform 180ms ease;
+}
+
+.habit-hero-scrim {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: var(--space-6) var(--space-4) var(--space-3);
+  background: linear-gradient(to top, rgba(12, 23, 16, 0.78), rgba(12, 23, 16, 0));
+}
+
+.habit-hero-title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+.habit-detail-stats {
+  display: flex;
+  gap: var(--space-3);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-4);
+}
+
+.day-pill-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  touch-action: pan-y;
+}
+
+.day-pill {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  text-align: left;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-round);
+  padding: var(--space-2) var(--space-4);
+  box-shadow: var(--shadow-sm);
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.day-pill-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 44px;
+  flex-shrink: 0;
+}
+
+.day-pill-daynum {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.day-pill-weekday {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  letter-spacing: 0.02em;
+}
+
+.day-pill-body {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.day-pill-status {
+  flex-shrink: 0;
+}
+
+.day-pill.is-today {
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
+  border-color: transparent;
+}
+
+.day-pill.is-today .day-pill-daynum,
+.day-pill.is-today .day-pill-weekday,
+.day-pill.is-today .day-pill-body {
+  color: var(--color-accent-contrast);
+}
+
+.day-pill.is-locked {
+  opacity: 0.62;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .day-pill:not(:disabled):hover {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-md), 0 8px 20px rgba(var(--color-accent-rgb), 0.3);
+  }
+
+  .habit-hero-back:hover {
+    transform: scale(1.1);
+  }
+}
+
 .calendar-header {
   display: flex;
   align-items: center;
