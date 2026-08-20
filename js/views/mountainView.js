@@ -1,11 +1,13 @@
 import { getAppStats } from "../state/derive.js";
 import { setEntry } from "../state/entries.js";
-import { todayKey, todayParts, monthLabel } from "../logic/dateUtils.js";
+import { todayKey, todayParts, monthLabel, weekdayHeader, buildMonthGrid } from "../logic/dateUtils.js";
 import { isDayComplete } from "../logic/completion.js";
 import { buildMountainSvg, buildProgressTrailPaths, MILESTONES } from "../mountainSvg.js";
 import { stageForProgress } from "../logic/progress.js";
 import { ACHIEVEMENTS } from "../logic/achievements.js";
+import { CHALLENGE_POOL } from "../logic/challenges.js";
 import { showToast } from "../components/toast.js";
+import { openDaySummary } from "./daySummaryView.js";
 
 // The mountain screen is re-rendered on every state change (subscribe in
 // app.js), which is most of the time just a habit being ticked while the
@@ -16,22 +18,25 @@ import { showToast } from "../components/toast.js";
 // across the update. So: build fresh only the first time the screen is
 // mounted, then patch attributes/text in place on every update after that.
 export function renderMountainView(container) {
-  const { stats, newlyUnlocked } = getAppStats();
+  const { stats, newlyUnlocked, newlyCompletedChallenges, monthStats } = getAppStats();
   const tKey = todayKey();
 
   if (newlyUnlocked.length > 0) {
     const first = ACHIEVEMENTS.find((a) => a.id === newlyUnlocked[0]);
     showToast(`🏆 Новая ачивка: ${first ? first.title : ""}`);
+  } else if (newlyCompletedChallenges.length > 0) {
+    const first = CHALLENGE_POOL.find((c) => c.id === newlyCompletedChallenges[0]);
+    showToast(`🏅 Испытание пройдено: ${first ? first.title : ""}`);
   }
 
   if (container.querySelector(".mountain-wrap svg")) {
-    patchMountainView(container, stats, tKey);
+    patchMountainView(container, stats, tKey, monthStats);
   } else {
-    renderFreshMountainView(container, stats, tKey);
+    renderFreshMountainView(container, stats, tKey, monthStats);
   }
 }
 
-function renderFreshMountainView(container, stats, tKey) {
+function renderFreshMountainView(container, stats, tKey, monthStats) {
   const stage = stageForProgress(stats.overallProgress);
   const progressPct = Math.round(stats.overallProgress * 100);
   const t = todayParts();
@@ -40,8 +45,8 @@ function renderFreshMountainView(container, stats, tKey) {
     <section class="view">
       <div class="view-header">
         <div>
-          <h1>Гора привычек</h1>
-          <p class="mountain-month-subtitle">Прогресс за ${monthLabel(t.year, t.month)} · 1-го числа гора обновляется</p>
+          <h1>Прогресс</h1>
+          <p class="mountain-month-subtitle">Гора за ${monthLabel(t.year, t.month)} · 1-го числа обновляется</p>
         </div>
       </div>
 
@@ -65,6 +70,8 @@ function renderFreshMountainView(container, stats, tKey) {
         ${buildMountainSvg(stats.overallProgress)}
       </div>
 
+      <div id="progress-calendar-section">${progressCalendarHtml(monthStats, t.year, t.month)}</div>
+
       <h3 class="section-heading">Сегодня</h3>
       <div id="today-section">
         ${stats.activeHabits.length === 0 ? emptyTodayHtml() : todayListHtml(stats, tKey)}
@@ -73,9 +80,10 @@ function renderFreshMountainView(container, stats, tKey) {
   `;
 
   wireTodayList(container, stats, tKey);
+  wireProgressCalendar(container, stats);
 }
 
-function patchMountainView(container, stats, tKey) {
+function patchMountainView(container, stats, tKey, monthStats) {
   const stage = stageForProgress(stats.overallProgress);
   const progressPct = Math.round(stats.overallProgress * 100);
 
@@ -101,9 +109,49 @@ function patchMountainView(container, stats, tKey) {
     if (el) el.classList.toggle("milestone--reached", reached);
   });
 
+  const t = todayParts();
+  const calendarSection = container.querySelector("#progress-calendar-section");
+  calendarSection.innerHTML = progressCalendarHtml(monthStats, t.year, t.month);
+  wireProgressCalendar(container, stats);
+
   const todaySection = container.querySelector("#today-section");
   todaySection.innerHTML = stats.activeHabits.length === 0 ? emptyTodayHtml() : todayListHtml(stats, tKey);
   wireTodayList(container, stats, tKey);
+}
+
+function progressCalendarHtml(monthStats, year, month) {
+  const grid = buildMonthGrid(year, month);
+  const weekdays = weekdayHeader();
+  const dayResultByKey = new Map(monthStats.days.map((d) => [d.dateKey, d]));
+
+  return `
+    <h3 class="section-heading">Календарь месяца</h3>
+    <div class="calendar-weekdays">${weekdays.map((w) => `<span>${w}</span>`).join("")}</div>
+    <div class="calendar-grid" id="progress-cal-grid">
+      ${grid.map((cell) => progressCellHtml(cell, dayResultByKey)).join("")}
+    </div>
+    <p class="calendar-swipe-hint">Нажмите на день — сводка по всем привычкам</p>
+  `;
+}
+
+function progressCellHtml(cell, dayResultByKey) {
+  if (!cell) return `<div class="calendar-cell"></div>`;
+  const result = dayResultByKey.get(cell.dateKey);
+  const classes = ["calendar-day"];
+  if (cell.isToday) classes.push("is-today");
+  if (result && result.counted) classes.push("is-done");
+  return `
+    <div class="calendar-cell">
+      <button type="button" class="${classes.join(" ")}" data-date-key="${cell.dateKey}">${cell.day}</button>
+    </div>`;
+}
+
+function wireProgressCalendar(container, stats) {
+  container.querySelectorAll("#progress-cal-grid .calendar-day").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      openDaySummary(btn.dataset.dateKey, stats.perHabit);
+    });
+  });
 }
 
 function emptyTodayHtml() {
@@ -162,12 +210,13 @@ function todayListHtml(stats, tKey) {
       const value = entries[tKey];
       const done = isDayComplete(habit, value);
       const checkClass = `today-check${justCompleted.has(habit.id) ? " just-completed" : ""}`;
+      const nameLabel = `${habit.icon ? `${habit.icon} ` : ""}${escapeHtml(habit.name)}`;
       if (habit.type === "boolean") {
         return `
           <li class="today-item ${done ? "is-done" : ""}" data-habit-id="${habit.id}" data-type="boolean">
             <button type="button" class="${checkClass}" data-action="toggle">${done ? "✓" : ""}</button>
             <div class="today-item-body">
-              <div class="today-item-name">${escapeHtml(habit.name)}</div>
+              <div class="today-item-name">${nameLabel}</div>
               <div class="today-item-streak">${currentStreak > 0 ? `🔥 ${currentStreak} дн. подряд` : "Отметьте сегодня"}</div>
             </div>
           </li>`;
@@ -176,7 +225,7 @@ function todayListHtml(stats, tKey) {
         <li class="today-item ${done ? "is-done" : ""}" data-habit-id="${habit.id}" data-type="numeric">
           <button type="button" class="${checkClass}" data-action="toggle" aria-hidden="true">${done ? "✓" : ""}</button>
           <div class="today-item-body">
-            <div class="today-item-name">${escapeHtml(habit.name)}</div>
+            <div class="today-item-name">${nameLabel}</div>
             <div class="today-item-streak">${currentStreak > 0 ? `🔥 ${currentStreak} дн. подряд` : habit.unit || "Введите число"}</div>
           </div>
           <input class="today-item-input" type="number" min="0" inputmode="numeric" data-action="number" value="${typeof value === "number" ? value : ""}" placeholder="0" />

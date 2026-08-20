@@ -35,7 +35,7 @@ export function renderCalendarView(container, { habitId }) {
         <button type="button" class="back-button" id="calendar-back">‹ Привычки</button>
       </div>
       <div class="card" style="margin-bottom: var(--space-4); display:flex; align-items:center; gap:12px;">
-        <span class="habit-dot" style="background:${habit.color}"></span>
+        <span class="habit-avatar" style="background:${habit.color}">${habit.icon || ""}</span>
         <div>
           <div class="habit-card-title">${escapeHtml(habit.name)}</div>
           <div class="habit-card-meta">${habit.type === "numeric" ? `Числовая${habit.unit ? " · " + escapeHtml(habit.unit) : ""}` : "Простая · галочка"}${streak > 0 ? ` · 🔥 ${streak} дн. подряд` : ""}</div>

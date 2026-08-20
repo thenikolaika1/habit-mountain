@@ -10,7 +10,9 @@ export function getHabit(id) {
   return state.habits.find((h) => h.id === id) || null;
 }
 
-export function addHabit({ name, type, unit = "", target = null, color = null }) {
+const DEFAULT_ICONS = ["⭐", "🌱", "💧", "📚", "🏃", "🧘", "🎯", "☀️"];
+
+export function addHabit({ name, type, unit = "", target = null, color = null, icon = null }) {
   const state = loadState();
   const habit = {
     id: generateId("hb"),
@@ -19,6 +21,7 @@ export function addHabit({ name, type, unit = "", target = null, color = null })
     unit: type === "numeric" ? unit.trim() : "",
     target: type === "numeric" && target ? Number(target) : null,
     color: color || pickColor(state.habits.length),
+    icon: icon || DEFAULT_ICONS[state.habits.length % DEFAULT_ICONS.length],
     createdAt: new Date().toISOString(),
     archived: false,
   };
@@ -47,8 +50,16 @@ export function deleteHabitPermanently(id) {
   saveState(state);
 }
 
-const PALETTE = ["#2f9e6e", "#3a7bd5", "#d9822b", "#c1447e", "#7a5cd6", "#2aa7a0", "#c94f4f"];
+export const PALETTE = ["#2f9e6e", "#3a7bd5", "#d9822b", "#c1447e", "#7a5cd6", "#2aa7a0", "#c94f4f"];
 
 function pickColor(index) {
   return PALETTE[index % PALETTE.length];
 }
+
+// Curated emoji choices for the habit avatar picker — a fixed, small set
+// covering common habit themes rather than a full emoji picker library.
+export const EMOJI_CHOICES = [
+  "⭐", "🌱", "💧", "📚", "🏃", "🧘", "🎯", "☀️",
+  "🔥", "💪", "🛌", "🥗", "🚭", "🧠", "🎨", "🎸",
+  "🚴", "🏊", "✍️", "🧹", "💰", "🌍", "🐶", "☕️",
+];
