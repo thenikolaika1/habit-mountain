@@ -228,40 +228,18 @@
 
 /* Real medal photo variant for challenge/achievement cards
  * (medalHeroFrame() in illustrations.js) — same absolute-fill technique as
- * .habit-hero-photo, but without its 118%/top offset: these sources are an
- * extreme portrait crop (~0.32-0.38 aspect, except the star, already
- * ≈16:9) being cover-fit into the card's wide ~2.2/1 box, not a
- * near-square photo with a caption to hide. Each modifier below only sets
- * object-position, hand-picked per source image so the medal itself stays
- * centered in the visible slice instead of getting cropped by a generic
- * "center". */
+ * .habit-hero-photo, but without its 118%/top offset: all 5 medal sources
+ * are already ≈16:9 with the medal itself well-centered on the canvas, so
+ * a single shared object-position: center covers cleanly into the card's
+ * wide ~2.2/1 box without cropping into the medal. */
 .challenge-hero-photo {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
-}
-
-.challenge-hero-photo--trophy {
-  object-position: center 30%;
-}
-
-.challenge-hero-photo--shield {
-  object-position: center 45%;
-}
-
-.challenge-hero-photo--crown {
-  object-position: center 60%;
-}
-
-.challenge-hero-photo--lightning {
-  object-position: center 55%;
-}
-
-.challenge-hero-photo--star {
   object-position: center;
+  display: block;
 }
 
 /* Real medal photo for the "Испытай себя!" header (medalHeaderPhoto() in

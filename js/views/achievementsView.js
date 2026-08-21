@@ -1,5 +1,5 @@
 import { getAppStats } from "../state/derive.js";
-import { CHALLENGE_POOL, DIFFICULTY_META, getCompletedChallengesMap, getIncompleteChallengesMap } from "../logic/challenges.js";
+import { CHALLENGE_POOL, DIFFICULTY_META, getCompletedChallengesMap, getIncompleteChallengesMap, getMedalForChallenge } from "../logic/challenges.js";
 import { monthLabel } from "../logic/dateUtils.js";
 import { trophyIllustration, challengeHeroForId, challengeProgressBadge, wirePhotoFallback } from "../illustrations.js";
 
@@ -50,7 +50,7 @@ function achievementCardHtml(a, info) {
   const date = formatShortDate(info.unlockedAt);
   return `
     <div class="achievement-card media-card">
-      ${challengeHeroForId(a.id)}
+      ${challengeHeroForId(a.id, getMedalForChallenge(a.id, info.monthKey))}
       <div class="media-card-scrim">
         <div class="media-card-title">${a.title}</div>
         <div class="media-card-meta">Получено ${date}</div>
@@ -64,7 +64,7 @@ function incompleteCardHtml(challenge, info) {
   const pct = Math.round(info.progress * 100);
   return `
     <div class="achievement-card achievement-card--incomplete media-card">
-      ${challengeHeroForId(challenge.id)}
+      ${challengeHeroForId(challenge.id, getMedalForChallenge(challenge.id, info.monthKey))}
       <span class="media-card-badge">${challengeProgressBadge({ pct: info.progress, done: false })}</span>
       <span class="media-card-badge media-card-badge--left challenge-difficulty-badge ${diff.className}">
         <span class="challenge-difficulty-dot"></span>${diff.label}

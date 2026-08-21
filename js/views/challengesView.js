@@ -1,5 +1,5 @@
 import { getAppStats } from "../state/derive.js";
-import { CHALLENGE_POOL, DIFFICULTY_META, DIFFICULTY_RANK, pickMonthlyChallenges, getCompletedChallengesMap, getChallengeProgress } from "../logic/challenges.js";
+import { CHALLENGE_POOL, DIFFICULTY_META, DIFFICULTY_RANK, pickMonthlyChallenges, getCompletedChallengesMap, getChallengeProgress, getMedalForChallenge } from "../logic/challenges.js";
 import { todayParts, monthKey, monthLabel } from "../logic/dateUtils.js";
 import { openModal } from "../components/modal.js";
 import { showToast } from "../components/toast.js";
@@ -35,7 +35,7 @@ export function renderChallengesView(container) {
       <div class="illustration-frame">${medalHeaderPhoto()}</div>
 
       <div class="challenge-list">
-        ${active.map((c) => challengeCardHtml(c, Boolean(completed[c.id]), monthStats)).join("")}
+        ${active.map((c) => challengeCardHtml(c, Boolean(completed[c.id]), monthStats, currentMonthKey)).join("")}
       </div>
     </section>
   `;
@@ -50,12 +50,12 @@ export function renderChallengesView(container) {
   });
 }
 
-function challengeCardHtml(challenge, done, monthStats) {
+function challengeCardHtml(challenge, done, monthStats, activeMonthKey) {
   const pct = done ? 1 : getChallengeProgress(challenge, monthStats);
   const diff = DIFFICULTY_META[challenge.difficulty];
   return `
     <div class="challenge-card media-card ${done ? "is-done" : ""}" data-challenge-id="${challenge.id}" role="button" tabindex="0">
-      ${challengeHeroForId(challenge.id)}
+      ${challengeHeroForId(challenge.id, getMedalForChallenge(challenge.id, activeMonthKey))}
       <span class="media-card-badge">${challengeProgressBadge({ pct, done })}</span>
       <span class="media-card-badge media-card-badge--left challenge-difficulty-badge ${diff.className}">
         <span class="challenge-difficulty-dot"></span>${diff.label}

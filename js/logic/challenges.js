@@ -167,6 +167,59 @@ export function pickMonthlyChallenges(monthKey) {
   return shuffled.slice(0, CHALLENGES_PER_MONTH);
 }
 
+// ---------- Medal photo assignment (assets/habits/medal_*.png) ----------
+// 5 real medal photos, one per active challenge each month — every month's
+// active set is exactly 5 (CHALLENGES_PER_MONTH), so this is a clean
+// bijection, never a many-to-one guess.
+const MEDAL_FILES = ["medal_trophy.png", "medal_shield.png", "medal_crown.png", "medal_lightning.png", "medal_star.png"];
+
+// One-time hand-curated assignment, by meaning, for the specific 5
+// challenges active this exact month — every other month (past or future)
+// falls through to the random-but-deterministic assignment below instead,
+// per the user's explicit request that future rotations NOT be re-curated
+// by hand.
+const CURATED_MEDAL_MONTH_KEY = "2026-08";
+const CURATED_MEDAL_BY_CHALLENGE_ID = {
+  warm_up: "medal_lightning.png", // Разгон — энергия/скорость
+  all_by_plan: "medal_shield.png", // Всё по плану — надёжность/выполнение
+  climb_third: "medal_crown.png", // Восхождение на треть — масштаб/статус подъёма
+  persistence: "medal_trophy.png", // Упорство — 40 отметок, самый тяжёлый числовой порог в пуле
+  no_gaps_5: "medal_star.png", // Без пропусков — стабильность день за днём
+};
+
+/**
+ * Which medal photo (a filename in assets/habits/) challenge `id` should
+ * show for the month `monthKey` — null if `id` wasn't even active that
+ * month (a defensive no-op the caller should treat as "no photo, fall back
+ * to the drawn SVG scene"). CURATED_MEDAL_MONTH_KEY uses the hand-picked
+ * thematic table above (only if its keys still match that month's actual
+ * active set — a guard against CHALLENGE_POOL/pickMonthlyChallenges ever
+ * changing out from under it); every other month deterministically
+ * shuffles the same 5 medal files (seeded by monthKey with its own salt,
+ * so it doesn't mirror pickMonthlyChallenges' own shuffle) and assigns them
+ * 1:1 to that month's active challenges in pickMonthlyChallenges' own
+ * order — bijective, so two challenges never share a medal within the same
+ * month.
+ */
+export function getMedalForChallenge(id, monthKey) {
+  if (!monthKey) return null;
+  const active = pickMonthlyChallenges(monthKey);
+  const idx = active.findIndex((c) => c.id === id);
+  if (idx === -1) return null;
+
+  if (monthKey === CURATED_MEDAL_MONTH_KEY && active.every((c) => CURATED_MEDAL_BY_CHALLENGE_ID[c.id])) {
+    return CURATED_MEDAL_BY_CHALLENGE_ID[id];
+  }
+
+  const rng = mulberry32(hashString(`${monthKey}:medal`));
+  const shuffled = MEDAL_FILES.slice();
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled[idx];
+}
+
 /** Read-only view of ever-completed challenges, joined with their pool definitions. */
 export function getCompletedChallengesMap() {
   const state = loadState();
