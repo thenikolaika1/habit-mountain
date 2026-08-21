@@ -5,7 +5,7 @@ import { isDayComplete, getNumericTotal } from "../logic/completion.js";
 import { buildMonthGrid, monthLabel, prevMonth, nextMonth, todayParts } from "../logic/dateUtils.js";
 import { renderMonthSummary } from "../components/monthSummary.js";
 import { openDayDetail } from "./dayDetailView.js";
-import { heroIllustrationForHabit, statusRing } from "../illustrations.js";
+import { heroIllustrationForHabit, wirePhotoFallback, statusRing } from "../illustrations.js";
 
 const WEEKDAY_SHORT = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"]; // JS Date#getDay(): 0 = Sunday
 
@@ -66,6 +66,7 @@ export function renderCalendarView(container, { habitId }) {
   `;
 
   wireEvents(container, habit, entries, habitId);
+  wirePhotoFallback(container);
 }
 
 function dayPillHtml(habit, entries, cell) {

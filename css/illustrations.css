@@ -149,6 +149,25 @@
   display: block;
 }
 
+/* Real photo variant of the same frame (heroPhotoFrame() in
+ * illustrations.js) — sized/positioned identically to .habit-hero-svg by
+ * every container that uses it (.media-card, .popular-habit-card,
+ * .habit-hero), so a card doesn't need to know whether it got a photo or
+ * a drawn scene. height:118% + object-position:top crops off the bottom
+ * ~15% of the source photo — where the photo pack's own caption pill
+ * sits — inside the container's own overflow:hidden, so only the app's
+ * own scrim/title (drawn on top by the caller) ends up labeling the
+ * card. */
+.habit-hero-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 118%;
+  object-fit: cover;
+  object-position: top;
+  display: block;
+}
+
 .habit-hero-bg-a {
   fill: var(--stage-base);
 }

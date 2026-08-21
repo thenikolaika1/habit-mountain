@@ -4,7 +4,7 @@ import { computeCurrentStreak } from "../logic/streaks.js";
 import { openModal, closeModal, openConfirm } from "../components/modal.js";
 import { UNITS } from "../logic/units.js";
 import { loadState } from "../state/storage.js";
-import { sproutIllustration, statusRing, heroIllustrationForHabit, iconSearch } from "../illustrations.js";
+import { sproutIllustration, statusRing, heroIllustrationForHabit, wirePhotoFallback, iconSearch } from "../illustrations.js";
 import { isDayComplete } from "../logic/completion.js";
 import { todayKey } from "../logic/dateUtils.js";
 
@@ -40,6 +40,7 @@ export function renderHabitsView(container) {
   `;
 
   wireHabitsList(container, habits);
+  wirePhotoFallback(container);
 
   container.querySelector("#habit-search").addEventListener("input", (e) => {
     const query = e.target.value.trim().toLowerCase();
@@ -52,6 +53,7 @@ export function renderHabitsView(container) {
           : emptyStateHtml()
         : habitsListHtml(filtered);
     wireHabitsList(container, filtered);
+    wirePhotoFallback(listSection);
   });
 
   container.querySelectorAll(".popular-habit-card").forEach((btn) => {

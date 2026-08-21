@@ -349,9 +349,69 @@ const HERO_BY_EMOJI = {
 };
 
 /** Picks a themed hero illustration for a habit from its emoji icon, falling back to the generic mountain/sun scene for anything unmapped. */
+// ---------- Real photos (assets/habits/), where available ----------
+// A small curated set of the "Популярные привычки" presets ships an actual
+// photo instead of a hand-drawn scene — matched by the habit's emoji icon,
+// same lookup pattern as HERO_BY_EMOJI, so both the ready-made presets and
+// any user habit that happens to share the same icon get the photo too.
+// Everything else (including any habit whose photo file hasn't landed in
+// assets/habits/ yet) keeps falling back to the SVG heroXxx() scenes below
+// — there's always a themed illustration, real photo or drawn.
+const PHOTO_BY_EMOJI = {
+  "💧": "pit_vodu.png",
+  "📚": "chtenie.png",
+  "🧘": "meditaciya.png",
+  "💪": "otzhimaniya.png",
+  "🛌": "son.png",
+  "🏃": "progulka.png",
+};
+
+/**
+ * Wraps a real photo in the same full-bleed treatment as heroFrame()'s SVG
+ * output — an <img>, not an <svg>, but sized/positioned identically by
+ * .habit-hero-photo (css/illustrations.css) so every call site (habit
+ * list card, popular-habit carousel, habit detail hero) can treat the two
+ * interchangeably. The photo's own baked-in caption pill sits in the
+ * bottom slice of the frame, which .habit-hero-photo's crop hides — the
+ * app draws its own name/scrim on top instead, so there's one consistent
+ * label style whether the card ended up with a photo or a drawn scene.
+ */
+function heroPhotoFrame(filename, alt, icon) {
+  // data-fallback-icon lets wirePhotoFallback() below rebuild the *same*
+  // themed SVG scene heroIllustrationForHabit() would have picked for this
+  // icon if there were no photo mapping — so a missing/broken photo file
+  // degrades to the matching drawn scene (a wet droplet for 💧, a book for
+  // 📚, ...), not a generic fallback every mapped habit would share.
+  return `<img class="habit-hero-photo" src="./assets/habits/${filename}" alt="${alt}" loading="lazy" data-fallback-icon="${icon}" />`;
+}
+
 export function heroIllustrationForHabit(habit) {
+  const photo = PHOTO_BY_EMOJI[habit?.icon];
+  if (photo) return heroPhotoFrame(photo, habit?.name || "", habit?.icon || "");
   const build = HERO_BY_EMOJI[habit?.icon] || heroDefault;
   return build();
+}
+
+/**
+ * Call once after rendering any container that may contain
+ * heroIllustrationForHabit() output — swaps a broken/missing photo
+ * (assets/habits/*.png not present, e.g. before the real files have
+ * landed, or a future rename/typo) for the matching drawn scene instead of
+ * leaving a blank/broken-image card. Every call site of
+ * heroIllustrationForHabit() should call this right after setting
+ * container.innerHTML.
+ */
+export function wirePhotoFallback(container) {
+  container.querySelectorAll("img.habit-hero-photo").forEach((img) => {
+    img.addEventListener(
+      "error",
+      () => {
+        const build = HERO_BY_EMOJI[img.dataset.fallbackIcon] || heroDefault;
+        img.outerHTML = build();
+      },
+      { once: true }
+    );
+  });
 }
 
 // ---------- Challenge / achievement hero illustrations ----------
