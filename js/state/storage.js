@@ -15,6 +15,7 @@ function emptyState() {
     meta: {
       unlockedAchievements: {},
       completedChallenges: {},
+      incompleteChallenges: {},
       lastSeenMonth: null,
       settings: { theme: "system", notificationsEnabled: false, defaultUnit: "раз" },
     },
@@ -42,6 +43,10 @@ function migrate(raw) {
     state.meta.completedChallenges =
       raw.meta.completedChallenges && typeof raw.meta.completedChallenges === "object"
         ? raw.meta.completedChallenges
+        : {};
+    state.meta.incompleteChallenges =
+      raw.meta.incompleteChallenges && typeof raw.meta.incompleteChallenges === "object"
+        ? raw.meta.incompleteChallenges
         : {};
     state.meta.lastSeenMonth = typeof raw.meta.lastSeenMonth === "string" ? raw.meta.lastSeenMonth : null;
     const rawSettings = raw.meta.settings && typeof raw.meta.settings === "object" ? raw.meta.settings : {};

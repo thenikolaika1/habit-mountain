@@ -8,7 +8,8 @@
 import { loadState, saveState } from "../state/storage.js";
 import { getHabits } from "../state/habits.js";
 import { getEntriesByHabit } from "../state/derive.js";
-import { computeMonthMountainProgress, stageForProgress } from "../logic/progress.js";
+import { computeMonthMountainProgress, computeMonthStats, stageForProgress } from "../logic/progress.js";
+import { archiveEndedMonthChallenges } from "../logic/challenges.js";
 import { todayParts, prevMonth, monthKey, monthLabel } from "../logic/dateUtils.js";
 import { openModal } from "./modal.js";
 
@@ -19,13 +20,33 @@ export function maybeShowMonthRecap() {
   const lastSeenKey = state.meta.lastSeenMonth;
 
   if (lastSeenKey && lastSeenKey !== currentKey) {
-    showRecap(prevMonth(today));
+    const ended = prevMonth(today);
+    archiveEndedMonthChallengesFor(ended);
+    showRecap(ended);
   }
 
   if (lastSeenKey !== currentKey) {
     state.meta.lastSeenMonth = currentKey;
     saveState(state);
   }
+}
+
+/**
+ * Recomputes the ended month's own challenge stats independently (not
+ * whatever the app last happened to have cached) and hands them to
+ * archiveEndedMonthChallenges() — completes anything that actually
+ * cleared the bar but was never caught live, and records the rest as
+ * unfinished attempts (see js/logic/challenges.js). Runs regardless of
+ * whether there's anything to recap-show below, since a habit-free month
+ * still needs its (trivially all-zero) challenge state settled — cheap
+ * either way, and keeps this the one place month-end bookkeeping happens.
+ */
+function archiveEndedMonthChallengesFor({ year, month }) {
+  const habits = getHabits().filter((h) => !h.archived);
+  if (habits.length === 0) return;
+  const entriesByHabit = getEntriesByHabit(habits);
+  const endedMonthStats = computeMonthStats(year, month, habits, entriesByHabit);
+  archiveEndedMonthChallenges(endedMonthStats, monthKey(year, month));
 }
 
 function showRecap({ year, month }) {

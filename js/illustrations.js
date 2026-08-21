@@ -5,14 +5,16 @@
 // the markup, so everything reacts correctly to the light/dark theme.
 
 /**
- * Small circular status indicator — done (filled + check) / empty (outline)
- * / locked (outline + dot) — used wherever a card needs a compact status
- * badge instead of a button or chevron: the habit list, challenge cards,
- * and the per-habit day list. Deliberately not a percentage ring — none of
- * those three contexts have a meaningful "how much" to show, just a
- * three-state status, so a simpler shape reads faster at a glance.
+ * Small circular status indicator — done (filled + check) / empty (outline,
+ * optionally with a partial-fill progress arc via `pct`) / locked (outline
+ * + dot) — used wherever a card needs a compact status badge instead of a
+ * button or chevron: the habit list, challenge cards, and the per-habit
+ * day list. `pct` (0-1) is only meaningful in the "empty" state — the
+ * monthly challenge cards use it to show how far along an in-progress
+ * challenge is; every other call site omits it and gets the plain outline
+ * ring exactly as before.
  */
-export function statusRing({ state = "empty", size = 44 } = {}) {
+export function statusRing({ state = "empty", size = 44, pct = 0 } = {}) {
   const r = (size - 4) / 2;
   const c = size / 2;
 
@@ -37,9 +39,17 @@ export function statusRing({ state = "empty", size = 44 } = {}) {
       </svg>`;
   }
 
+  const clampedPct = Math.max(0, Math.min(1, pct));
+  const circumference = 2 * Math.PI * r;
+  const arc =
+    clampedPct > 0
+      ? `<circle class="status-ring-progress" cx="${c}" cy="${c}" r="${r}" stroke-dasharray="${(clampedPct * circumference).toFixed(2)} ${circumference.toFixed(2)}" transform="rotate(-90 ${c} ${c})" />`
+      : "";
+  const label = clampedPct > 0 ? `Прогресс ${Math.round(clampedPct * 100)}%` : "Не выполнено";
   return `
-    <svg class="status-ring status-ring--empty" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" role="img" aria-label="Не выполнено">
+    <svg class="status-ring status-ring--empty" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" role="img" aria-label="${label}">
       <circle class="status-ring-track" cx="${c}" cy="${c}" r="${r}" />
+      ${arc}
     </svg>`;
 }
 

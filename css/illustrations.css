@@ -47,6 +47,17 @@
   fill: var(--color-border);
 }
 
+/* Partial-fill arc for an in-progress (not yet done) challenge — drawn
+ * over .status-ring-track via stroke-dasharray, see statusRing()'s `pct`
+ * parameter. */
+.status-ring-progress {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dasharray 240ms ease;
+}
+
 .status-ring--locked .status-ring-track {
   opacity: 0.5;
 }

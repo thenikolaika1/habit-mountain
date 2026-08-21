@@ -7,78 +7,122 @@ import { loadState, saveState } from "../state/storage.js";
 // permanent ACHIEVEMENTS ("Первый шаг", "Неделя силы", "Месяц дисциплины",
 // "Идеальный день", "Идеальная неделя", "Сто отметок", "Покоритель
 // вершины") so the two lists never look like duplicates in Достижения.
+//
+// Each entry pairs its pass/fail `check(m)` with a `progress(m)` function
+// returning how far along the SAME rule is as a 0-1 fraction — used for the
+// in-progress ring/bar on the active challenge card and for the "how far
+// did I get" record kept when a challenge's month ends unmet (see
+// archiveEndedMonthChallenges below). The two are meant to agree exactly at
+// the threshold (progress reaches 1 iff check passes) — kept side by side
+// per entry rather than deriving one from the other, since the natural
+// "fraction of the way there" isn't always a trivial reading of the
+// boolean rule (e.g. firstThreeCounted).
 export const CHALLENGE_POOL = [
   {
     id: "stable_start",
     title: "Стабильный старт",
     description: "Первые 3 дня месяца — большинство привычек выполнено каждый день",
     icon: "🚀",
+    difficulty: "easy",
     check: (m) => m.firstThreeCounted,
+    progress: (m) => m.days.slice(0, 3).filter((d) => d.counted).length / 3,
   },
   {
     id: "warm_up",
     title: "Разгон",
     description: "10 отметок-дней суммарно за месяц",
     icon: "🔆",
+    difficulty: "easy",
     check: (m) => m.totalMarks >= 10,
+    progress: (m) => m.totalMarks / 10,
   },
   {
     id: "no_gaps_5",
     title: "Без пропусков",
     description: "5 дней подряд с большинством привычек выполнено",
     icon: "🧩",
+    difficulty: "medium",
     check: (m) => m.bestCountedStreak >= 5,
+    progress: (m) => m.bestCountedStreak / 5,
   },
   {
     id: "climb_third",
     title: "Восхождение на треть",
     description: "Прогресс горы в этом месяце — не меньше 33%",
     icon: "🥾",
+    difficulty: "hard",
     check: (m) => m.progress >= 0.33,
+    progress: (m) => m.progress / 0.33,
   },
   {
     id: "climb_half",
     title: "Половина пути",
     description: "Прогресс горы в этом месяце — не меньше 50%",
     icon: "🏔️",
+    difficulty: "hard",
     check: (m) => m.progress >= 0.5,
+    progress: (m) => m.progress / 0.5,
   },
   {
     id: "climb_summit",
     title: "Штурм вершины",
     description: "Прогресс горы в этом месяце достиг 100%",
     icon: "🚩",
+    difficulty: "hard",
     check: (m) => m.progress >= 1,
+    progress: (m) => m.progress,
   },
   {
     id: "mark_collector",
     title: "Коллекционер отметок",
     description: "20 отметок-дней суммарно за месяц",
     icon: "🗂️",
+    difficulty: "medium",
     check: (m) => m.totalMarks >= 20,
+    progress: (m) => m.totalMarks / 20,
   },
   {
     id: "all_by_plan",
     title: "Всё по плану",
     description: "7 дней подряд — хотя бы одна привычка выполнена каждый день",
     icon: "📅",
+    difficulty: "easy",
     check: (m) => m.bestAnyStreak >= 7,
+    progress: (m) => m.bestAnyStreak / 7,
   },
   {
     id: "persistence",
     title: "Упорство",
     description: "40 отметок-дней суммарно за месяц",
     icon: "🧗",
+    difficulty: "hard",
     check: (m) => m.totalMarks >= 40,
+    progress: (m) => m.totalMarks / 40,
   },
   {
     id: "iron_will",
     title: "Железная воля",
     description: "10 дней подряд с большинством привычек выполнено",
     icon: "🛡️",
+    difficulty: "hard",
     check: (m) => m.bestCountedStreak >= 10,
+    progress: (m) => m.bestCountedStreak / 10,
   },
 ];
+
+/** Label + accent token for each difficulty tier — reuses existing palette tokens (no new colors introduced). */
+export const DIFFICULTY_META = {
+  easy: { label: "Легко", className: "is-easy" },
+  medium: { label: "Средне", className: "is-medium" },
+  hard: { label: "Сложно", className: "is-hard" },
+};
+
+/** How far along `challenge` is against `monthStats`, clamped to 0-1. Always reads 1 once challenge.check() would pass. */
+export function getChallengeProgress(challenge, monthStats) {
+  if (challenge.check(monthStats)) return 1;
+  const raw = challenge.progress(monthStats);
+  return Math.max(0, Math.min(1, Number.isFinite(raw) ? raw : 0));
+}
 
 const CHALLENGES_PER_MONTH = 5;
 
@@ -127,6 +171,19 @@ export function getCompletedChallengesMap() {
 }
 
 /**
+ * Read-only view of challenges whose most recent attempt ran out the
+ * month without completing — see archiveEndedMonthChallenges(). Keyed by
+ * challenge id, one record per id (the latest failed attempt only, not a
+ * full history of every miss) — cleared automatically the moment that
+ * challenge is ever completed, in either evaluateAndUnlockChallenges() or
+ * archiveEndedMonthChallenges() itself.
+ */
+export function getIncompleteChallengesMap() {
+  const state = loadState();
+  return state.meta.incompleteChallenges || {};
+}
+
+/**
  * Checks this month's 5 active challenges against fresh month stats and
  * persists newly-completed ones — same one-way ratchet as
  * evaluateAndUnlock() in achievements.js. A challenge completed in an
@@ -138,17 +195,74 @@ export function evaluateAndUnlockChallenges(monthStats, monthKey) {
   const completed = state.meta.completedChallenges;
   const active = pickMonthlyChallenges(monthKey);
   const newlyCompleted = [];
+  let changed = false;
 
   for (const challenge of active) {
     if (completed[challenge.id]) continue;
     if (challenge.check(monthStats)) {
       completed[challenge.id] = { unlockedAt: new Date().toISOString(), monthKey };
       newlyCompleted.push(challenge.id);
+      changed = true;
+      // A challenge that eventually succeeds shouldn't still show up as an
+      // unfinished attempt from some earlier month it missed.
+      if (state.meta.incompleteChallenges[challenge.id]) {
+        delete state.meta.incompleteChallenges[challenge.id];
+      }
     }
   }
 
-  if (newlyCompleted.length > 0) {
+  if (changed) {
     saveState(state);
   }
   return newlyCompleted;
+}
+
+/**
+ * Called once per month transition (see maybeShowMonthRecap() in
+ * js/components/monthRecap.js, the same "have we seen this month key
+ * before" gate the mountain's own recap uses) — for every challenge that
+ * was active during the month that just ended, either:
+ *  - it's already completed (this or an earlier month) — nothing to do;
+ *  - its final numbers actually clear the bar but the app was never open
+ *    to catch it live (e.g. the user skipped the last few days of the
+ *    month) — complete it now, backdated to the month that ended, same
+ *    as evaluateAndUnlockChallenges would have;
+ *  - otherwise it genuinely fell short — record how far it got
+ *    (getIncompleteChallengesMap()) instead of silently dropping it, so
+ *    Достижения can show it as an unfinished attempt with a progress bar
+ *    rather than losing the data.
+ * Recomputes monthStats itself from the raw entries rather than relying on
+ * whatever was last cached, so it reflects the month's true final state
+ * regardless of when the app happens to be reopened.
+ */
+export function archiveEndedMonthChallenges(endedMonthStats, endedMonthKey) {
+  const state = loadState();
+  const completed = state.meta.completedChallenges;
+  const incomplete = state.meta.incompleteChallenges;
+  const active = pickMonthlyChallenges(endedMonthKey);
+  let changed = false;
+
+  for (const challenge of active) {
+    if (completed[challenge.id]) {
+      if (incomplete[challenge.id]) {
+        delete incomplete[challenge.id];
+        changed = true;
+      }
+      continue;
+    }
+    if (challenge.check(endedMonthStats)) {
+      completed[challenge.id] = { unlockedAt: new Date().toISOString(), monthKey: endedMonthKey };
+      if (incomplete[challenge.id]) delete incomplete[challenge.id];
+      changed = true;
+      continue;
+    }
+    incomplete[challenge.id] = {
+      monthKey: endedMonthKey,
+      progress: getChallengeProgress(challenge, endedMonthStats),
+      endedAt: new Date().toISOString(),
+    };
+    changed = true;
+  }
+
+  if (changed) saveState(state);
 }
