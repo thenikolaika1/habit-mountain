@@ -50,7 +50,7 @@ export const CHALLENGE_POOL = [
     title: "Восхождение на треть",
     description: "Прогресс горы в этом месяце — не меньше 33%",
     icon: "🥾",
-    difficulty: "hard",
+    difficulty: "medium",
     check: (m) => m.progress >= 0.33,
     progress: (m) => m.progress / 0.33,
   },
@@ -59,7 +59,7 @@ export const CHALLENGE_POOL = [
     title: "Половина пути",
     description: "Прогресс горы в этом месяце — не меньше 50%",
     icon: "🏔️",
-    difficulty: "hard",
+    difficulty: "medium",
     check: (m) => m.progress >= 0.5,
     progress: (m) => m.progress / 0.5,
   },
@@ -95,7 +95,7 @@ export const CHALLENGE_POOL = [
     title: "Упорство",
     description: "40 отметок-дней суммарно за месяц",
     icon: "🧗",
-    difficulty: "hard",
+    difficulty: "medium",
     check: (m) => m.totalMarks >= 40,
     progress: (m) => m.totalMarks / 40,
   },
@@ -104,9 +104,18 @@ export const CHALLENGE_POOL = [
     title: "Железная воля",
     description: "10 дней подряд с большинством привычек выполнено",
     icon: "🛡️",
-    difficulty: "hard",
+    difficulty: "medium",
     check: (m) => m.bestCountedStreak >= 10,
     progress: (m) => m.bestCountedStreak / 10,
+  },
+  {
+    id: "perfect_discipline",
+    title: "Безупречный месяц",
+    description: "Все привычки выполнены каждый день месяца — без единого пропуска",
+    icon: "💎",
+    difficulty: "hard",
+    check: (m) => m.days.every((d) => d.perfect),
+    progress: (m) => m.days.filter((d) => d.perfect).length / m.days.length,
   },
 ];
 
@@ -127,7 +136,12 @@ export function getChallengeProgress(challenge, monthStats) {
   return Math.max(0, Math.min(1, Number.isFinite(raw) ? raw : 0));
 }
 
-const CHALLENGES_PER_MONTH = 5;
+// Exactly how many of each difficulty tier make up the active monthly set —
+// a flat shuffle-and-take-5 across the whole pool left the actual tier mix
+// up to chance (the pool being hard-heavy meant "2 hard" some months), so
+// pickMonthlyChallenges() below draws this many from each tier instead,
+// guaranteeing the same easy/medium/hard balance every month.
+const TIER_COUNTS = { easy: 2, medium: 2, hard: 1 };
 
 /** Tiny deterministic string hash (djb2) — good enough for a stable seed, not cryptography. */
 function hashString(str) {
@@ -150,26 +164,42 @@ function mulberry32(seed) {
   };
 }
 
+/** Fisher-Yates-shuffles `pool` with `rng` and returns its first `n` — the shared shuffle step both pickMonthlyChallenges() and getMedalForChallenge() build on. */
+function shuffleN(pool, n, rng) {
+  const shuffled = pool.slice();
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, n);
+}
+
 /**
  * Deterministically picks this month's 5 active challenges from the pool,
  * seeded by the month key ("2026-08") — the same month always yields the
  * same 5, but a new month reliably picks a different combination. Nothing
  * about this is persisted: like the rest of the app, it's recomputed on
  * the fly from a pure function of the current date.
+ *
+ * Draws TIER_COUNTS' exact quota from each difficulty tier (rather than one
+ * flat shuffle across the whole pool) so every month reliably reads as
+ * "2 easy + 2 medium + 1 hard" — never left up to how the pool happens to
+ * be weighted, and never a month with two "hard" cards and no "easy" one.
  */
 export function pickMonthlyChallenges(monthKey) {
   const rng = mulberry32(hashString(monthKey));
-  const shuffled = CHALLENGE_POOL.slice();
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled.slice(0, CHALLENGES_PER_MONTH);
+  const byDifficulty = { easy: [], medium: [], hard: [] };
+  CHALLENGE_POOL.forEach((c) => byDifficulty[c.difficulty].push(c));
+  return [
+    ...shuffleN(byDifficulty.easy, TIER_COUNTS.easy, rng),
+    ...shuffleN(byDifficulty.medium, TIER_COUNTS.medium, rng),
+    ...shuffleN(byDifficulty.hard, TIER_COUNTS.hard, rng),
+  ];
 }
 
 // ---------- Medal photo assignment (assets/habits/medal_*.png) ----------
 // 5 real medal photos, one per active challenge each month — every month's
-// active set is exactly 5 (CHALLENGES_PER_MONTH), so this is a clean
+// active set is exactly 5 (TIER_COUNTS' 2+2+1), so this is a clean
 // bijection, never a many-to-one guess.
 const MEDAL_FILES = ["medal_trophy.png", "medal_shield.png", "medal_crown.png", "medal_lightning.png", "medal_star.png"];
 
@@ -180,11 +210,11 @@ const MEDAL_FILES = ["medal_trophy.png", "medal_shield.png", "medal_crown.png", 
 // by hand.
 const CURATED_MEDAL_MONTH_KEY = "2026-08";
 const CURATED_MEDAL_BY_CHALLENGE_ID = {
-  warm_up: "medal_lightning.png", // Разгон — энергия/скорость
+  stable_start: "medal_lightning.png", // Стабильный старт — энергия/разгон
   all_by_plan: "medal_shield.png", // Всё по плану — надёжность/выполнение
-  climb_third: "medal_crown.png", // Восхождение на треть — масштаб/статус подъёма
-  persistence: "medal_trophy.png", // Упорство — 40 отметок, самый тяжёлый числовой порог в пуле
-  no_gaps_5: "medal_star.png", // Без пропусков — стабильность день за днём
+  climb_third: "medal_star.png", // Восхождение на треть — первая веха подъёма
+  climb_half: "medal_crown.png", // Половина пути — веха покрупнее, выше статус
+  perfect_discipline: "medal_trophy.png", // Безупречный месяц — главный приз за самое трудное испытание
 };
 
 /**

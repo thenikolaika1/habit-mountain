@@ -23,7 +23,17 @@ export function computeMonthDayResults(year, month, habits, entriesByHabit) {
       const entries = entriesByHabit[habit.id] || {};
       if (isDayComplete(habit, entries[dateKey])) completedCount++;
     }
-    days.push({ day, dateKey, completedCount, counted: habits.length > 0 && completedCount > threshold });
+    days.push({
+      day,
+      dateKey,
+      completedCount,
+      counted: habits.length > 0 && completedCount > threshold,
+      // Every active habit done that day, not just the majority — the bar
+      // "Безупречный месяц" (js/logic/challenges.js) needs. Same
+      // no-special-casing-future-days behavior as `counted`: a day with no
+      // entries yet simply isn't perfect until it's actually lived through.
+      perfect: habits.length > 0 && completedCount === habits.length,
+    });
   }
   return days;
 }

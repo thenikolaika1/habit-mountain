@@ -90,7 +90,7 @@ export function challengeProgressBadge({ pct = 0, done = false, size = 40 } = {}
       <circle class="challenge-progress-badge-bg" cx="${c}" cy="${c}" r="${size * 0.46}" />
       <circle class="challenge-progress-badge-track" cx="${c}" cy="${c}" r="${r}" />
       ${arc}
-      <text class="challenge-progress-badge-text" x="${c}" y="${c + 0.5}" text-anchor="middle" dominant-baseline="central">${Math.round(clampedPct * 100)}</text>
+      <text class="challenge-progress-badge-text" x="${c}" y="${c + 0.5}" text-anchor="middle" dominant-baseline="central">${Math.round(clampedPct * 100)}%</text>
     </svg>`;
 }
 
