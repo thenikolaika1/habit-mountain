@@ -639,8 +639,8 @@ export function challengeHeroForId(id, medalFilename) {
   return build();
 }
 
-/** Real medal photo for the "Испытай себя!" header, in the same 72×72 slot medalIllustration()'s SVG used to fill — falls back to medalIllustration() on load failure via wirePhotoFallback(). */
+/** Real flame photo for the "Испытай себя!" header, in the same 72×72 slot medalIllustration()'s SVG used to fill — falls back to medalIllustration() on load failure via wirePhotoFallback(). Not part of MEDAL_FILES/getMedalForChallenge() in logic/challenges.js — this header icon is fixed, not one of the per-card rotating medals. */
 export function medalHeaderPhoto() {
-  const filename = "medal_star.png";
-  return `<img class="illustration-photo illustration-photo--star" src="./assets/habits/${filename}" alt="Медаль" loading="lazy" data-fallback-header="medal" />`;
+  const filename = "flame_icon.png";
+  return `<img class="illustration-photo illustration-photo--flame" src="./assets/habits/${filename}" alt="Пламя" loading="lazy" data-fallback-header="medal" />`;
 }

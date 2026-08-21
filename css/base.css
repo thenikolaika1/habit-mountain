@@ -162,6 +162,25 @@ a:visited {
   margin-top: 2px;
 }
 
+/* Испытания screen's own title block (challengesView.js wraps its <h1>/
+ * .mountain-month-subtitle in .challenges-title) — bolder + a gold-green
+ * gradient fill, scoped so the shared .view-header h1/.mountain-month-subtitle
+ * rules above stay untouched everywhere else (Достижения, Привычки,
+ * Прогресс, Настройки). Only existing palette tokens — no new colors. */
+.challenges-title h1 {
+  font-weight: 800;
+  color: var(--color-accent-dark); /* fallback if background-clip: text isn't supported */
+  background: linear-gradient(135deg, var(--color-accent-dark), var(--color-warning));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.challenges-title .mountain-month-subtitle {
+  font-weight: 600;
+}
+
 .back-button {
   display: inline-flex;
   align-items: center;

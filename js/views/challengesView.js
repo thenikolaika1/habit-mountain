@@ -26,7 +26,7 @@ export function renderChallengesView(container) {
   container.innerHTML = `
     <section class="view">
       <div class="view-header">
-        <div>
+        <div class="challenges-title">
           <h1>Испытай себя!</h1>
           <p class="mountain-month-subtitle">Испытания за ${monthLabel(t.year, t.month)} · обновляются 1-го числа</p>
         </div>

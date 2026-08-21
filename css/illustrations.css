@@ -242,7 +242,7 @@
   display: block;
 }
 
-/* Real medal photo for the "Испытай себя!" header (medalHeaderPhoto() in
+/* Real flame photo for the "Испытай себя!" header (medalHeaderPhoto() in
  * illustrations.js) — fills the same 72×72 slot .illustration used to,
  * inside the untouched 96×96 .illustration-frame. */
 .illustration-photo {
@@ -253,7 +253,7 @@
   display: block;
 }
 
-.illustration-photo--star {
+.illustration-photo--flame {
   object-position: center;
 }
 
