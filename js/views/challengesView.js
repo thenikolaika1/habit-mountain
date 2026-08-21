@@ -3,7 +3,7 @@ import { CHALLENGE_POOL, DIFFICULTY_META, DIFFICULTY_RANK, pickMonthlyChallenges
 import { todayParts, monthKey, monthLabel } from "../logic/dateUtils.js";
 import { openModal } from "../components/modal.js";
 import { showToast } from "../components/toast.js";
-import { medalIllustration, challengeProgressBadge, challengeHeroForId } from "../illustrations.js";
+import { medalHeaderPhoto, challengeProgressBadge, challengeHeroForId, wirePhotoFallback } from "../illustrations.js";
 
 export function renderChallengesView(container) {
   const { newlyCompletedChallenges, monthStats } = getAppStats();
@@ -32,13 +32,15 @@ export function renderChallengesView(container) {
         </div>
       </div>
 
-      <div class="illustration-frame">${medalIllustration()}</div>
+      <div class="illustration-frame">${medalHeaderPhoto()}</div>
 
       <div class="challenge-list">
         ${active.map((c) => challengeCardHtml(c, Boolean(completed[c.id]), monthStats)).join("")}
       </div>
     </section>
   `;
+
+  wirePhotoFallback(container);
 
   container.querySelectorAll(".challenge-card").forEach((card) => {
     card.addEventListener("click", () => {

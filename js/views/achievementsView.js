@@ -1,7 +1,7 @@
 import { getAppStats } from "../state/derive.js";
 import { CHALLENGE_POOL, DIFFICULTY_META, getCompletedChallengesMap, getIncompleteChallengesMap } from "../logic/challenges.js";
 import { monthLabel } from "../logic/dateUtils.js";
-import { trophyIllustration, challengeHeroForId, challengeProgressBadge } from "../illustrations.js";
+import { trophyIllustration, challengeHeroForId, challengeProgressBadge, wirePhotoFallback } from "../illustrations.js";
 
 export function renderAchievementsView(container) {
   // Recompute stats so anything earned this instant shows immediately.
@@ -42,6 +42,8 @@ export function renderAchievementsView(container) {
       }
     </section>
   `;
+
+  wirePhotoFallback(container);
 }
 
 function achievementCardHtml(a, info) {

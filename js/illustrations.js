@@ -453,16 +453,25 @@ export function heroIllustrationForHabit(habit) {
  * container.innerHTML.
  */
 export function wirePhotoFallback(container) {
-  container.querySelectorAll("img.habit-hero-photo").forEach((img) => {
-    img.addEventListener(
-      "error",
-      () => {
-        const build = HERO_BY_EMOJI[img.dataset.fallbackIcon] || heroDefault;
-        img.outerHTML = build();
-      },
-      { once: true }
-    );
-  });
+  container
+    .querySelectorAll("img[data-fallback-icon], img[data-fallback-challenge-id], img[data-fallback-header]")
+    .forEach((img) => {
+      img.addEventListener(
+        "error",
+        () => {
+          if (img.dataset.fallbackChallengeId !== undefined) {
+            const build = CHALLENGE_HERO_BY_ID[img.dataset.fallbackChallengeId] || challengeHeroClimbThird;
+            img.outerHTML = build();
+          } else if (img.dataset.fallbackHeader !== undefined) {
+            img.outerHTML = medalIllustration();
+          } else {
+            const build = HERO_BY_EMOJI[img.dataset.fallbackIcon] || heroDefault;
+            img.outerHTML = build();
+          }
+        },
+        { once: true }
+      );
+    });
 }
 
 // ---------- Challenge / achievement hero illustrations ----------
@@ -608,8 +617,56 @@ const CHALLENGE_HERO_BY_ID = {
   iron_will: challengeHeroBanner,
 };
 
-/** Picks a themed hero illustration for a challenge (Испытания/Достижения cards) by its CHALLENGE_POOL id, falling back to the climb-a-third scene for any future/unmapped id. */
+// ---------- Real medal photos (assets/habits/), where available ----------
+// Same idea as PHOTO_BY_EMOJI above, but keyed by CHALLENGE_POOL id instead
+// of a habit's emoji: 5 real medal photos, matched thematically to the 10
+// challenge ids (a photo can cover more than one id — e.g. both climb_half
+// and persistence read as "crown"-worthy). Any id left out of this map (and
+// any id whose photo file fails to load) keeps falling back to its drawn
+// climberFigure() scene via CHALLENGE_HERO_BY_ID, exactly like the habit
+// photos do.
+const MEDAL_BY_CHALLENGE_ID = {
+  iron_will: "medal_shield.png",
+  climb_summit: "medal_trophy.png",
+  climb_half: "medal_crown.png",
+  persistence: "medal_crown.png",
+  stable_start: "medal_lightning.png",
+  warm_up: "medal_lightning.png",
+  no_gaps_5: "medal_star.png",
+  climb_third: "medal_star.png",
+  mark_collector: "medal_star.png",
+  all_by_plan: "medal_star.png",
+};
+
+// CSS modifier suffix per source file — each medal photo is an extreme
+// portrait crop (~0.32-0.38 aspect, except the star which is already
+// ≈16:9), so covering it into the card's wide ~2.2/1 box needs its own
+// hand-picked object-position per image (see .challenge-hero-photo--* in
+// css/illustrations.css) rather than one shared "center".
+const MEDAL_MODIFIER_BY_FILE = {
+  "medal_trophy.png": "trophy",
+  "medal_shield.png": "shield",
+  "medal_crown.png": "crown",
+  "medal_lightning.png": "lightning",
+  "medal_star.png": "star",
+};
+
+/** Wraps a real medal photo in the same full-bleed absolute-fill treatment as heroPhotoFrame(), sized/cropped for the wide challenge/achievement card instead of the habit hero's taller box (see .challenge-hero-photo). */
+function medalHeroFrame(filename, alt, id) {
+  const modifier = MEDAL_MODIFIER_BY_FILE[filename] || "star";
+  return `<img class="challenge-hero-photo challenge-hero-photo--${modifier}" src="./assets/habits/${filename}" alt="${alt}" loading="lazy" data-fallback-challenge-id="${id}" />`;
+}
+
+/** Picks a themed hero illustration for a challenge (Испытания/Достижения cards) by its CHALLENGE_POOL id — a real medal photo where MEDAL_BY_CHALLENGE_ID maps one, otherwise the drawn climber scene, falling back to the climb-a-third scene for any future/unmapped id. */
 export function challengeHeroForId(id) {
+  const photo = MEDAL_BY_CHALLENGE_ID[id];
+  if (photo) return medalHeroFrame(photo, "Награда", id);
   const build = CHALLENGE_HERO_BY_ID[id] || challengeHeroClimbThird;
   return build();
+}
+
+/** Real medal photo for the "Испытай себя!" header, in the same 72×72 slot medalIllustration()'s SVG used to fill — falls back to medalIllustration() on load failure via wirePhotoFallback(). */
+export function medalHeaderPhoto() {
+  const filename = "medal_star.png";
+  return `<img class="illustration-photo illustration-photo--star" src="./assets/habits/${filename}" alt="Медаль" loading="lazy" data-fallback-header="medal" />`;
 }
