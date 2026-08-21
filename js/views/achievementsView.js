@@ -63,8 +63,8 @@ function incompleteCardHtml(challenge, info) {
   return `
     <div class="achievement-card achievement-card--incomplete media-card">
       ${challengeHeroForId(challenge.id)}
-      <span class="media-card-badge media-card-badge--left">${challengeProgressBadge({ pct: info.progress, done: false })}</span>
-      <span class="media-card-badge challenge-difficulty-badge ${diff.className}">
+      <span class="media-card-badge">${challengeProgressBadge({ pct: info.progress, done: false })}</span>
+      <span class="media-card-badge media-card-badge--left challenge-difficulty-badge ${diff.className}">
         <span class="challenge-difficulty-dot"></span>${diff.label}
       </span>
       <div class="media-card-scrim">

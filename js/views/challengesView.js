@@ -54,8 +54,8 @@ function challengeCardHtml(challenge, done, monthStats) {
   return `
     <div class="challenge-card media-card ${done ? "is-done" : ""}" data-challenge-id="${challenge.id}" role="button" tabindex="0">
       ${challengeHeroForId(challenge.id)}
-      <span class="media-card-badge media-card-badge--left">${challengeProgressBadge({ pct, done })}</span>
-      <span class="media-card-badge challenge-difficulty-badge ${diff.className}">
+      <span class="media-card-badge">${challengeProgressBadge({ pct, done })}</span>
+      <span class="media-card-badge media-card-badge--left challenge-difficulty-badge ${diff.className}">
         <span class="challenge-difficulty-dot"></span>${diff.label}
       </span>
       <div class="media-card-scrim">
