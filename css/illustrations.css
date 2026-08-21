@@ -58,6 +58,53 @@
   transition: stroke-dasharray 240ms ease;
 }
 
+/* ---------- Challenge progress "donut" badge (challengeProgressBadge()) ----------
+ * An opaque light disc + ring, unlike .status-ring (which sits directly on
+ * whatever's behind it, fine for a small outline) — this one carries a
+ * percentage number, so it needs its own backing to stay legible over any
+ * part of a photo/illustration. */
+.challenge-progress-badge {
+  display: block;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.25));
+}
+
+.challenge-progress-badge-bg {
+  fill: rgba(255, 255, 255, 0.92);
+}
+
+.challenge-progress-badge-bg--done {
+  fill: var(--color-accent);
+}
+
+.challenge-progress-badge-track {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 3;
+}
+
+.challenge-progress-badge-arc {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dasharray 240ms ease;
+}
+
+.challenge-progress-badge-text {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 800;
+  fill: var(--color-ink);
+}
+
+.challenge-progress-badge-check {
+  fill: none;
+  stroke: var(--color-accent-contrast);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .status-ring--locked .status-ring-track {
   opacity: 0.5;
 }

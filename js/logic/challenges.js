@@ -117,6 +117,9 @@ export const DIFFICULTY_META = {
   hard: { label: "Сложно", className: "is-hard" },
 };
 
+/** Ascending sort weight for a difficulty tier — used to order the active challenge cards easy-first. */
+export const DIFFICULTY_RANK = { easy: 0, medium: 1, hard: 2 };
+
 /** How far along `challenge` is against `monthStats`, clamped to 0-1. Always reads 1 once challenge.check() would pass. */
 export function getChallengeProgress(challenge, monthStats) {
   if (challenge.check(monthStats)) return 1;

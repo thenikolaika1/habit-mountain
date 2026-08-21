@@ -53,6 +53,47 @@ export function statusRing({ state = "empty", size = 44, pct = 0 } = {}) {
     </svg>`;
 }
 
+/**
+ * Circular progress "donut" badge for a challenge card — an opaque light
+ * disc (same weight as .media-card-icon-btn's corner buttons, so it reads
+ * clearly over any part of the photo behind it) with a track+arc ring and
+ * the percentage centered inside, or a checkmark once done. Distinct from
+ * statusRing() (which stays icon-only, no text) because this one needs a
+ * legible number — the challenge cards are the one place that number
+ * actually matters at a glance.
+ */
+export function challengeProgressBadge({ pct = 0, done = false, size = 40 } = {}) {
+  const c = size / 2;
+  const r = size * 0.36;
+
+  if (done) {
+    const a = size * 0.3;
+    const b = size * 0.44;
+    const d = size * 0.65;
+    const e = size * 0.72;
+    const f = size * 0.36;
+    return `
+      <svg class="challenge-progress-badge" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" role="img" aria-label="Выполнено">
+        <circle class="challenge-progress-badge-bg challenge-progress-badge-bg--done" cx="${c}" cy="${c}" r="${size * 0.46}" />
+        <path class="challenge-progress-badge-check" d="M${a},${size * 0.5} L${b},${d} L${e},${f}" />
+      </svg>`;
+  }
+
+  const clampedPct = Math.max(0, Math.min(1, pct));
+  const circumference = 2 * Math.PI * r;
+  const arc =
+    clampedPct > 0
+      ? `<circle class="challenge-progress-badge-arc" cx="${c}" cy="${c}" r="${r}" stroke-dasharray="${(clampedPct * circumference).toFixed(2)} ${circumference.toFixed(2)}" transform="rotate(-90 ${c} ${c})" />`
+      : "";
+  return `
+    <svg class="challenge-progress-badge" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" role="img" aria-label="Прогресс ${Math.round(clampedPct * 100)}%">
+      <circle class="challenge-progress-badge-bg" cx="${c}" cy="${c}" r="${size * 0.46}" />
+      <circle class="challenge-progress-badge-track" cx="${c}" cy="${c}" r="${r}" />
+      ${arc}
+      <text class="challenge-progress-badge-text" x="${c}" y="${c + 0.5}" text-anchor="middle" dominant-baseline="central">${Math.round(clampedPct * 100)}</text>
+    </svg>`;
+}
+
 /** Medal-on-ribbon hero illustration for the "Испытания" screen header. */
 export function medalIllustration() {
   return `

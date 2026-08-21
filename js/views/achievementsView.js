@@ -1,8 +1,7 @@
 import { getAppStats } from "../state/derive.js";
 import { CHALLENGE_POOL, DIFFICULTY_META, getCompletedChallengesMap, getIncompleteChallengesMap } from "../logic/challenges.js";
-import { challengeProgressBarHtml } from "./challengesView.js";
 import { monthLabel } from "../logic/dateUtils.js";
-import { trophyIllustration, challengeHeroForId } from "../illustrations.js";
+import { trophyIllustration, challengeHeroForId, challengeProgressBadge } from "../illustrations.js";
 
 export function renderAchievementsView(container) {
   // Recompute stats so anything earned this instant shows immediately.
@@ -57,21 +56,20 @@ function achievementCardHtml(a, info) {
     </div>`;
 }
 
-/** A challenge whose active month ended without completing — same illustration, desaturated (see .achievement-card--incomplete), with a progress bar instead of an unlock date. */
+/** A challenge whose active month ended without completing — same illustration, desaturated (see .achievement-card--incomplete), same corner badges as the active challenge card (progress donut left, difficulty right), frozen at however far it got. */
 function incompleteCardHtml(challenge, info) {
   const diff = DIFFICULTY_META[challenge.difficulty];
   const pct = Math.round(info.progress * 100);
   return `
     <div class="achievement-card achievement-card--incomplete media-card">
       ${challengeHeroForId(challenge.id)}
+      <span class="media-card-badge media-card-badge--left">${challengeProgressBadge({ pct: info.progress, done: false })}</span>
+      <span class="media-card-badge challenge-difficulty-badge ${diff.className}">
+        <span class="challenge-difficulty-dot"></span>${diff.label}
+      </span>
       <div class="media-card-scrim">
-        <div class="challenge-difficulty">
-          <span class="challenge-difficulty-dot ${diff.className}"></span>
-          ${diff.label}
-        </div>
         <div class="media-card-title">${challenge.title}</div>
         <div class="media-card-meta">Не завершено — прогресс ${pct}% (${monthLabelFromKey(info.monthKey)})</div>
-        ${challengeProgressBarHtml(info.progress, false, { tone: "muted" })}
       </div>
     </div>`;
 }

@@ -1,9 +1,9 @@
 import { getAppStats } from "../state/derive.js";
-import { CHALLENGE_POOL, DIFFICULTY_META, pickMonthlyChallenges, getCompletedChallengesMap, getChallengeProgress } from "../logic/challenges.js";
+import { CHALLENGE_POOL, DIFFICULTY_META, DIFFICULTY_RANK, pickMonthlyChallenges, getCompletedChallengesMap, getChallengeProgress } from "../logic/challenges.js";
 import { todayParts, monthKey, monthLabel } from "../logic/dateUtils.js";
 import { openModal } from "../components/modal.js";
 import { showToast } from "../components/toast.js";
-import { medalIllustration, statusRing, challengeHeroForId } from "../illustrations.js";
+import { medalIllustration, challengeProgressBadge, challengeHeroForId } from "../illustrations.js";
 
 export function renderChallengesView(container) {
   const { newlyCompletedChallenges, monthStats } = getAppStats();
@@ -15,7 +15,12 @@ export function renderChallengesView(container) {
 
   const t = todayParts();
   const currentMonthKey = monthKey(t.year, t.month);
-  const active = pickMonthlyChallenges(currentMonthKey);
+  // Sorted easy -> medium -> hard (stable, so same-tier challenges keep
+  // pickMonthlyChallenges()'s own order) — the pool's picked-per-month
+  // order has no relation to difficulty on its own.
+  const active = pickMonthlyChallenges(currentMonthKey)
+    .slice()
+    .sort((a, b) => DIFFICULTY_RANK[a.difficulty] - DIFFICULTY_RANK[b.difficulty]);
   const completed = getCompletedChallengesMap();
 
   container.innerHTML = `
@@ -49,27 +54,14 @@ function challengeCardHtml(challenge, done, monthStats) {
   return `
     <div class="challenge-card media-card ${done ? "is-done" : ""}" data-challenge-id="${challenge.id}" role="button" tabindex="0">
       ${challengeHeroForId(challenge.id)}
-      <span class="media-card-badge">${statusRing({ state: done ? "done" : "empty", size: 34, pct })}</span>
+      <span class="media-card-badge media-card-badge--left">${challengeProgressBadge({ pct, done })}</span>
+      <span class="media-card-badge challenge-difficulty-badge ${diff.className}">
+        <span class="challenge-difficulty-dot"></span>${diff.label}
+      </span>
       <div class="media-card-scrim">
-        <div class="challenge-difficulty">
-          <span class="challenge-difficulty-dot ${diff.className}"></span>
-          ${diff.label}
-        </div>
         <div class="media-card-title">${challenge.title}</div>
         <div class="media-card-meta">${challenge.description}</div>
-        ${challengeProgressBarHtml(pct, done)}
       </div>
-    </div>`;
-}
-
-/** Shared with achievementsView.js's incomplete-attempt cards — a thin fill bar + percentage label. `tone` picks the fill color: "accent" (still achievable, this month's active card) or "muted" (an archived, no-longer-achievable attempt). */
-export function challengeProgressBarHtml(pct, done, { tone = "accent" } = {}) {
-  if (done) return "";
-  const roundedPct = Math.round(pct * 100);
-  return `
-    <div class="challenge-progress">
-      <div class="challenge-progress-track"><div class="challenge-progress-fill challenge-progress-fill--${tone}" style="width:${roundedPct}%"></div></div>
-      <span class="challenge-progress-label">${roundedPct}%</span>
     </div>`;
 }
 

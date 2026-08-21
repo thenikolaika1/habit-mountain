@@ -193,6 +193,11 @@
   z-index: 1;
 }
 
+.media-card-badge--left {
+  right: auto;
+  left: var(--space-2);
+}
+
 .media-card-icon-btn {
   position: absolute;
   top: var(--space-2);
@@ -978,79 +983,45 @@
   box-shadow: var(--shadow-sm), 0 0 0 3px var(--color-accent);
 }
 
-/* Difficulty badge (colored dot + label) — sits at the top of the scrim,
- * above the title. Dot colors reuse existing palette tokens rather than
- * introducing new hex values: green/amber/red already exist as the
+/* Difficulty badge (colored dot + label) — an opaque corner badge overlaid
+ * on the photo (top-right, via .media-card-badge), not a translucent line
+ * in the scrim any more: a solid light pill reads clearly regardless of
+ * what's behind it and is a level up in "заметнее" from the old
+ * scrim-text version. Dot colors reuse existing palette tokens rather
+ * than introducing new hex values: green/amber/red already exist as the
  * accent/warning/danger tokens. */
-.challenge-difficulty {
-  display: flex;
+.challenge-difficulty-badge {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
-  font-weight: 700;
+  padding: 6px 11px;
+  border-radius: var(--radius-round);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow-sm);
+  font-size: 12px;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  color: rgba(255, 255, 255, 0.92);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-  margin-bottom: 3px;
+  color: var(--color-ink);
 }
 
 .challenge-difficulty-dot {
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   flex-shrink: 0;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
 }
 
-.challenge-difficulty-dot.is-easy {
+.challenge-difficulty-badge.is-easy .challenge-difficulty-dot {
   background: var(--color-accent);
 }
 
-.challenge-difficulty-dot.is-medium {
+.challenge-difficulty-badge.is-medium .challenge-difficulty-dot {
   background: var(--color-warning);
 }
 
-.challenge-difficulty-dot.is-hard {
+.challenge-difficulty-badge.is-hard .challenge-difficulty-dot {
   background: var(--color-danger);
-}
-
-/* Thin progress bar + percentage, under the description in the scrim —
- * shared by the active challenge card (.challenge-progress-fill--accent,
- * green: still achievable this month) and the archived incomplete-attempt
- * card in Достижения (.challenge-progress-fill--muted, neutral: no longer
- * achievable, just a record of how far it got). */
-.challenge-progress {
-  margin-top: var(--space-2);
-}
-
-.challenge-progress-track {
-  height: 5px;
-  border-radius: var(--radius-round);
-  background: rgba(255, 255, 255, 0.28);
-  overflow: hidden;
-}
-
-.challenge-progress-fill {
-  height: 100%;
-  border-radius: var(--radius-round);
-}
-
-.challenge-progress-fill--accent {
-  background: var(--color-accent);
-}
-
-.challenge-progress-fill--muted {
-  background: rgba(255, 255, 255, 0.7);
-}
-
-.challenge-progress-label {
-  display: block;
-  margin-top: 3px;
-  font-size: 11px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.85);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 }
 
 /* ---------- Settings ---------- */
