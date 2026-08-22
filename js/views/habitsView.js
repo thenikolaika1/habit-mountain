@@ -1,4 +1,4 @@
-import { getHabits, addHabit, updateHabit, archiveHabit, deleteHabitPermanently, PALETTE } from "../state/habits.js";
+import { getHabits, addHabit, updateHabit, archiveHabit, deleteHabitPermanently } from "../state/habits.js";
 import { getEntriesForHabit } from "../state/entries.js";
 import { computeCurrentStreak } from "../logic/streaks.js";
 import { openModal, closeModal, openConfirm } from "../components/modal.js";
@@ -144,7 +144,6 @@ function habitsListHtml(habits) {
 
 function habitFormHtml(habit) {
   const type = habit?.type || "boolean";
-  const color = habit?.color || PALETTE[0];
   const defaultUnit = loadState().meta.settings.defaultUnit;
   const unit = habit?.unit || defaultUnit;
 
@@ -153,13 +152,6 @@ function habitFormHtml(habit) {
       <div class="field">
         <label for="habit-name">Название</label>
         <input type="text" id="habit-name" required maxlength="60" value="${habit ? escapeHtml(habit.name) : ""}" placeholder="Например, Отжимания" />
-      </div>
-
-      <div class="field">
-        <label>Цвет</label>
-        <div class="color-picker" id="habit-color-picker">
-          ${PALETTE.map((c) => `<button type="button" class="color-picker-item ${c === color ? "is-active" : ""}" data-value="${c}" style="background:${c}" aria-label="Выбрать цвет"></button>`).join("")}
-        </div>
       </div>
 
       <div class="field">
@@ -191,13 +183,11 @@ function habitFormHtml(habit) {
 
 function wireHabitForm(sheet, close, { habit } = {}) {
   let currentType = habit?.type || "boolean";
-  let currentColor = habit?.color || PALETTE[0];
   const defaultUnit = loadState().meta.settings.defaultUnit;
   let currentUnit = habit?.unit || defaultUnit;
   const typeGroup = sheet.querySelector("#habit-type");
   const unitField = sheet.querySelector("#habit-unit-field");
   const unitPicker = sheet.querySelector("#habit-unit-picker");
-  const colorPicker = sheet.querySelector("#habit-color-picker");
 
   typeGroup.querySelectorAll("button").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -214,13 +204,6 @@ function wireHabitForm(sheet, close, { habit } = {}) {
     });
   });
 
-  colorPicker.querySelectorAll(".color-picker-item").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      currentColor = btn.dataset.value;
-      colorPicker.querySelectorAll(".color-picker-item").forEach((b) => b.classList.toggle("is-active", b === btn));
-    });
-  });
-
   sheet.querySelector("#habit-form").addEventListener("submit", (e) => {
     e.preventDefault();
     const name = sheet.querySelector("#habit-name").value.trim();
@@ -231,10 +214,9 @@ function wireHabitForm(sheet, close, { habit } = {}) {
         name,
         type: currentType,
         unit: currentType === "numeric" ? currentUnit : "",
-        color: currentColor,
       });
     } else {
-      addHabit({ name, type: currentType, unit: currentUnit, color: currentColor });
+      addHabit({ name, type: currentType, unit: currentUnit });
     }
     close();
   });

@@ -807,10 +807,6 @@
     box-shadow: var(--shadow-md), 0 8px 20px rgba(var(--color-accent-rgb), 0.35);
   }
 
-  .color-picker-item:hover {
-    transform: scale(1.15);
-  }
-
   .unit-picker-item:hover {
     transform: scale(1.04);
   }
@@ -933,33 +929,23 @@
   line-height: 1.2;
 }
 
-/* ---------- Color / unit pickers (habit form) ----------
- * The habit form used to also have an .emoji-picker here for manually
- * picking a habit's icon/photo — removed: photo selection is automatic now
- * (a category detected from the habit's name, see logic/categories.js), so
- * there's nothing left to manually pick. */
-.color-picker,
+/* ---------- Unit picker (habit form) ----------
+ * The habit form used to also have an .emoji-picker (icon/photo) and a
+ * .color-picker (habit.color) here for manually picking a habit's visual
+ * identity — both removed: photo selection is automatic now (a category
+ * detected from the habit's name, see logic/categories.js), and the color
+ * still exists on the habit (used for the "Сегодня" avatar chip gradient,
+ * see darkenColor() in state/habits.js) but is now assigned automatically
+ * too (addHabit()'s own round-robin pickColor() fallback), never edited
+ * again once set. */
 .unit-picker {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
 }
 
-.color-picker-item {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-md);
-  border: 3px solid transparent;
-  transition: transform 150ms ease, border-color 150ms ease;
-}
-
-.color-picker-item.is-active {
-  border-color: var(--color-ink);
-}
-
-/* Unit-of-measure picker (habitFormHtml()'s #habit-unit-picker) — a row of
- * icon+label pills instead of a bare <select>, same visual language as
- * .color-picker-item above (rounded, active border/background highlight). */
+/* Icon+label pills instead of a bare <select>, rounded/active-highlight
+ * language consistent with the rest of the form. */
 .unit-picker-item {
   display: inline-flex;
   align-items: center;
