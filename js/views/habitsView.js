@@ -1,8 +1,8 @@
-import { getHabits, addHabit, updateHabit, archiveHabit, deleteHabitPermanently, PALETTE, EMOJI_CHOICES } from "../state/habits.js";
+import { getHabits, addHabit, updateHabit, archiveHabit, deleteHabitPermanently, PALETTE } from "../state/habits.js";
 import { getEntriesForHabit } from "../state/entries.js";
 import { computeCurrentStreak } from "../logic/streaks.js";
 import { openModal, closeModal, openConfirm } from "../components/modal.js";
-import { UNITS } from "../logic/units.js";
+import { UNITS, UNIT_ICONS } from "../logic/units.js";
 import { loadState } from "../state/storage.js";
 import { sproutIllustration, statusRing, heroIllustrationForHabit, wirePhotoFallback, iconSearch } from "../illustrations.js";
 import { isDayComplete } from "../logic/completion.js";
@@ -23,7 +23,9 @@ export function renderHabitsView(container) {
   container.innerHTML = `
     <section class="view">
       <div class="view-header">
-        <h1>Привычки</h1>
+        <div class="habits-title">
+          <h1>Привычки</h1>
+        </div>
       </div>
 
       <div class="field habit-search-field">
@@ -142,7 +144,6 @@ function habitsListHtml(habits) {
 
 function habitFormHtml(habit) {
   const type = habit?.type || "boolean";
-  const icon = habit?.icon || EMOJI_CHOICES[0];
   const color = habit?.color || PALETTE[0];
   const defaultUnit = loadState().meta.settings.defaultUnit;
   const unit = habit?.unit || defaultUnit;
@@ -152,13 +153,6 @@ function habitFormHtml(habit) {
       <div class="field">
         <label for="habit-name">Название</label>
         <input type="text" id="habit-name" required maxlength="60" value="${habit ? escapeHtml(habit.name) : ""}" placeholder="Например, Отжимания" />
-      </div>
-
-      <div class="field">
-        <label>Иконка</label>
-        <div class="emoji-picker" id="habit-icon-picker">
-          ${EMOJI_CHOICES.map((e) => `<button type="button" class="emoji-picker-item ${e === icon ? "is-active" : ""}" data-value="${e}">${e}</button>`).join("")}
-        </div>
       </div>
 
       <div class="field">
@@ -176,10 +170,10 @@ function habitFormHtml(habit) {
         </div>
       </div>
       <div class="field" id="habit-unit-field" style="display:${type === "numeric" ? "block" : "none"}">
-        <label for="habit-unit">Единица измерения</label>
-        <select id="habit-unit">
-          ${UNITS.map((u) => `<option value="${u}" ${u === unit ? "selected" : ""}>${u}</option>`).join("")}
-        </select>
+        <label>Единица измерения</label>
+        <div class="unit-picker" id="habit-unit-picker">
+          ${UNITS.map((u) => `<button type="button" class="unit-picker-item ${u === unit ? "is-active" : ""}" data-value="${u}"><span class="unit-picker-item-icon">${UNIT_ICONS[u] || ""}</span>${u}</button>`).join("")}
+        </div>
       </div>
       <div class="modal-actions">
         <button type="submit" class="btn btn-primary btn-block">${habit ? "Сохранить" : "Добавить привычку"}</button>
@@ -197,11 +191,12 @@ function habitFormHtml(habit) {
 
 function wireHabitForm(sheet, close, { habit } = {}) {
   let currentType = habit?.type || "boolean";
-  let currentIcon = habit?.icon || EMOJI_CHOICES[0];
   let currentColor = habit?.color || PALETTE[0];
+  const defaultUnit = loadState().meta.settings.defaultUnit;
+  let currentUnit = habit?.unit || defaultUnit;
   const typeGroup = sheet.querySelector("#habit-type");
   const unitField = sheet.querySelector("#habit-unit-field");
-  const iconPicker = sheet.querySelector("#habit-icon-picker");
+  const unitPicker = sheet.querySelector("#habit-unit-picker");
   const colorPicker = sheet.querySelector("#habit-color-picker");
 
   typeGroup.querySelectorAll("button").forEach((btn) => {
@@ -212,10 +207,10 @@ function wireHabitForm(sheet, close, { habit } = {}) {
     });
   });
 
-  iconPicker.querySelectorAll(".emoji-picker-item").forEach((btn) => {
+  unitPicker.querySelectorAll(".unit-picker-item").forEach((btn) => {
     btn.addEventListener("click", () => {
-      currentIcon = btn.dataset.value;
-      iconPicker.querySelectorAll(".emoji-picker-item").forEach((b) => b.classList.toggle("is-active", b === btn));
+      currentUnit = btn.dataset.value;
+      unitPicker.querySelectorAll(".unit-picker-item").forEach((b) => b.classList.toggle("is-active", b === btn));
     });
   });
 
@@ -230,19 +225,16 @@ function wireHabitForm(sheet, close, { habit } = {}) {
     e.preventDefault();
     const name = sheet.querySelector("#habit-name").value.trim();
     if (!name) return;
-    const unitSelect = sheet.querySelector("#habit-unit");
-    const unit = unitSelect ? unitSelect.value : "";
 
     if (habit) {
       updateHabit(habit.id, {
         name,
         type: currentType,
-        unit: currentType === "numeric" ? unit : "",
-        icon: currentIcon,
+        unit: currentType === "numeric" ? currentUnit : "",
         color: currentColor,
       });
     } else {
-      addHabit({ name, type: currentType, unit, icon: currentIcon, color: currentColor });
+      addHabit({ name, type: currentType, unit: currentUnit, color: currentColor });
     }
     close();
   });

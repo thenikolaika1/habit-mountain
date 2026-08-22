@@ -807,9 +807,12 @@
     box-shadow: var(--shadow-md), 0 8px 20px rgba(var(--color-accent-rgb), 0.35);
   }
 
-  .emoji-picker-item:hover,
   .color-picker-item:hover {
     transform: scale(1.15);
+  }
+
+  .unit-picker-item:hover {
+    transform: scale(1.04);
   }
 
   .settings-toggle:hover {
@@ -930,30 +933,16 @@
   line-height: 1.2;
 }
 
-/* ---------- Emoji / color pickers (habit form) ---------- */
-.emoji-picker,
-.color-picker {
+/* ---------- Color / unit pickers (habit form) ----------
+ * The habit form used to also have an .emoji-picker here for manually
+ * picking a habit's icon/photo — removed: photo selection is automatic now
+ * (a category detected from the habit's name, see logic/categories.js), so
+ * there's nothing left to manually pick. */
+.color-picker,
+.unit-picker {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-}
-
-.emoji-picker-item {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  background: var(--color-surface-alt);
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 150ms ease, border-color 150ms ease;
-}
-
-.emoji-picker-item.is-active {
-  border-color: var(--color-accent);
-  background: var(--color-surface);
 }
 
 .color-picker-item {
@@ -966,6 +955,33 @@
 
 .color-picker-item.is-active {
   border-color: var(--color-ink);
+}
+
+/* Unit-of-measure picker (habitFormHtml()'s #habit-unit-picker) — a row of
+ * icon+label pills instead of a bare <select>, same visual language as
+ * .color-picker-item above (rounded, active border/background highlight). */
+.unit-picker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-round);
+  border: 2px solid transparent;
+  background: var(--color-surface-alt);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  transition: transform 150ms ease, border-color 150ms ease;
+}
+
+.unit-picker-item-icon {
+  font-size: 15px;
+}
+
+.unit-picker-item.is-active {
+  border-color: var(--color-accent);
+  background: var(--color-surface);
+  color: var(--color-accent-dark);
 }
 
 /* ---------- Challenges ---------- */

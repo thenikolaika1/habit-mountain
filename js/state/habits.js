@@ -10,7 +10,14 @@ export function getHabit(id) {
   return state.habits.find((h) => h.id === id) || null;
 }
 
-const DEFAULT_ICONS = ["⭐", "🌱", "💧", "📚", "🏃", "🧘", "🎯", "☀️"];
+// Round-robin fallback for habit.icon when nothing else supplies one — the
+// habit form no longer lets users pick an icon manually (photo selection is
+// automatic, see logic/categories.js), so this is now the *only* source of
+// habit.icon for new habits. Deliberately excludes 💧📚🏃🧘 (PHOTO_BY_EMOJI's
+// keys in illustrations.js) — landing on one of those by pure round-robin
+// chance would hijack an unrelated habit onto pit_vodu.png/chtenie.png/
+// progulka.png/meditaciya.png regardless of what the habit is actually about.
+const DEFAULT_ICONS = ["⭐", "🌱", "🎯", "☀️", "🔥", "🎨", "🌍", "🧠"];
 
 export function addHabit({ name, type, unit = "", target = null, color = null, icon = null }) {
   const state = loadState();
@@ -101,11 +108,3 @@ export function darkenColor(hex, amount = 0.16) {
       .padStart(2, "0");
   return `#${toHex(r2)}${toHex(g2)}${toHex(b2)}`;
 }
-
-// Curated emoji choices for the habit avatar picker — a fixed, small set
-// covering common habit themes rather than a full emoji picker library.
-export const EMOJI_CHOICES = [
-  "⭐", "🌱", "💧", "📚", "🏃", "🧘", "🎯", "☀️",
-  "🔥", "💪", "🛌", "🥗", "🚭", "🧠", "🎨", "🎸",
-  "🚴", "🏊", "✍️", "🧹", "💰", "🌍", "🐶", "☕️",
-];

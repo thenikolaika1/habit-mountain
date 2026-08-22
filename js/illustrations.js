@@ -4,6 +4,8 @@
 // via CSS classes (styled in css/illustrations.css) rather than baked into
 // the markup, so everything reacts correctly to the light/dark theme.
 
+import { detectCategory, getCategoryById } from "./logic/categories.js";
+
 /**
  * Small circular status indicator — done (filled + check) / empty (outline,
  * optionally with a partial-fill progress arc via `pct`) / locked (outline
@@ -399,7 +401,6 @@ const HERO_BY_EMOJI = {
   "🎸": heroCreative,
 };
 
-/** Picks a themed hero illustration for a habit from its emoji icon, falling back to the generic mountain/sun scene for anything unmapped. */
 // ---------- Real photos (assets/habits/), where available ----------
 // A small curated set of the "Популярные привычки" presets ships an actual
 // photo instead of a hand-drawn scene — matched by the habit's emoji icon,
@@ -436,9 +437,37 @@ function heroPhotoFrame(filename, alt, icon) {
   return `<img class="habit-hero-photo" src="./assets/habits/${filename}" alt="${alt}" loading="lazy" data-fallback-icon="${icon}" />`;
 }
 
+/** Same full-bleed treatment as heroPhotoFrame(), for a category-matched photo (logic/categories.js) instead of an emoji-matched one — data-fallback-category lets wirePhotoFallback() below pick the right themed SVG scene (or the generic default) if the file 404s. */
+function categoryPhotoFrame(categoryId, filename, alt) {
+  return `<img class="habit-hero-photo" src="./assets/habits/${filename}" alt="${alt}" loading="lazy" data-fallback-category="${categoryId}" />`;
+}
+
+// SVG-scene fallback for a category photo that fails to load — only
+// "sport" and "mental_health" have an existing hand-drawn scene that's
+// actually a good thematic match (they already reuse otzhimaniya.png/
+// meditaciya.png, the same photos 💪/🧘 use); the other 6 categories have
+// no dedicated scene, so they fall back to the generic heroDefault().
+const CATEGORY_FALLBACK_BUILD = {
+  sport: heroFitness,
+  mental_health: heroMindfulness,
+};
+
+/**
+ * Picks a themed hero illustration for a habit — a real photo where one's
+ * mapped, otherwise a drawn SVG scene. Three tiers, in order: (1) the
+ * habit's emoji (PHOTO_BY_EMOJI — mainly catches the 6 "Популярные
+ * привычки" presets, which set `icon` directly and never touch the form);
+ * (2) a category auto-detected from the habit's *name* (logic/categories.js
+ * — the primary path for anything created through the add/edit form, which
+ * has no manual photo/icon picker any more); (3) the emoji-keyed drawn
+ * scene, or the generic mountain/sun default if nothing matched at all.
+ */
 export function heroIllustrationForHabit(habit) {
   const photo = PHOTO_BY_EMOJI[habit?.icon];
   if (photo) return heroPhotoFrame(photo, habit?.name || "", habit?.icon || "");
+  const categoryId = detectCategory(habit?.name);
+  const category = categoryId && getCategoryById(categoryId);
+  if (category) return categoryPhotoFrame(category.id, category.photo, habit?.name || "");
   const build = HERO_BY_EMOJI[habit?.icon] || heroDefault;
   return build();
 }
@@ -454,7 +483,7 @@ export function heroIllustrationForHabit(habit) {
  */
 export function wirePhotoFallback(container) {
   container
-    .querySelectorAll("img[data-fallback-icon], img[data-fallback-challenge-id], img[data-fallback-header]")
+    .querySelectorAll("img[data-fallback-icon], img[data-fallback-challenge-id], img[data-fallback-header], img[data-fallback-category]")
     .forEach((img) => {
       img.addEventListener(
         "error",
@@ -464,6 +493,9 @@ export function wirePhotoFallback(container) {
             img.outerHTML = build();
           } else if (img.dataset.fallbackHeader !== undefined) {
             img.outerHTML = medalIllustration();
+          } else if (img.dataset.fallbackCategory !== undefined) {
+            const build = CATEGORY_FALLBACK_BUILD[img.dataset.fallbackCategory] || heroDefault;
+            img.outerHTML = build();
           } else {
             const build = HERO_BY_EMOJI[img.dataset.fallbackIcon] || heroDefault;
             img.outerHTML = build();
