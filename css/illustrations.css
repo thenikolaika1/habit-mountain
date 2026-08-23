@@ -247,6 +247,27 @@
   display: block;
 }
 
+/* Per-photo micro-adjustments off the 20% default above — a few files read
+ * better with the .habit-card window nudged a little one way or the other.
+ * Matched by `src` (the only per-photo hook available at this point — see
+ * heroPhotoFrame()/categoryPhotoFrame() in illustrations.js) rather than a
+ * new class, so it applies wherever that exact file is used, preset or
+ * auto-detected category alike (meditaciya.png is also the mental_health
+ * category photo, otzhimaniya.png is also the sport category photo —
+ * intentional, one file means one crop everywhere it appears). Small
+ * nudges only (~6 points either way) — both directions have plenty of
+ * margin on these three (bisected the same way as the 20% default: full
+ * face still in frame from ~8% up through ~34% down on each), so this is
+ * a deliberate light correction, not a value picked at a safety limit. */
+.habit-hero-photo[src$="meditaciya.png"],
+.habit-hero-photo[src$="progulka.png"] {
+  object-position: center 14%;
+}
+
+.habit-hero-photo[src$="otzhimaniya.png"] {
+  object-position: center 26%;
+}
+
 /* Real medal photo variant for challenge/achievement cards
  * (medalHeroFrame() in illustrations.js) — same absolute-fill technique as
  * .habit-hero-photo, but without its 118%/top offset: all 5 medal sources
