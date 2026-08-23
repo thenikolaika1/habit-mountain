@@ -1,8 +1,11 @@
-// Bumped for the v2 redesign (5 tabs, Испытания/Настройки, new palette) —
-// a new cache name means the "activate" handler below purges the old v1
-// cache wholesale instead of leaving a stale mix of pre- and
-// post-redesign files for anyone who already installed the app.
-const CACHE_NAME = "habit-mountain-v2";
+// Bumped for the v3 habit-photos work (auto-category detection, the medal/
+// category photo pack, and several rounds of object-position crop tuning
+// across css/illustrations.css) — none of that landed here since v2, so
+// anyone with the app already installed was stuck on cache-first stale
+// CSS/JS the whole time (fetch handler below is cache-first: a hit never
+// re-checks the network). A new cache name makes the "activate" handler
+// purge the old cache wholesale instead of leaving a stale mix behind.
+const CACHE_NAME = "habit-mountain-v3";
 
 const APP_SHELL = [
   "./",
