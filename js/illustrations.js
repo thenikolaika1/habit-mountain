@@ -434,12 +434,19 @@ function heroPhotoFrame(filename, alt, icon) {
   // icon if there were no photo mapping — so a missing/broken photo file
   // degrades to the matching drawn scene (a wet droplet for 💧, a book for
   // 📚, ...), not a generic fallback every mapped habit would share.
-  return `<img class="habit-hero-photo" src="./assets/habits/${filename}" alt="${alt}" loading="lazy" data-fallback-icon="${icon}" />`;
+  // data-photo carries the bare filename for css/illustrations.css's
+  // per-photo object-position overrides — kept as its own attribute
+  // (not read off `src`) because `src` isn't a stable thing to match on:
+  // a cache-busting query string, a CDN rewrite, or (concretely, in this
+  // project) the Artifact-preview bundler inlining every photo as a
+  // `data:` URI would each silently break a `[src$="filename.png"]`
+  // selector without any error, and did exactly that here once already.
+  return `<img class="habit-hero-photo" src="./assets/habits/${filename}" data-photo="${filename}" alt="${alt}" loading="lazy" data-fallback-icon="${icon}" />`;
 }
 
 /** Same full-bleed treatment as heroPhotoFrame(), for a category-matched photo (logic/categories.js) instead of an emoji-matched one — data-fallback-category lets wirePhotoFallback() below pick the right themed SVG scene (or the generic default) if the file 404s. */
 function categoryPhotoFrame(categoryId, filename, alt) {
-  return `<img class="habit-hero-photo" src="./assets/habits/${filename}" alt="${alt}" loading="lazy" data-fallback-category="${categoryId}" />`;
+  return `<img class="habit-hero-photo" src="./assets/habits/${filename}" data-photo="${filename}" alt="${alt}" loading="lazy" data-fallback-category="${categoryId}" />`;
 }
 
 // SVG-scene fallback for a category photo that fails to load — only

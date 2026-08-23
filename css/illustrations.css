@@ -249,26 +249,30 @@
 
 /* Per-photo micro-adjustments off the 20% default above — a few files read
  * better with the .habit-card window nudged a little one way or the other.
- * Matched by `src` (the only per-photo hook available at this point — see
- * heroPhotoFrame()/categoryPhotoFrame() in illustrations.js) rather than a
- * new class, so it applies wherever that exact file is used, preset or
- * auto-detected category alike (meditaciya.png is also the mental_health
- * category photo, otzhimaniya.png is also the sport category photo —
- * intentional, one file means one crop everywhere it appears). Bisected
- * against the rendered card each time, same as the 20% default — progulka.png
- * keeps a full face up to 0% (pure top), otzhimaniya.png keeps one down to
- * 50%, so both have far more room than the values below use; a first pass
- * (14%/26%) turned out to read as too subtle a change, revised further in
- * the same direction. */
-.habit-hero-photo[src$="meditaciya.png"] {
+ * Matched by `data-photo` (set alongside `src` in heroPhotoFrame()/
+ * categoryPhotoFrame(), illustrations.js) rather than `src` itself or a new
+ * class — `src` isn't safe to match on here: the Artifact-preview bundler
+ * inlines every photo as a `data:` URI, which silently broke a
+ * `[src$="filename.png"]` version of this rule with no error (the base
+ * rule below just won every specificity fight instead), so this now keys
+ * off an attribute nothing ever rewrites. Applies wherever that exact file
+ * is used, preset or auto-detected category alike (meditaciya.png is also
+ * the mental_health category photo, otzhimaniya.png is also the sport
+ * category photo — intentional, one file means one crop everywhere it
+ * appears). Bisected against the rendered card each time, same as the 20%
+ * default — progulka.png keeps a full face up to 0% (pure top),
+ * otzhimaniya.png keeps one down to 50%, so both have far more room than
+ * the values below use; a first pass (14%/26%) turned out to read as too
+ * subtle a change, revised further in the same direction. */
+.habit-hero-photo[data-photo="meditaciya.png"] {
   object-position: center 14%;
 }
 
-.habit-hero-photo[src$="progulka.png"] {
+.habit-hero-photo[data-photo="progulka.png"] {
   object-position: center 6%;
 }
 
-.habit-hero-photo[src$="otzhimaniya.png"] {
+.habit-hero-photo[data-photo="otzhimaniya.png"] {
   object-position: center 38%;
 }
 
