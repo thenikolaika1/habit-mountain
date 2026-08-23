@@ -150,29 +150,18 @@ a:visited {
   gap: var(--space-2);
 }
 
+/* Every screen's header (Испытания/Привычки/Прогресс/Достижения/
+ * Настройки — all five wrap their <h1> in .view-header, some additionally
+ * in their own .challenges-title/.habits-title div, which is now just a
+ * structural wrapper with no styling of its own) shares this same bold,
+ * light-to-saturated green gradient fill — the same accent tokens as
+ * .btn-primary/.fab (var(--color-accent) -> var(--color-accent-dark)), so
+ * every section header echoes the app's own green identity identically,
+ * not just Испытания/Привычки. Only existing palette tokens — no new
+ * colors. */
 .view-header h1 {
   font-family: var(--font-display);
   font-size: 22px;
-  font-weight: 600;
-}
-
-.mountain-month-subtitle {
-  font-size: 12px;
-  color: var(--color-text-muted);
-  margin-top: 2px;
-}
-
-/* Испытания's and Привычки's own title blocks (challengesView.js wraps its
- * <h1>/.mountain-month-subtitle in .challenges-title; habitsView.js wraps
- * its bare <h1> in .habits-title) — bolder + the same light-to-saturated
- * green gradient fill as .btn-primary/.fab elsewhere in the app
- * (var(--color-accent) -> var(--color-accent-dark)), so both headers echo
- * the app's own green identity and match each other exactly. Scoped so the
- * shared .view-header h1/.mountain-month-subtitle rules above stay
- * untouched everywhere else (Достижения, Прогресс, Настройки). Only
- * existing palette tokens — no new colors. */
-.challenges-title h1,
-.habits-title h1 {
   font-weight: 800;
   color: var(--color-accent-dark); /* fallback if background-clip: text isn't supported */
   background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
@@ -180,6 +169,12 @@ a:visited {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.mountain-month-subtitle {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
 }
 
 .challenges-title .mountain-month-subtitle {

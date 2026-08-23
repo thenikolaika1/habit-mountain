@@ -100,8 +100,14 @@
   height: 56px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
-  color: var(--color-accent-contrast);
+  /* Fixed white, not var(--color-accent-contrast) — that token flips to a
+   * near-black (#08130f) in the dark theme (meant for text on the lighter
+   * dark-theme accent green elsewhere, e.g. .btn-primary), which made the
+   * "+" nearly invisible against this button's gradient in dark mode. */
+  color: #ffffff;
   font-size: 28px;
+  line-height: 1; /* the "+" glyph's own line box otherwise pushes it a
+    couple px off the flex-centered geometric center of the circle */
   border: none;
   box-shadow: var(--shadow-md);
   z-index: var(--z-tabbar);
