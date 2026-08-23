@@ -222,20 +222,28 @@
  * slack for object-position to slide through. The taller .popular-habit-card
  * (3/4) and .habit-hero (4/5) boxes scale by *height* instead, so cover
  * already maps almost the whole photo (minus the 118%-cropped caption
- * strip) onto them regardless of this value — nothing to tune there. Pulled
- * down from "top" (0%) → "20%" → "38%": every source photo has its
- * subject's face in the top third of the square frame, so a low value
- * mostly showed hair/headroom over a sliver of face on the .habit-card
- * banner — 38% slides the visible window down into chest/hands territory
- * (the actual action, not just the face) while staying well clear of the
- * caption clipped off the bottom. */
+ * strip) onto them regardless of this value — nothing to tune there.
+ *
+ * On .habit-card, the visible window is a hard ~38.5% slice of the source
+ * photo's height no matter what this value is (fixed purely by the 2.6/1
+ * aspect ratio + a square source) — this value only controls *where* that
+ * slice sits, not how tall it is. Some photos frame their subject small
+ * within the square (progulka.png in particular — a person shown mostly
+ * full-body, head occupying a short vertical band) — bisected it directly
+ * by sweeping this value against the rendered card: the head is fully in
+ * frame through ~20%, then it's *entirely* gone by 24% (the window slides
+ * past the whole head in that narrow gap, not just clipping into it a
+ * little). 20% is the highest value with real margin on every photo in the
+ * set — tried 38% and separately 22% first, both cut into/through a face
+ * on at least one photo, so don't push this any higher without re-checking
+ * every photo, not just the ones that looked fine in isolation. */
 .habit-hero-photo {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 118%;
   object-fit: cover;
-  object-position: center 38%;
+  object-position: center 20%;
   display: block;
 }
 
