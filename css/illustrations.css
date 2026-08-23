@@ -214,19 +214,28 @@
  * a drawn scene. height:118% crops off the bottom ~15% of the source photo
  * — where the photo pack's own caption pill sits — inside the container's
  * own overflow:hidden, so only the app's own scrim/title (drawn on top by
- * the caller) ends up labeling the card. object-position's vertical value
- * is pulled down off "top" (0%) to "20%" — every source photo has its
- * subject's face in the top third of the square frame, so pinning strictly
- * to the top mostly showed hair/headroom instead of the person/context
- * (hands, the object they're holding) — 20% shows more of the subject while
- * staying well clear of the caption clipped off the bottom. */
+ * the caller) ends up labeling the card.
+ *
+ * object-position's vertical value only has a visible effect on the wide
+ * .habit-card list-row banner (aspect-ratio 2.6/1) — `cover` scales a
+ * square source photo to fill that box by *width*, leaving real vertical
+ * slack for object-position to slide through. The taller .popular-habit-card
+ * (3/4) and .habit-hero (4/5) boxes scale by *height* instead, so cover
+ * already maps almost the whole photo (minus the 118%-cropped caption
+ * strip) onto them regardless of this value — nothing to tune there. Pulled
+ * down from "top" (0%) → "20%" → "38%": every source photo has its
+ * subject's face in the top third of the square frame, so a low value
+ * mostly showed hair/headroom over a sliver of face on the .habit-card
+ * banner — 38% slides the visible window down into chest/hands territory
+ * (the actual action, not just the face) while staying well clear of the
+ * caption clipped off the bottom. */
 .habit-hero-photo {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 118%;
   object-fit: cover;
-  object-position: center 20%;
+  object-position: center 38%;
   display: block;
 }
 

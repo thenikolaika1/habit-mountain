@@ -4,7 +4,7 @@
 // via CSS classes (styled in css/illustrations.css) rather than baked into
 // the markup, so everything reacts correctly to the light/dark theme.
 
-import { detectCategory, getCategoryById } from "./logic/categories.js";
+import { detectCategory, getCategoryById, NEUTRAL_CATEGORY_ID } from "./logic/categories.js";
 
 /**
  * Small circular status indicator — done (filled + check) / empty (outline,
@@ -453,23 +453,26 @@ const CATEGORY_FALLBACK_BUILD = {
 };
 
 /**
- * Picks a themed hero illustration for a habit — a real photo where one's
- * mapped, otherwise a drawn SVG scene. Three tiers, in order: (1) the
- * habit's emoji (PHOTO_BY_EMOJI — mainly catches the 6 "Популярные
- * привычки" presets, which set `icon` directly and never touch the form);
- * (2) a category auto-detected from the habit's *name* (logic/categories.js
- * — the primary path for anything created through the add/edit form, which
- * has no manual photo/icon picker any more); (3) the emoji-keyed drawn
- * scene, or the generic mountain/sun default if nothing matched at all.
+ * Picks a themed hero illustration for a habit — always a real photo, never
+ * the generic drawn mountain/sun scene, as long as *some* photo is mapped.
+ * Two tiers, in order: (1) the habit's emoji (PHOTO_BY_EMOJI — mainly
+ * catches the 6 "Популярные привычки" presets, which set `icon` directly
+ * and never touch the form); (2) a category auto-detected from the habit's
+ * *name* (logic/categories.js — the primary path for anything created
+ * through the add/edit form, which has no manual photo/icon picker any
+ * more), falling back to NEUTRAL_CATEGORY_ID's photo when nothing matched.
+ * (A habit's auto-assigned `icon` — round-robin from DEFAULT_ICONS, no
+ * longer picked by hand — carries no meaning about the habit itself, so
+ * unlike the emoji-mapped photo tier it's never used to pick an SVG scene
+ * here; HERO_BY_EMOJI/heroDefault() still exist for wirePhotoFallback()'s
+ * broken-photo-file fallback below.)
  */
 export function heroIllustrationForHabit(habit) {
   const photo = PHOTO_BY_EMOJI[habit?.icon];
   if (photo) return heroPhotoFrame(photo, habit?.name || "", habit?.icon || "");
-  const categoryId = detectCategory(habit?.name);
-  const category = categoryId && getCategoryById(categoryId);
-  if (category) return categoryPhotoFrame(category.id, category.photo, habit?.name || "");
-  const build = HERO_BY_EMOJI[habit?.icon] || heroDefault;
-  return build();
+  const categoryId = detectCategory(habit?.name) || NEUTRAL_CATEGORY_ID;
+  const category = getCategoryById(categoryId);
+  return categoryPhotoFrame(category.id, category.photo, habit?.name || "");
 }
 
 /**
