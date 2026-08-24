@@ -5,6 +5,7 @@
 // the markup, so everything reacts correctly to the light/dark theme.
 
 import { detectCategory, getCategoryById, NEUTRAL_CATEGORY_ID } from "./logic/categories.js";
+import { pickHabitIconTopic } from "./logic/habitIconTopics.js";
 
 /**
  * Small circular status indicator — done (filled + check) / empty (outline,
@@ -482,26 +483,63 @@ export function heroIllustrationForHabit(habit) {
   return categoryPhotoFrame(category.id, category.photo, habit?.name || "");
 }
 
+// Line-icon pictograms for the "Сегодня" checklist avatar (todayAvatarIcon()
+// below) — one per topic in logic/habitIconTopics.js's HABIT_ICON_TOPICS,
+// keyed by topic id. Deliberately plain outline shapes (no fill, uniform
+// stroke via .today-item-avatar-icon in css/components.css) at a shared
+// 24x24 grid, in the spirit of a minimal line-icon set (Feather/Lucide-
+// style) — this app has no external icon library dependency, so these are
+// hand-drawn to fit that same visual language instead of imported. Every
+// shape reads as "what this habit is about" at a glance, never as a status
+// indicator (no checkmarks/fills here — that's .today-check, a completely
+// separate element with its own state).
+const HABIT_ICON_PATHS = {
+  water: `<path d="M12 3 C12 3 6 10.5 6 15 A6 6 0 0 0 18 15 C18 10.5 12 3 12 3 Z" />`,
+  sleep: `<path d="M3 19 V10 A2 2 0 0 1 5 8 H10 A2 2 0 0 1 12 10 V13" /><path d="M12 13 H19 A2 2 0 0 1 21 15 V19" /><path d="M3 19 H21" /><circle cx="7" cy="10.5" r="1.3" />`,
+  meditation: `<circle cx="12" cy="7" r="2.2" /><path d="M12 9.2 V13" /><path d="M6 19 C6 15 9 13 12 13 C15 13 18 15 18 19" /><path d="M8 16 L5 19 M16 16 L19 19" />`,
+  vitamins: `<rect x="3" y="9" width="18" height="8" rx="4" /><line x1="12" y1="9" x2="12" y2="17" />`,
+  reading: `<path d="M4 5 C4 5 8 4 12 6 C16 4 20 5 20 5 V18 C20 18 16 17 12 19 C8 17 4 18 4 18 Z" /><path d="M12 6 V19" />`,
+  learning: `<path d="M12 4 L22 9 L12 14 L2 9 Z" /><path d="M6 11 V16 C6 17.5 8.5 19 12 19 C15.5 19 18 17.5 18 16 V11" /><path d="M22 9 V15" />`,
+  strength: `<path d="M4 10 V14" /><path d="M6.5 8 V16" /><path d="M17.5 8 V16" /><path d="M20 10 V14" /><path d="M6.5 12 H17.5" />`,
+  walking: `<ellipse cx="8" cy="8" rx="2" ry="3" transform="rotate(-20 8 8)" /><ellipse cx="16" cy="16" rx="2" ry="3" transform="rotate(20 16 16)" />`,
+  sport: `<circle cx="15.5" cy="5" r="1.8" /><path d="M13.5 8 L10.5 11.5 L13.5 13.5 L11.5 19.5 M13.5 13.5 L17 15.5 L18.5 12.5 M10.5 11.5 L7 13" />`,
+  nutrition: `<path d="M12 8 C9 6 5 8 5 13 C5 17 8 20 11 20 C11.7 20 12.3 20 13 20 C16 20 19 17 19 13 C19 8 15 6 12 8 Z" /><path d="M12 8 C12 8 11.5 5 13.5 4" />`,
+  cleaning: `<path d="M15 4 L7 17" /><path d="M7 17 L4.5 21 M9 15.5 L6 20.5 M11 14 L8.5 19" /><path d="M15 4 L18 6.5" />`,
+  home: `<path d="M4 11 L12 4 L20 11" /><path d="M6 10 V20 H18 V10" /><path d="M10 20 V15 H14 V20" />`,
+  finance: `<circle cx="12" cy="12" r="8" /><path d="M14.5 9.5 C14.5 8.3 13.4 7.5 12 7.5 C10.6 7.5 9.5 8.3 9.5 9.5 C9.5 10.7 10.6 11.1 12 11.5 C13.4 11.9 14.5 12.3 14.5 13.5 C14.5 14.7 13.4 15.5 12 15.5 C10.6 15.5 9.5 14.7 9.5 13.5" /><path d="M12 6 V18" />`,
+  mail: `<rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 7 L12 14 L21 7" />`,
+  phone: `<path d="M6 3 C6 3 9 3 9.5 6 C9.8 8 8 8.5 8 9.5 C8 12 12 16 14.5 16 C15.5 16 16 14.2 18 14.5 C21 15 21 18 21 18 C21 20 19 21 17 21 C10 21 3 14 3 7 C3 5 4 3 6 3 Z" />`,
+  relationships: `<circle cx="9" cy="8" r="2.5" /><circle cx="16.5" cy="9.5" r="2" /><path d="M4 19 C4 15.5 6.2 13.5 9 13.5 C11.2 13.5 13 14.8 13.6 16.8" /><path d="M13.5 19 C13.5 16.5 14.8 15 16.5 15 C18.4 15 20 16.6 20 19" />`,
+  productivity: `<rect x="5" y="4" width="14" height="17" rx="2" /><rect x="9" y="2.5" width="6" height="3" rx="1" /><path d="M8 10 H16 M8 13 H16 M8 16 H13" />`,
+  health: `<path d="M12 20 C12 20 4 14 4 8.5 A4 4 0 0 1 12 6.5 A4 4 0 0 1 20 8.5 C20 14 12 20 12 20 Z" /><path d="M8 12 H10 L11.5 9 L13.5 15 L15 12 H17" />`,
+};
+
+// Fallback for a name that matches no topic at all — a plain sparkle, not
+// a checkmark (this element is a decorative habit identifier, never a
+// status indicator — that distinction matters enough here to avoid any
+// shape that could read as "done").
+const NEUTRAL_ICON_PATH = `<path d="M12 3 L13.8 9.2 L20 11 L13.8 12.8 L12 19 L10.2 12.8 L4 11 L10.2 9.2 Z" />`;
+
 /**
  * Small round avatar for every row of the "Сегодня" checklist
  * (mountainView.js's todayListHtml() and daySummaryView.js's read-only
- * variant) — the same icon for every habit, not a per-habit photo (a real
- * photo was tried first, but looked odd/repetitive with the exact same
- * picture on every single row — a plain iconic mark reads better at this
- * size and repeated this often). The gradient is a plain CSS background
- * (css/components.css), the same var(--color-accent) -> var(--color-accent-dark)
- * gradient as .fab/.btn-primary/the section headers — not an SVG
- * <linearGradient>, which would need a unique id per instance to avoid
- * collisions (todayListHtml() renders one of these per habit, so multiple
- * copies land in the DOM at once). Just a small inline-SVG checkmark on
- * top, the same 3-point path shape statusRing() uses for its own "done"
- * check.
+ * variant) — a light disc with a thin accent-green ring, and a matching
+ * green outline pictogram for the habit's topic (a droplet for water, a
+ * book for reading, ...; see HABIT_ICON_PATHS above and
+ * logic/habitIconTopics.js for the name -> topic matching). Went through a
+ * couple of earlier designs first: a real photo (looked odd/repetitive
+ * with the exact same picture on every row) and a plain accent-gradient
+ * checkmark disc (read as a second status indicator, competing with
+ * .today-check) — this per-habit outline icon is the settled design:
+ * decorative identifier, not a completion status.
  */
-export function todayAvatarIcon() {
+export function todayAvatarIcon(habit) {
+  const topicId = pickHabitIconTopic(habit?.name);
+  const path = HABIT_ICON_PATHS[topicId] || NEUTRAL_ICON_PATH;
   return `
     <span class="today-item-avatar">
-      <svg class="today-item-avatar-check" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-        <path d="M4,12.5 L9.5,18 L20,6" />
+      <svg class="today-item-avatar-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        ${path}
       </svg>
     </span>`;
 }

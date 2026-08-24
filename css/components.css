@@ -822,18 +822,21 @@
   }
 }
 
-/* ---------- Today-list avatar (universal icon) ----------
- * A small round accent-gradient disc with a white checkmark — the same
- * icon for every habit (todayAvatarIcon(), js/illustrations.js), not
- * per-habit any more: habit.color/habit.icon used to drive a gradient
- * squircle chip with the habit's own emoji here, then briefly a real
- * photo, but a repeated identical photo on every row read as an odd
- * stand-in rather than a deliberate icon — this plain iconic mark is the
- * settled design. habit.color/habit.icon stay in the schema for
- * round-robin defaults/back-compat, just decorative-dead now. Same
- * two-stop gradient as .fab/.btn-primary/the section headers — this
- * section's tie-in to the app's own color identity (see .today-check
- * below too). */
+/* ---------- Today-list avatar (per-habit line-icon pictogram) ----------
+ * A light disc (var(--color-surface-alt) — the app's existing pale-mint
+ * "alt surface" token, not a new color) with a thin accent-green ring and
+ * a matching green outline icon for the habit's topic (todayAvatarIcon(),
+ * js/illustrations.js — a droplet for water, a book for reading, ...;
+ * HABIT_ICON_PATHS there + logic/habitIconTopics.js do the name -> topic
+ * matching). Two earlier designs preceded this: a real photo (same
+ * picture repeated on every row, read as an odd stand-in) and a solid
+ * accent-gradient disc with a white checkmark (read as a *second* status
+ * indicator competing with .today-check for attention) — this light ring
+ * + outline pictogram is the settled design, explicitly a decorative
+ * identifier rather than a completion status: no fill, no checkmark here.
+ * habit.color/habit.icon stay in the schema for round-robin defaults/
+ * back-compat, just decorative-dead — same fate as ever since the
+ * manual pickers were removed. */
 .today-item-avatar {
   width: 34px;
   height: 34px;
@@ -842,14 +845,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
-  box-shadow: var(--shadow-sm);
+  background: var(--color-surface-alt);
+  border: 2px solid var(--color-accent);
 }
 
-.today-item-avatar-check {
+.today-item-avatar-icon {
   fill: none;
-  stroke: #ffffff;
-  stroke-width: 3;
+  stroke: var(--color-accent);
+  stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
 }

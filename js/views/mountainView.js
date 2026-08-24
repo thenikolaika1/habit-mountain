@@ -212,7 +212,7 @@ function todayListHtml(stats, tKey) {
       const value = entries[tKey];
       const done = isDayComplete(habit, value);
       const checkClass = `today-check${justCompleted.has(habit.id) ? " just-completed" : ""}`;
-      const avatar = todayAvatarIcon();
+      const avatar = todayAvatarIcon(habit);
       if (habit.type === "boolean") {
         return `
           <li class="today-item ${done ? "is-done" : ""}" data-habit-id="${habit.id}" data-type="boolean">

@@ -29,7 +29,7 @@ export function openDaySummary(dateKey, perHabit) {
         habit.type === "numeric" && done ? `${getNumericTotal(value)}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""}` : "";
       return `
         <li class="today-item ${done ? "is-done" : ""}">
-          ${todayAvatarIcon()}
+          ${todayAvatarIcon(habit)}
           <div class="today-item-body">
             <div class="today-item-name">${escapeHtml(habit.name)}</div>
           </div>
