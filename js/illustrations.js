@@ -57,6 +57,30 @@ export function statusRing({ state = "empty", size = 44, pct = 0 } = {}) {
 }
 
 /**
+ * Thin progress ring drawn behind a calendar day's number (Прогресс →
+ * Календарь месяца) — a much plainer cousin of statusRing() above: just a
+ * track + a partial-fill arc, no locked/done glyph states and no label of
+ * its own (the day number is a separate sibling element the caller layers
+ * on top, styled via .calendar-day-value in css/calendar.css). Callers are
+ * expected to skip calling this entirely for pct === 0, since the design
+ * calls for no ring at all on a day with nothing completed — this function
+ * itself just clamps and draws whatever pct it's given.
+ */
+export function dayProgressRing(pct) {
+  const size = 36;
+  const r = 15;
+  const c = size / 2;
+  const clampedPct = Math.max(0, Math.min(1, pct));
+  const circumference = 2 * Math.PI * r;
+  const arcLength = (clampedPct * circumference).toFixed(2);
+  return `
+    <svg class="calendar-day-ring" viewBox="0 0 ${size} ${size}" aria-hidden="true">
+      <circle class="calendar-day-ring-track" cx="${c}" cy="${c}" r="${r}" />
+      <circle class="calendar-day-ring-progress" cx="${c}" cy="${c}" r="${r}" stroke-dasharray="${arcLength} ${circumference.toFixed(2)}" transform="rotate(-90 ${c} ${c})" />
+    </svg>`;
+}
+
+/**
  * Circular progress "donut" badge for a challenge card — an opaque light
  * disc (same weight as .media-card-icon-btn's corner buttons, so it reads
  * clearly over any part of the photo behind it) with a track+arc ring and

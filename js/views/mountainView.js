@@ -7,7 +7,7 @@ import { stageForProgress } from "../logic/progress.js";
 import { CHALLENGE_POOL } from "../logic/challenges.js";
 import { showToast } from "../components/toast.js";
 import { openDaySummary } from "./daySummaryView.js";
-import { todayAvatarIcon } from "../illustrations.js";
+import { todayAvatarIcon, dayProgressRing } from "../illustrations.js";
 
 // The mountain screen is re-rendered on every state change (subscribe in
 // app.js), which is most of the time just a habit being ticked while the
@@ -72,7 +72,7 @@ function renderFreshMountainView(container, stats, tKey, monthStats) {
         ${buildMountainSvg(stats.overallProgress)}
       </div>
 
-      <div id="progress-calendar-section">${progressCalendarHtml(monthStats, t.year, t.month)}</div>
+      <div id="progress-calendar-section">${progressCalendarHtml(monthStats, t.year, t.month, stats.activeHabits.length)}</div>
 
       <h3 class="section-heading">Сегодня</h3>
       <div id="today-section">
@@ -113,7 +113,7 @@ function patchMountainView(container, stats, tKey, monthStats) {
 
   const t = todayParts();
   const calendarSection = container.querySelector("#progress-calendar-section");
-  calendarSection.innerHTML = progressCalendarHtml(monthStats, t.year, t.month);
+  calendarSection.innerHTML = progressCalendarHtml(monthStats, t.year, t.month, stats.activeHabits.length);
   wireProgressCalendar(container, stats);
 
   const todaySection = container.querySelector("#today-section");
@@ -121,36 +121,61 @@ function patchMountainView(container, stats, tKey, monthStats) {
   wireTodayList(container, stats, tKey);
 }
 
-function progressCalendarHtml(monthStats, year, month) {
+// Which day was last tapped in the calendar grid — plain module-level
+// state, not threaded through render(), mirroring the bounce-animation
+// diffing state further down this file (previouslyDoneToday etc.): it's
+// UI-only and unrelated to the store, so it survives an unrelated
+// store-triggered re-render (e.g. ticking a habit elsewhere) instead of
+// resetting the selection highlight every time.
+let selectedDateKey = null;
+
+function progressCalendarHtml(monthStats, year, month, activeHabitsCount) {
   const grid = buildMonthGrid(year, month);
   const weekdays = weekdayHeader();
   const dayResultByKey = new Map(monthStats.days.map((d) => [d.dateKey, d]));
 
   return `
     <h3 class="section-heading">Календарь месяца</h3>
-    <div class="calendar-weekdays">${weekdays.map((w) => `<span>${w}</span>`).join("")}</div>
+    <div class="calendar-weekdays">${weekdays.map((w, i) => `<span class="${i >= 5 ? "is-weekend" : ""}">${w}</span>`).join("")}</div>
     <div class="calendar-grid" id="progress-cal-grid">
-      ${grid.map((cell) => progressCellHtml(cell, dayResultByKey)).join("")}
+      ${grid.map((cell) => progressCellHtml(cell, dayResultByKey, activeHabitsCount)).join("")}
     </div>
     <p class="calendar-swipe-hint">Нажмите на день — сводка по всем привычкам</p>
   `;
 }
 
-function progressCellHtml(cell, dayResultByKey) {
+function progressCellHtml(cell, dayResultByKey, activeHabitsCount) {
   if (!cell) return `<div class="calendar-cell"></div>`;
   const result = dayResultByKey.get(cell.dateKey);
   const classes = ["calendar-day"];
   if (cell.isToday) classes.push("is-today");
   if (result && result.counted) classes.push("is-done");
+  if (cell.isFuture) classes.push("is-future");
+  if (cell.dateKey === selectedDateKey) classes.push("is-selected");
+
+  // Mini progress ring: only for a past-or-current day with something
+  // completed — a future day never has data, and a day with 0 completed
+  // habits gets no ring at all (dayProgressRing() is simply not called).
+  const pct = !cell.isFuture && result && activeHabitsCount > 0 ? result.completedCount / activeHabitsCount : 0;
+  const ring = pct > 0 ? dayProgressRing(pct) : "";
+
   return `
     <div class="calendar-cell">
-      <button type="button" class="${classes.join(" ")}" data-date-key="${cell.dateKey}">${cell.day}</button>
+      <button type="button" class="${classes.join(" ")}" data-date-key="${cell.dateKey}">
+        ${ring}
+        <span class="calendar-day-value">${cell.day}</span>
+      </button>
     </div>`;
 }
 
 function wireProgressCalendar(container, stats) {
   container.querySelectorAll("#progress-cal-grid .calendar-day").forEach((btn) => {
     btn.addEventListener("click", () => {
+      selectedDateKey = btn.dataset.dateKey;
+      container.querySelectorAll("#progress-cal-grid .calendar-day.is-selected").forEach((el) => {
+        if (el !== btn) el.classList.remove("is-selected");
+      });
+      btn.classList.add("is-selected");
       openDaySummary(btn.dataset.dateKey, stats.perHabit);
     });
   });

@@ -200,8 +200,15 @@
   text-align: center;
   font-size: 11px;
   font-weight: 700;
-  color: var(--color-text-muted);
+  color: var(--color-accent);
   text-transform: uppercase;
+}
+
+/* Sat/Sun get a visibly darker shade of the same green identity — a
+ * distinct-but-related shade, not an unrelated color, so weekends read
+ * differently from weekdays without breaking the accent theme. */
+.calendar-weekdays span.is-weekend {
+  color: var(--color-accent-dark);
 }
 
 .calendar-grid {
@@ -222,9 +229,10 @@
 .calendar-day {
   width: 100%;
   height: 100%;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   border: none;
-  background: var(--color-surface);
+  background: linear-gradient(160deg, var(--color-surface), var(--color-surface-alt));
+  box-shadow: var(--shadow-sm);
   font-size: 14px;
   font-weight: 600;
   color: var(--color-text);
@@ -232,16 +240,82 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+  transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease, opacity 180ms ease;
 }
 
+/* Mini progress ring (js/illustrations.js's dayProgressRing()) — absolutely
+ * positioned behind the day number, only rendered by the caller for a past
+ * or current day with at least one completed habit (pct > 0). */
+.calendar-day-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.calendar-day-ring-track {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 2;
+  opacity: 0.6;
+}
+
+.calendar-day-ring-progress {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  transition: stroke-dasharray 240ms ease;
+}
+
+.calendar-day-value {
+  position: relative;
+  z-index: 1;
+}
+
+/* Today — a soft filled green background instead of a plain outline. */
 .calendar-day.is-today {
-  box-shadow: inset 0 0 0 2px var(--color-accent);
+  background: linear-gradient(160deg, rgba(var(--color-accent-rgb), 0.26), rgba(var(--color-accent-rgb), 0.13));
+  color: var(--color-accent-dark);
+}
+
+/* Selected (tapped) day — a clearly different treatment than "today":
+ * a solid accent-dark ring plus a pale neutral fill, not a green tint. */
+.calendar-day.is-selected {
+  box-shadow: inset 0 0 0 2px var(--color-accent-dark), var(--shadow-md);
+  background: var(--color-surface-alt);
+}
+
+/* Selected AND today at once: keep today's green tint, layer the
+ * selection ring on top so both states stay legible. */
+.calendar-day.is-today.is-selected {
+  box-shadow: inset 0 0 0 2px var(--color-accent-dark), var(--shadow-md);
 }
 
 .calendar-day.is-done {
   background: var(--color-accent);
   color: var(--color-accent-contrast);
+}
+
+/* On a solid accent background the default green ring would vanish —
+ * recolor it to the same contrast token already used for the day number. */
+.calendar-day.is-done .calendar-day-ring-track {
+  stroke: var(--color-accent-contrast);
+  opacity: 0.3;
+}
+
+.calendar-day.is-done .calendar-day-ring-progress {
+  stroke: var(--color-accent-contrast);
+  opacity: 0.9;
+}
+
+/* Future days (after today) — muted, visually inert. */
+.calendar-day.is-future {
+  background: var(--color-surface);
+  box-shadow: none;
+  color: var(--color-text-muted);
+  opacity: 0.45;
 }
 
 .calendar-day.is-locked {
@@ -276,11 +350,17 @@
   }
 
   .calendar-day:not(:disabled):hover {
-    transform: scale(1.08);
-    box-shadow: var(--shadow-sm);
+    transform: scale(1.06);
+    box-shadow: var(--shadow-md);
   }
 
   .calendar-day.is-done:not(:disabled):hover {
     background: var(--color-accent-dark);
   }
+}
+
+/* Tap feedback for touch devices (no :hover there) — a light press-down,
+ * matching the hover scale-up above in spirit. */
+.calendar-day:not(:disabled):active {
+  transform: scale(0.94);
 }
