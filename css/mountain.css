@@ -3,7 +3,12 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-md);
-  background: linear-gradient(to bottom, var(--stage-sky-top), var(--stage-sky-bottom));
+  /* Sky, not part of the SVG: a soft glow near the summit (radial, first
+   * layer so it sits on top) over a 3-stop gradient — mint/blue-green at
+   * the foot warming to a golden-peach haze near the top. */
+  background:
+    radial-gradient(ellipse 70% 35% at 50% 6%, var(--stage-sky-glow), transparent 70%),
+    linear-gradient(to top, var(--stage-sky-bottom), var(--stage-sky-mid) 55%, var(--stage-sky-top));
 }
 
 .mountain-svg {
@@ -12,51 +17,68 @@
   height: auto;
 }
 
-.mountain-layer-base {
-  fill: var(--stage-base);
+/* Gradient stop colors for #mountainBodyGradient/#treeGradient
+ * (js/mountainSvg.js) — kept in CSS rather than inlined on the <stop>
+ * elements, same convention as every other fill in this file. */
+.mountain-gradient-stop--grass {
+  stop-color: var(--stage-base);
 }
 
-.mountain-layer-forest {
-  fill: var(--stage-forest);
+.mountain-gradient-stop--forest {
+  stop-color: var(--stage-forest);
+}
+
+.mountain-gradient-stop--rock {
+  stop-color: var(--stage-rocks);
+}
+
+.mountain-gradient-stop--snow-tint {
+  stop-color: var(--stage-summit-dark);
+}
+
+.mountain-gradient-stop--snow {
+  stop-color: var(--stage-summit);
+}
+
+.mountain-gradient-stop--tree-base {
+  stop-color: var(--stage-forest-dark);
+}
+
+.mountain-gradient-stop--tree-tip {
+  stop-color: var(--stage-forest);
+}
+
+/* The whole silhouette, one smooth fill (grass -> forest -> rock -> snow)
+ * instead of four flat stacked bands — no hard seams between zones. */
+.mountain-body {
+  fill: url(#mountainBodyGradient);
 }
 
 .mountain-tree {
-  fill: var(--stage-forest-dark);
-}
-
-.mountain-layer-rocks {
-  fill: var(--stage-rocks);
-}
-
-.mountain-rock-shadow {
-  fill: var(--stage-rocks-dark);
-}
-
-.mountain-layer-summit {
-  fill: var(--stage-summit);
-}
-
-.mountain-summit-shadow {
-  fill: var(--stage-summit-dark);
+  fill: url(#treeGradient);
 }
 
 .mountain-trail {
   fill: none;
   stroke: #fff8e6;
-  stroke-width: 3;
+  stroke-width: 2.5;
   stroke-linecap: round;
-  stroke-dasharray: 2 10;
-  opacity: 0.85;
+  stroke-dasharray: 2 11;
+  /* Noticeably paler than the walked portion below, so "done" vs "left to
+   * go" reads at a glance. */
+  opacity: 0.55;
 }
 
 /* The portion of the trail already walked — progress is shown purely by
- * how far up this gold line reaches, with no separate character marker. */
+ * how far up this gold line reaches, with no separate character marker.
+ * Two stacked drop-shadows (a tight core + a wider soft halo) for a
+ * stronger, more visibly "glowing" gold than a single small blur gives. */
 .mountain-trail-walked {
   fill: none;
-  stroke: #f2c14e;
-  stroke-width: 4;
+  stroke: #f7c948;
+  stroke-width: 4.5;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 3px rgba(242, 193, 78, 0.55));
+  filter: drop-shadow(0 0 4px rgba(247, 201, 72, 0.75)) drop-shadow(0 0 11px rgba(247, 201, 72, 0.4));
 }
 
 /* Only takes effect while the mountain screen stays mounted and gets
@@ -108,6 +130,11 @@
   stroke: var(--color-bg);
   stroke-width: 2.5px;
   stroke-linejoin: round;
+  /* Extra soft shadow under the halo-stroked text itself — most
+   * milestones sit above the ridge line, over the sky rather than the
+   * mountain body, so the higher ones (near the now-warm peach summit
+   * sky) get an extra contrast cushion on top of the stroke. */
+  filter: drop-shadow(0 1px 1.5px rgba(12, 20, 15, 0.3));
 }
 
 .milestone-stem {
@@ -145,6 +172,7 @@
   stroke: var(--color-bg);
   stroke-width: 2px;
   stroke-linejoin: round;
+  filter: drop-shadow(0 1px 1.5px rgba(12, 20, 15, 0.3));
 }
 
 @keyframes summit-glow {
@@ -182,8 +210,13 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .mountain-progress-caption {
+  :root:not([data-theme="light"]) .mountain-progress-caption {
     background: rgba(24, 34, 32, 0.85);
     color: var(--color-text);
   }
+}
+
+:root[data-theme="dark"] .mountain-progress-caption {
+  background: rgba(24, 34, 32, 0.85);
+  color: var(--color-text);
 }

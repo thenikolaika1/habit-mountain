@@ -27,12 +27,25 @@
   --stage-base-dark: #74cd93;
   --stage-forest: #1f6b42;
   --stage-forest-dark: #123322;
-  --stage-rocks: #333a33;
+  /* Cool grey-green rock, not near-black — see mountain-redesign notes:
+   * the old near-black value read as a jarring dark wedge below the
+   * summit. */
+  --stage-rocks: #7c8f92;
   --stage-rocks-dark: #1c211c;
   --stage-summit: #ffffff;
-  --stage-summit-dark: #dfe8e0;
-  --stage-sky-top: #ffffff;
-  --stage-sky-bottom: #eaf6ef;
+  /* Repurposed from an unused "summit shadow" token into the pale icy-blue
+   * gradient stop just below the pure-white summit stop (the mountain's
+   * "снег с голубым отливом"). */
+  --stage-summit-dark: #e8f2fb;
+  /* Warm golden-peach near the summit, mint/blue-green at the foot — the
+   * sky is a 3-stop gradient on .mountain-wrap (mountain.css), not part
+   * of the SVG itself. */
+  --stage-sky-top: #ffd9a0;
+  --stage-sky-mid: #fff3dc;
+  --stage-sky-bottom: #e3f4ee;
+  /* Soft glow rgba behind the summit, layered as a radial-gradient under
+   * the sky's linear-gradient. */
+  --stage-sky-glow: rgba(255, 205, 138, 0.55);
 
   /* spacing scale */
   --space-1: 4px;
@@ -90,12 +103,14 @@
     --stage-base-dark: #1d4029;
     --stage-forest: #163a26;
     --stage-forest-dark: #0c2116;
-    --stage-rocks: #161915;
+    --stage-rocks: #46564f;
     --stage-rocks-dark: #0a0c0a;
     --stage-summit: #e7eef5;
-    --stage-summit-dark: #b9c8d6;
-    --stage-sky-top: #0c1512;
-    --stage-sky-bottom: #101715;
+    --stage-summit-dark: #c7d9e6;
+    --stage-sky-top: #3a2c1a;
+    --stage-sky-mid: #1c211c;
+    --stage-sky-bottom: #0b1613;
+    --stage-sky-glow: rgba(255, 195, 120, 0.22);
 
     --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
@@ -120,12 +135,14 @@
   --stage-base-dark: #1d4029;
   --stage-forest: #163a26;
   --stage-forest-dark: #0c2116;
-  --stage-rocks: #161915;
+  --stage-rocks: #46564f;
   --stage-rocks-dark: #0a0c0a;
   --stage-summit: #e7eef5;
-  --stage-summit-dark: #b9c8d6;
-  --stage-sky-top: #0c1512;
-  --stage-sky-bottom: #101715;
+  --stage-summit-dark: #c7d9e6;
+  --stage-sky-top: #3a2c1a;
+  --stage-sky-mid: #1c211c;
+  --stage-sky-bottom: #0b1613;
+  --stage-sky-glow: rgba(255, 195, 120, 0.22);
 
   --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);

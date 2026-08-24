@@ -166,17 +166,63 @@ export function buildProgressTrailPaths(progress) {
   return { walkedD, remainingD };
 }
 
-const TREE_HEIGHT_LOWER = 26;
-const TREE_HEIGHT_UPPER = 42;
+// Three distinct silhouettes so the tree line doesn't read as one shape
+// copy-pasted six times — a tall narrow two-tier fir (the original
+// shape), a shorter bushier three-tier pine, and a single slender spike.
+// Each is built at a base unit size and scaled by `scale`, keeping one
+// shared set of proportions per shape rather than ad-hoc numbers per tree.
+function firTree(bx, by, scale) {
+  const lower = 26 * scale;
+  const upper = 42 * scale;
+  const wLower = 15 * scale;
+  const wUpper = 9 * scale;
+  const tierGap = 15 * scale;
+  return `
+    <polygon class="mountain-tree" points="${bx - wLower},${by} ${bx + wLower},${by} ${bx},${by - lower}" />
+    <polygon class="mountain-tree" points="${bx - wUpper},${by - tierGap} ${bx + wUpper},${by - tierGap} ${bx},${by - upper}" />
+  `;
+}
+
+function roundTree(bx, by, scale) {
+  const h = 30 * scale;
+  const wLower = 17 * scale;
+  const wMid = 13 * scale;
+  const wUpper = 8 * scale;
+  const tier1 = h * 0.36;
+  const tier2 = h * 0.68;
+  return `
+    <polygon class="mountain-tree" points="${bx - wLower},${by} ${bx + wLower},${by} ${bx},${by - tier1}" />
+    <polygon class="mountain-tree" points="${bx - wMid},${by - tier1 * 0.6} ${bx + wMid},${by - tier1 * 0.6} ${bx},${by - tier2}" />
+    <polygon class="mountain-tree" points="${bx - wUpper},${by - tier2 * 0.75} ${bx + wUpper},${by - tier2 * 0.75} ${bx},${by - h}" />
+  `;
+}
+
+function slimTree(bx, by, scale) {
+  const h = 44 * scale;
+  const w = 7 * scale;
+  return `<polygon class="mountain-tree" points="${bx - w},${by} ${bx + w},${by} ${bx},${by - h}" />`;
+}
+
+const TREE_SHAPES = { fir: firTree, round: roundTree, slim: slimTree };
+
+// Which silhouette + how big at each TREE_PROGRESS slot — deterministic,
+// deliberately not sorted by shape or by size, so the tree line reads as a
+// mixed, natural-looking stand rather than a uniform row.
+const TREE_VARIANTS = [
+  { shape: "fir", scale: 1.0 },
+  { shape: "round", scale: 0.72 },
+  { shape: "slim", scale: 1.15 },
+  { shape: "round", scale: 0.85 },
+  { shape: "fir", scale: 0.68 },
+  { shape: "slim", scale: 0.95 },
+];
 
 function treeShape(x, y, index) {
   const jitter = ((index % 3) - 1) * 5; // deterministic left/right stagger
   const bx = x + jitter;
   const by = y + 2; // sink base 2px into the fill so it reads as planted
-  return `
-    <polygon class="mountain-tree" points="${bx - 15},${by} ${bx + 15},${by} ${bx},${by - TREE_HEIGHT_LOWER}" />
-    <polygon class="mountain-tree" points="${bx - 9},${by - 15} ${bx + 9},${by - 15} ${bx},${by - TREE_HEIGHT_UPPER}" />
-  `;
+  const variant = TREE_VARIANTS[index % TREE_VARIANTS.length];
+  return TREE_SHAPES[variant.shape](bx, by, variant.scale);
 }
 
 function treesMarkup() {
@@ -298,12 +344,31 @@ export function buildMountainSvg(overallProgress) {
         <clipPath id="mountainClip">
           <path d="${silhouetteD}" />
         </clipPath>
+        <!-- Single smooth fill for the whole silhouette instead of four
+             flat stacked bands — grass -> forest -> rock -> snow, no hard
+             seams between zones. Each stop's color lives in mountain.css
+             (class + stop-color), not inlined here, matching how every
+             other fill in this file is styled. Safe as a fixed id: this
+             SVG is only ever mounted once per page. -->
+        <linearGradient id="mountainBodyGradient" x1="0" y1="1" x2="0" y2="0">
+          <stop class="mountain-gradient-stop mountain-gradient-stop--grass" offset="0%" />
+          <stop class="mountain-gradient-stop mountain-gradient-stop--grass" offset="22%" />
+          <stop class="mountain-gradient-stop mountain-gradient-stop--forest" offset="38%" />
+          <stop class="mountain-gradient-stop mountain-gradient-stop--forest" offset="55%" />
+          <stop class="mountain-gradient-stop mountain-gradient-stop--rock" offset="68%" />
+          <stop class="mountain-gradient-stop mountain-gradient-stop--rock" offset="85%" />
+          <stop class="mountain-gradient-stop mountain-gradient-stop--snow-tint" offset="94%" />
+          <stop class="mountain-gradient-stop mountain-gradient-stop--snow" offset="100%" />
+        </linearGradient>
+        <!-- Dark base -> lighter tip fill shared by every tree, for a bit
+             of volume instead of one flat color. -->
+        <linearGradient id="treeGradient" x1="0" y1="1" x2="0" y2="0">
+          <stop class="mountain-gradient-stop mountain-gradient-stop--tree-base" offset="0%" />
+          <stop class="mountain-gradient-stop mountain-gradient-stop--tree-tip" offset="100%" />
+        </linearGradient>
       </defs>
       <g clip-path="url(#mountainClip)">
-        <rect class="mountain-layer-base" x="0" y="480" width="400" height="120" />
-        <rect class="mountain-layer-forest" x="0" y="290" width="400" height="190" />
-        <rect class="mountain-layer-rocks" x="0" y="140" width="400" height="150" />
-        <rect class="mountain-layer-summit" x="0" y="0" width="400" height="140" />
+        <rect class="mountain-body" x="0" y="0" width="400" height="600" />
       </g>
       ${treesMarkup()}
       <path class="mountain-trail" d="${remainingD || `M${RIDGE[ridgeIndexOf(1)].x},${RIDGE[ridgeIndexOf(1)].y}`}" style="${remainingD ? "" : "display:none;"}" />

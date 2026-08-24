@@ -5,7 +5,7 @@
 // CSS/JS the whole time (fetch handler below is cache-first: a hit never
 // re-checks the network). A new cache name makes the "activate" handler
 // purge the old cache wholesale instead of leaving a stale mix behind.
-const CACHE_NAME = "habit-mountain-v4";
+const CACHE_NAME = "habit-mountain-v5";
 
 const APP_SHELL = [
   "./",
