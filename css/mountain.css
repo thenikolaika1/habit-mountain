@@ -58,6 +58,98 @@
   fill: url(#treeGradient);
 }
 
+/* Gentle wind sway (js/mountainSvg.js wraps each tree's polygons in this
+ * class, with a per-tree animation-duration/-delay so the six trees don't
+ * swing in lockstep). fill-box + center bottom pivots each tree around its
+ * own base, without the caller having to compute/pass pixel coordinates
+ * for the rotation origin. */
+@keyframes tree-sway {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+.mountain-tree-sway {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: tree-sway 3.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mountain-tree-sway {
+    animation: none;
+  }
+}
+
+/* Slow-drifting sky clouds (js/mountainSvg.js's cloudsMarkup()) — plain
+ * white at low opacity so they read as soft haze rather than solid
+ * shapes, blending into the warm sky gradient behind the SVG. */
+@keyframes cloud-drift {
+  0%,
+  100% {
+    transform: translateX(-6px);
+  }
+
+  50% {
+    transform: translateX(6px);
+  }
+}
+
+.mountain-cloud {
+  fill: #ffffff;
+  opacity: 0.6;
+  animation: cloud-drift 28s ease-in-out infinite;
+}
+
+/* Dimmer in dark mode — full-opacity white clouds would read as far too
+ * bright against the night sky; same media-query + [data-theme] pairing
+ * already used below for .mountain-progress-caption. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .mountain-cloud {
+    opacity: 0.22;
+  }
+}
+
+:root[data-theme="dark"] .mountain-cloud {
+  opacity: 0.22;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mountain-cloud {
+    animation: none;
+  }
+}
+
+/* Small rock-band accents (js/mountainSvg.js's mountainDetailsMarkup()) —
+ * pebbles, scrubby bushes, and early snow patches breaking up the flat
+ * rock fill, plus a couple of pale highlight strokes on the snow cap. */
+.mountain-rock {
+  fill: var(--stage-rocks-dark);
+  opacity: 0.65;
+}
+
+.mountain-bush {
+  fill: var(--stage-forest-dark);
+  opacity: 0.8;
+}
+
+.mountain-snow-patch {
+  fill: var(--stage-summit);
+  opacity: 0.55;
+}
+
+.mountain-snow-sparkle {
+  stroke: #fff8e6;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  opacity: 0.5;
+}
+
 .mountain-trail {
   fill: none;
   stroke: #fff8e6;

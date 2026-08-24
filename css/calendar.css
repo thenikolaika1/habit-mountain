@@ -274,9 +274,14 @@
   z-index: 1;
 }
 
-/* Today — a soft filled green background instead of a plain outline. */
+/* Today — a soft filled green background instead of a plain outline.
+ * Strong enough (high-alpha fill + a solid accent ring) to jump out at a
+ * glance among the rest of the month, while staying clearly short of
+ * is-done's fully opaque fill and a different hue than is-selected's
+ * accent-dark ring below. */
 .calendar-day.is-today {
-  background: linear-gradient(160deg, rgba(var(--color-accent-rgb), 0.26), rgba(var(--color-accent-rgb), 0.13));
+  background: linear-gradient(160deg, rgba(var(--color-accent-rgb), 0.55), rgba(var(--color-accent-rgb), 0.3));
+  box-shadow: inset 0 0 0 2px var(--color-accent), var(--shadow-sm);
   color: var(--color-accent-dark);
 }
 

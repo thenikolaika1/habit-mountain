@@ -222,7 +222,18 @@ function treeShape(x, y, index) {
   const bx = x + jitter;
   const by = y + 2; // sink base 2px into the fill so it reads as planted
   const variant = TREE_VARIANTS[index % TREE_VARIANTS.length];
-  return TREE_SHAPES[variant.shape](bx, by, variant.scale);
+  const shapeMarkup = TREE_SHAPES[variant.shape](bx, by, variant.scale);
+  // Gentle wind sway — a shared rotate keyframe (css/mountain.css), with
+  // per-tree duration/delay so six trees don't swing in lockstep like one
+  // shape copy-pasted six times. Deterministic (not Math.random()), same
+  // spirit as the jitter above: duration varies by index, and a negative
+  // delay starts each tree mid-cycle instead of every tree beginning in
+  // the same pose. transform-origin (center bottom of the tree's own
+  // fill box, see .mountain-tree-sway) needs no coordinates here — no bx/by
+  // math to keep in sync with the rotation pivot.
+  const duration = (3.1 + (index % 4) * 0.35).toFixed(2);
+  const delay = (-(index * 0.61 + (index % 3) * 0.27)).toFixed(2);
+  return `<g class="mountain-tree-sway" style="animation-duration:${duration}s; animation-delay:${delay}s;">${shapeMarkup}</g>`;
 }
 
 function treesMarkup() {
@@ -230,6 +241,103 @@ function treesMarkup() {
     const { x, y } = pointAtProgress(p);
     return treeShape(x, y, i);
   }).join("");
+}
+
+// ---------- Sky: a few slow-drifting clouds ----------
+// Plain sky decoration, not clipped to the mountain silhouette — rendered
+// before the mountain body (see buildMountainSvg) so the mountain would
+// occlude any cloud that ever dipped below the ridge line, though none of
+// these positions currently do (all sit well above the ridge y at their x).
+// x stays under ~260 so clouds don't crowd the two rightmost milestones'
+// captions near the summit (x≈325-378).
+const CLOUD_POSITIONS = [
+  { x: 55, y: 45, scale: 1.0, duration: 27, delay: -4 },
+  { x: 155, y: 26, scale: 0.8, duration: 33, delay: -14 },
+  { x: 255, y: 72, scale: 0.9, duration: 24, delay: -9 },
+];
+
+/** Three overlapping ellipses — the classic cartoon-cloud silhouette. */
+function cloudShape(x, y, scale) {
+  return `
+    <ellipse cx="${x - 14 * scale}" cy="${y + 3 * scale}" rx="${12 * scale}" ry="${7 * scale}" />
+    <ellipse cx="${x}" cy="${y}" rx="${18 * scale}" ry="${9 * scale}" />
+    <ellipse cx="${x + 13 * scale}" cy="${y + 2 * scale}" rx="${11 * scale}" ry="${6.5 * scale}" />
+  `;
+}
+
+function cloudsMarkup() {
+  return CLOUD_POSITIONS.map(({ x, y, scale, duration, delay }) => {
+    return `<g class="mountain-cloud" style="animation-duration:${duration}s; animation-delay:${delay}s;">${cloudShape(x, y, scale)}</g>`;
+  }).join("");
+}
+
+// ---------- Rock-band accents + snow-cap texture ----------
+// A handful of small decorative marks so the rock band and snow cap don't
+// read as one flat fill. Each is placed a short fixed offset (dx, dy) below
+// the exact ridge point at progress `p` — reusing pointAtProgress(), the
+// same single source of geometric truth the trail/trees/milestones read
+// from — which moves it from the skyline down into the already-filled
+// mountain body, so nothing here needs its own clip-path.
+const ROCK_DETAILS = [
+  { p: 0.6, dx: -14, dy: 10, r: 4.5 },
+  { p: 0.68, dx: 12, dy: 16, r: 5.5 },
+  { p: 0.78, dx: -8, dy: 12, r: 4 },
+];
+
+const BUSH_DETAILS = [
+  { p: 0.64, dx: 16, dy: 8 },
+  { p: 0.74, dx: -14, dy: 14 },
+];
+
+const ROCK_SNOW_PATCH_DETAILS = [
+  { p: 0.72, dx: 6, dy: -4, rx: 10, ry: 5 },
+  { p: 0.85, dx: -10, dy: 8, rx: 9, ry: 4.5 },
+];
+
+// Pale highlight strokes on the snow cap itself, so the topmost band isn't
+// one flat white shape.
+const SNOW_SPARKLE_DETAILS = [
+  { p: 0.94, dx: -12, dy: 14, len: 9 },
+  { p: 0.98, dx: 10, dy: 26, len: 7 },
+];
+
+function detailPoint(p, dx, dy) {
+  const { x, y } = pointAtProgress(p);
+  return { x: x + dx, y: y + dy };
+}
+
+/** A tiny 3-blob cluster — the same cartoon-silhouette trick as cloudShape,
+ * scaled down and colored as foliage by .mountain-bush in mountain.css. */
+function bushShape(x, y) {
+  return `
+    <ellipse class="mountain-bush" cx="${x - 4}" cy="${y}" rx="4.5" ry="3.5" />
+    <ellipse class="mountain-bush" cx="${x + 4}" cy="${y - 1}" rx="5" ry="4" />
+    <ellipse class="mountain-bush" cx="${x}" cy="${y - 3}" rx="4.5" ry="3.5" />
+  `;
+}
+
+function mountainDetailsMarkup() {
+  const rocks = ROCK_DETAILS.map(({ p, dx, dy, r }) => {
+    const { x, y } = detailPoint(p, dx, dy);
+    return `<circle class="mountain-rock" cx="${x}" cy="${y}" r="${r}" />`;
+  }).join("");
+
+  const bushes = BUSH_DETAILS.map(({ p, dx, dy }) => {
+    const { x, y } = detailPoint(p, dx, dy);
+    return bushShape(x, y);
+  }).join("");
+
+  const snowPatches = ROCK_SNOW_PATCH_DETAILS.map(({ p, dx, dy, rx, ry }) => {
+    const { x, y } = detailPoint(p, dx, dy);
+    return `<ellipse class="mountain-snow-patch" cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" />`;
+  }).join("");
+
+  const sparkles = SNOW_SPARKLE_DETAILS.map(({ p, dx, dy, len }) => {
+    const { x, y } = detailPoint(p, dx, dy);
+    return `<line class="mountain-snow-sparkle" x1="${x - len / 2}" y1="${y}" x2="${x + len / 2}" y2="${y}" />`;
+  }).join("");
+
+  return rocks + bushes + snowPatches + sparkles;
 }
 
 /** Splits a long label into up to 2 roughly-balanced lines at a word boundary. */
@@ -367,9 +475,11 @@ export function buildMountainSvg(overallProgress) {
           <stop class="mountain-gradient-stop mountain-gradient-stop--tree-tip" offset="100%" />
         </linearGradient>
       </defs>
+      ${cloudsMarkup()}
       <g clip-path="url(#mountainClip)">
         <rect class="mountain-body" x="0" y="0" width="400" height="600" />
       </g>
+      ${mountainDetailsMarkup()}
       ${treesMarkup()}
       <path class="mountain-trail" d="${remainingD || `M${RIDGE[ridgeIndexOf(1)].x},${RIDGE[ridgeIndexOf(1)].y}`}" style="${remainingD ? "" : "display:none;"}" />
       <path class="mountain-trail-walked" d="${walkedD}" />
