@@ -44,6 +44,57 @@ export const MILESTONES = [
 // Trees stand at these progress values (foot + forest zone only).
 const TREE_PROGRESS = [0.05, 0.12, 0.19, 0.27, 0.34, 0.41];
 
+// A fixed pixel cushion added on top of every pointBelowRidge() margin, to
+// absorb the gap between approxRidgeY()'s straight-line approximation and
+// the real (slightly bowed) Catmull-Rom ridge curve — see both functions
+// below.
+const RIDGE_SAFETY_MARGIN = 15;
+
+/** Piecewise-linear approximation of the ridge's y at an arbitrary x —
+ * good enough for placing decorative fills deep inside the already-clipped
+ * mountain body. The real silhouette boundary is a smooth curve through
+ * the same RIDGE points, so it never strays far from this straight-line
+ * reading; RIDGE_SAFETY_MARGIN below absorbs the small remaining gap. */
+function approxRidgeY(x) {
+  for (let i = 0; i < RIDGE.length - 1; i++) {
+    const a = RIDGE[i];
+    const b = RIDGE[i + 1];
+    if (x >= a.x && x <= b.x) {
+      const t = (x - a.x) / (b.x - a.x || 1);
+      return a.y + (b.y - a.y) * t;
+    }
+  }
+  return RIDGE[RIDGE.length - 1].y;
+}
+
+/** A point a fixed pixel `margin` straight down from the ridge at x —
+ * safely inside the already-filled mountain body, unlike
+ * pointAtProgress()+dy which only reaches the narrow strip hugging the
+ * ridge/trail itself. This is what lets decorative details spread across
+ * the *whole* silhouette instead of clustering next to the trail. */
+function pointBelowRidge(x, margin) {
+  return { x, y: approxRidgeY(x) + RIDGE_SAFETY_MARGIN + margin };
+}
+
+// Extra trees scattered across the wide grass/forest mass that the
+// ridge-hugging TREE_PROGRESS trees below don't reach — the mountain body
+// is one solid fill across the *whole* 400-wide silhouette, not just a
+// strip along the diagonal trail, so a realistic "forest" needs trees off
+// to the side too. Kept to x<=250 (roughly the forest/rock boundary) so
+// trees don't appear above the treeline, in the rocky/snowy zone.
+const SCATTERED_TREES = [
+  { x: 30, margin: 30 },
+  { x: 75, margin: 55 },
+  { x: 120, margin: 45 },
+  { x: 60, margin: 110 },
+  { x: 175, margin: 70 },
+  { x: 140, margin: 130 },
+  { x: 220, margin: 60 },
+  { x: 95, margin: 160 },
+  { x: 250, margin: 90 },
+  { x: 15, margin: 18 },
+];
+
 function findSegment(p) {
   for (let i = 0; i < RIDGE.length - 1; i++) {
     if (p >= RIDGE[i].p && p <= RIDGE[i + 1].p) return i;
@@ -237,10 +288,11 @@ function treeShape(x, y, index) {
 }
 
 function treesMarkup() {
-  return TREE_PROGRESS.map((p, i) => {
-    const { x, y } = pointAtProgress(p);
-    return treeShape(x, y, i);
-  }).join("");
+  const points = [
+    ...TREE_PROGRESS.map((p) => pointAtProgress(p)),
+    ...SCATTERED_TREES.map(({ x, margin }) => pointBelowRidge(x, margin)),
+  ];
+  return points.map(({ x, y }, i) => treeShape(x, y, i)).join("");
 }
 
 // ---------- Sky: a few slow-drifting clouds ----------
@@ -273,38 +325,48 @@ function cloudsMarkup() {
 
 // ---------- Rock-band accents + snow-cap texture ----------
 // A handful of small decorative marks so the rock band and snow cap don't
-// read as one flat fill. Each is placed a short fixed offset (dx, dy) below
-// the exact ridge point at progress `p` — reusing pointAtProgress(), the
-// same single source of geometric truth the trail/trees/milestones read
-// from — which moves it from the skyline down into the already-filled
-// mountain body, so nothing here needs its own clip-path.
+// read as one flat fill. Each is placed via pointBelowRidge(x, margin) —
+// spread across the *whole* rocky x-range (~230-395), not clustered right
+// next to the ridge/trail the way a pointAtProgress()+small-offset
+// approach would — so nothing here needs its own clip-path (the margin
+// guarantees it lands inside the already-filled body).
 const ROCK_DETAILS = [
-  { p: 0.6, dx: -14, dy: 10, r: 4.5 },
-  { p: 0.68, dx: 12, dy: 16, r: 5.5 },
-  { p: 0.78, dx: -8, dy: 12, r: 4 },
+  { x: 260, margin: 20, r: 4.5 },
+  { x: 300, margin: 45, r: 5.5 },
+  { x: 340, margin: 30, r: 4 },
+  { x: 280, margin: 80, r: 5 },
+  { x: 320, margin: 100, r: 4.5 },
+  { x: 365, margin: 60, r: 3.5 },
+];
+
+// Flat rounded-rect "ledges" — a second silhouette alongside the round
+// rocks above, for variety.
+const LEDGE_DETAILS = [
+  { x: 270, margin: 55, w: 16, h: 6 },
+  { x: 350, margin: 40, w: 14, h: 5 },
+  { x: 310, margin: 130, w: 18, h: 6 },
 ];
 
 const BUSH_DETAILS = [
-  { p: 0.64, dx: 16, dy: 8 },
-  { p: 0.74, dx: -14, dy: 14 },
+  { x: 245, margin: 15 },
+  { x: 290, margin: 60 },
+  { x: 265, margin: 100 },
 ];
 
 const ROCK_SNOW_PATCH_DETAILS = [
-  { p: 0.72, dx: 6, dy: -4, rx: 10, ry: 5 },
-  { p: 0.85, dx: -10, dy: 8, rx: 9, ry: 4.5 },
+  { x: 330, margin: 15, rx: 10, ry: 5 },
+  { x: 300, margin: 55, rx: 9, ry: 4.5 },
+  { x: 355, margin: 45, rx: 8, ry: 4 },
 ];
 
 // Pale highlight strokes on the snow cap itself, so the topmost band isn't
 // one flat white shape.
 const SNOW_SPARKLE_DETAILS = [
-  { p: 0.94, dx: -12, dy: 14, len: 9 },
-  { p: 0.98, dx: 10, dy: 26, len: 7 },
+  { x: 350, margin: 15, len: 9 },
+  { x: 370, margin: 30, len: 7 },
+  { x: 360, margin: 50, len: 8 },
+  { x: 385, margin: 20, len: 6 },
 ];
-
-function detailPoint(p, dx, dy) {
-  const { x, y } = pointAtProgress(p);
-  return { x: x + dx, y: y + dy };
-}
 
 /** A tiny 3-blob cluster — the same cartoon-silhouette trick as cloudShape,
  * scaled down and colored as foliage by .mountain-bush in mountain.css. */
@@ -317,27 +379,59 @@ function bushShape(x, y) {
 }
 
 function mountainDetailsMarkup() {
-  const rocks = ROCK_DETAILS.map(({ p, dx, dy, r }) => {
-    const { x, y } = detailPoint(p, dx, dy);
-    return `<circle class="mountain-rock" cx="${x}" cy="${y}" r="${r}" />`;
+  const rocks = ROCK_DETAILS.map(({ x, margin, r }) => {
+    const pt = pointBelowRidge(x, margin);
+    return `<circle class="mountain-rock" cx="${pt.x}" cy="${pt.y}" r="${r}" />`;
   }).join("");
 
-  const bushes = BUSH_DETAILS.map(({ p, dx, dy }) => {
-    const { x, y } = detailPoint(p, dx, dy);
-    return bushShape(x, y);
+  const ledges = LEDGE_DETAILS.map(({ x, margin, w, h }) => {
+    const pt = pointBelowRidge(x, margin);
+    return `<rect class="mountain-ledge" x="${pt.x - w / 2}" y="${pt.y - h / 2}" width="${w}" height="${h}" rx="3" ry="3" />`;
   }).join("");
 
-  const snowPatches = ROCK_SNOW_PATCH_DETAILS.map(({ p, dx, dy, rx, ry }) => {
-    const { x, y } = detailPoint(p, dx, dy);
-    return `<ellipse class="mountain-snow-patch" cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" />`;
+  const bushes = BUSH_DETAILS.map(({ x, margin }) => {
+    const pt = pointBelowRidge(x, margin);
+    return bushShape(pt.x, pt.y);
   }).join("");
 
-  const sparkles = SNOW_SPARKLE_DETAILS.map(({ p, dx, dy, len }) => {
-    const { x, y } = detailPoint(p, dx, dy);
-    return `<line class="mountain-snow-sparkle" x1="${x - len / 2}" y1="${y}" x2="${x + len / 2}" y2="${y}" />`;
+  const snowPatches = ROCK_SNOW_PATCH_DETAILS.map(({ x, margin, rx, ry }) => {
+    const pt = pointBelowRidge(x, margin);
+    return `<ellipse class="mountain-snow-patch" cx="${pt.x}" cy="${pt.y}" rx="${rx}" ry="${ry}" />`;
   }).join("");
 
-  return rocks + bushes + snowPatches + sparkles;
+  const sparkles = SNOW_SPARKLE_DETAILS.map(({ x, margin, len }) => {
+    const pt = pointBelowRidge(x, margin);
+    return `<line class="mountain-snow-sparkle" x1="${pt.x - len / 2}" y1="${pt.y}" x2="${pt.x + len / 2}" y2="${pt.y}" />`;
+  }).join("");
+
+  return rocks + ledges + bushes + snowPatches + sparkles;
+}
+
+// ---------- Light terrain-relief texture, spread across the whole body ----------
+// A deterministic pseudo-random hash (not Math.random() — reproducible
+// across renders/tests, same principle as the tree jitter/sway timing
+// above) placing faint light/dark flecks anywhere from the ridge line down
+// to the canvas bottom, at any x — one mechanism covering all four color
+// zones (grass/forest/rock/snow) at once, instead of separate per-zone
+// detail lists.
+function pseudoRandom(seed) {
+  const v = Math.sin(seed * 12.9898) * 43758.5453;
+  return v - Math.floor(v);
+}
+
+const TEXTURE_DOT_COUNT = 26;
+
+function textureDotsMarkup() {
+  let out = "";
+  for (let i = 0; i < TEXTURE_DOT_COUNT; i++) {
+    const x = 10 + pseudoRandom(i * 3 + 1) * 380;
+    const ridgeY = approxRidgeY(x) + RIDGE_SAFETY_MARGIN;
+    const y = ridgeY + pseudoRandom(i * 3 + 2) * (600 - ridgeY - 10);
+    const r = 1.4 + pseudoRandom(i * 3 + 3) * 1.8;
+    const shade = pseudoRandom(i * 7) > 0.5 ? "dark" : "light";
+    out += `<circle class="mountain-texture-dot mountain-texture-dot--${shade}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" />`;
+  }
+  return out;
 }
 
 /** Splits a long label into up to 2 roughly-balanced lines at a word boundary. */
@@ -480,6 +574,7 @@ export function buildMountainSvg(overallProgress) {
         <rect class="mountain-body" x="0" y="0" width="400" height="600" />
       </g>
       ${mountainDetailsMarkup()}
+      ${textureDotsMarkup()}
       ${treesMarkup()}
       <path class="mountain-trail" d="${remainingD || `M${RIDGE[ridgeIndexOf(1)].x},${RIDGE[ridgeIndexOf(1)].y}`}" style="${remainingD ? "" : "display:none;"}" />
       <path class="mountain-trail-walked" d="${walkedD}" />

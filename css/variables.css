@@ -32,6 +32,13 @@
    * summit. */
   --stage-rocks: #7c8f92;
   --stage-rocks-dark: #1c211c;
+  /* Muted rock-accent shades for small pebble/ledge details on the
+   * mountain (mountain.css) — deliberately NOT --stage-rocks-dark: that
+   * token is a near-black leftover from before the mountain-body-gradient
+   * redesign, and reusing it for these dots read as stray black
+   * artifacts, not rocks. */
+  --stage-rocks-pebble: #5d6d70;
+  --stage-rocks-ledge: #a3b3b5;
   --stage-summit: #ffffff;
   /* Repurposed from an unused "summit shadow" token into the pale icy-blue
    * gradient stop just below the pure-white summit stop (the mountain's
@@ -105,6 +112,8 @@
     --stage-forest-dark: #0c2116;
     --stage-rocks: #46564f;
     --stage-rocks-dark: #0a0c0a;
+    --stage-rocks-pebble: #2e3a35;
+    --stage-rocks-ledge: #6b7d74;
     --stage-summit: #e7eef5;
     --stage-summit-dark: #c7d9e6;
     --stage-sky-top: #3a2c1a;
@@ -137,6 +146,8 @@
   --stage-forest-dark: #0c2116;
   --stage-rocks: #46564f;
   --stage-rocks-dark: #0a0c0a;
+  --stage-rocks-pebble: #2e3a35;
+  --stage-rocks-ledge: #6b7d74;
   --stage-summit: #e7eef5;
   --stage-summit-dark: #c7d9e6;
   --stage-sky-top: #3a2c1a;

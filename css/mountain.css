@@ -126,11 +126,19 @@
 }
 
 /* Small rock-band accents (js/mountainSvg.js's mountainDetailsMarkup()) —
- * pebbles, scrubby bushes, and early snow patches breaking up the flat
- * rock fill, plus a couple of pale highlight strokes on the snow cap. */
+ * pebbles, flat ledges, scrubby bushes, and early snow patches breaking up
+ * the flat rock fill, plus a couple of pale highlight strokes on the snow
+ * cap. --stage-rocks-pebble/--stage-rocks-ledge (not --stage-rocks-dark,
+ * which is a near-black leftover token) keep these in the same grey-green
+ * family as the rock band itself instead of reading as black artifacts. */
 .mountain-rock {
-  fill: var(--stage-rocks-dark);
-  opacity: 0.65;
+  fill: var(--stage-rocks-pebble);
+  opacity: 0.8;
+}
+
+.mountain-ledge {
+  fill: var(--stage-rocks-ledge);
+  opacity: 0.75;
 }
 
 .mountain-bush {
@@ -148,6 +156,19 @@
   stroke-width: 1.5;
   stroke-linecap: round;
   opacity: 0.5;
+}
+
+/* Faint terrain-relief noise (js/mountainSvg.js's textureDotsMarkup()) —
+ * spread across the whole silhouette, very low opacity so it reads as
+ * subtle texture rather than visible spots. */
+.mountain-texture-dot--dark {
+  fill: #000000;
+  opacity: 0.05;
+}
+
+.mountain-texture-dot--light {
+  fill: #ffffff;
+  opacity: 0.06;
 }
 
 .mountain-trail {
