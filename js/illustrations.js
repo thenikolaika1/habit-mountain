@@ -485,23 +485,25 @@ export function heroIllustrationForHabit(habit) {
 /**
  * Small round avatar for every row of the "Сегодня" checklist
  * (mountainView.js's todayListHtml() and daySummaryView.js's read-only
- * variant) — the same photo for every habit, unlike
- * heroIllustrationForHabit()'s per-habit card photos, since this slot is
- * too small to carry per-habit meaning. Reuses NEUTRAL_CATEGORY_ID's photo
- * (productivity.png) rather than introducing a new "generic" file —
- * data-fallback-avatar lets wirePhotoFallback() below swap in a plain
- * flat-color circle (not a full drawn scene — too small a frame for one)
- * if it 404s.
+ * variant) — the same icon for every habit, not a per-habit photo (a real
+ * photo was tried first, but looked odd/repetitive with the exact same
+ * picture on every single row — a plain iconic mark reads better at this
+ * size and repeated this often). The gradient is a plain CSS background
+ * (css/components.css), the same var(--color-accent) -> var(--color-accent-dark)
+ * gradient as .fab/.btn-primary/the section headers — not an SVG
+ * <linearGradient>, which would need a unique id per instance to avoid
+ * collisions (todayListHtml() renders one of these per habit, so multiple
+ * copies land in the DOM at once). Just a small inline-SVG checkmark on
+ * top, the same 3-point path shape statusRing() uses for its own "done"
+ * check.
  */
-export function todayAvatarPhoto() {
-  // Variable named `filename` (not e.g. `category.photo` inline) to match
-  // the exact `src="./assets/habits/${filename}"` template build-preview.mjs
-  // (scratchpad-only Artifact bundler) pattern-matches to inline photos as
-  // data: URIs — a different variable name here would silently skip this
-  // one image in that bundle, the same class of bug already hit once with
-  // a CSS selector instead of this JS template.
-  const filename = getCategoryById(NEUTRAL_CATEGORY_ID).photo;
-  return `<img class="today-item-avatar" src="./assets/habits/${filename}" alt="" loading="lazy" data-fallback-avatar />`;
+export function todayAvatarIcon() {
+  return `
+    <span class="today-item-avatar">
+      <svg class="today-item-avatar-check" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+        <path d="M4,12.5 L9.5,18 L20,6" />
+      </svg>
+    </span>`;
 }
 
 /**
@@ -515,9 +517,7 @@ export function todayAvatarPhoto() {
  */
 export function wirePhotoFallback(container) {
   container
-    .querySelectorAll(
-      "img[data-fallback-icon], img[data-fallback-challenge-id], img[data-fallback-header], img[data-fallback-category], img[data-fallback-avatar]"
-    )
+    .querySelectorAll("img[data-fallback-icon], img[data-fallback-challenge-id], img[data-fallback-header], img[data-fallback-category]")
     .forEach((img) => {
       img.addEventListener(
         "error",
@@ -530,11 +530,6 @@ export function wirePhotoFallback(container) {
           } else if (img.dataset.fallbackCategory !== undefined) {
             const build = CATEGORY_FALLBACK_BUILD[img.dataset.fallbackCategory] || heroDefault;
             img.outerHTML = build();
-          } else if (img.dataset.fallbackAvatar !== undefined) {
-            // Too small a frame (34px) for a drawn SVG scene — just a flat
-            // accent-colored circle, same "never leave a broken image"
-            // principle at a proportionate size.
-            img.outerHTML = `<span class="today-item-avatar today-item-avatar--fallback"></span>`;
           } else {
             const build = HERO_BY_EMOJI[img.dataset.fallbackIcon] || heroDefault;
             img.outerHTML = build();

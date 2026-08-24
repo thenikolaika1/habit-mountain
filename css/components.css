@@ -822,28 +822,36 @@
   }
 }
 
-/* ---------- Today-list avatar (universal photo) ----------
- * A small round photo — the same file for every habit (todayAvatarPhoto(),
- * js/illustrations.js), not per-habit any more: habit.color/habit.icon
- * used to drive a gradient-filled squircle chip with the habit's emoji
- * here, but neither field is rendered anywhere in the app any more (both
- * stay in the schema for round-robin defaults/back-compat, just
- * decorative-dead now — same situation habit.icon was already in after
- * the emoji picker was removed). The accent-green ring is this section's
- * tie-in to the app's own color identity (see .today-check below too). */
+/* ---------- Today-list avatar (universal icon) ----------
+ * A small round accent-gradient disc with a white checkmark — the same
+ * icon for every habit (todayAvatarIcon(), js/illustrations.js), not
+ * per-habit any more: habit.color/habit.icon used to drive a gradient
+ * squircle chip with the habit's own emoji here, then briefly a real
+ * photo, but a repeated identical photo on every row read as an odd
+ * stand-in rather than a deliberate icon — this plain iconic mark is the
+ * settled design. habit.color/habit.icon stay in the schema for
+ * round-robin defaults/back-compat, just decorative-dead now. Same
+ * two-stop gradient as .fab/.btn-primary/the section headers — this
+ * section's tie-in to the app's own color identity (see .today-check
+ * below too). */
 .today-item-avatar {
   width: 34px;
   height: 34px;
   border-radius: 50%;
   flex-shrink: 0;
-  object-fit: cover;
-  border: 2px solid var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
   box-shadow: var(--shadow-sm);
 }
 
-.today-item-avatar--fallback {
-  display: block;
-  background: var(--color-accent);
+.today-item-avatar-check {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* ---------- Habit search ---------- */
