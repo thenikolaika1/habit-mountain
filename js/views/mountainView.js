@@ -7,7 +7,7 @@ import { stageForProgress } from "../logic/progress.js";
 import { CHALLENGE_POOL } from "../logic/challenges.js";
 import { showToast } from "../components/toast.js";
 import { openDaySummary } from "./daySummaryView.js";
-import { darkenColor } from "../state/habits.js";
+import { todayAvatarPhoto, wirePhotoFallback } from "../illustrations.js";
 
 // The mountain screen is re-rendered on every state change (subscribe in
 // app.js), which is most of the time just a habit being ticked while the
@@ -82,6 +82,7 @@ function renderFreshMountainView(container, stats, tKey, monthStats) {
   `;
 
   wireTodayList(container, stats, tKey);
+  wirePhotoFallback(container.querySelector("#today-section"));
   wireProgressCalendar(container, stats);
 }
 
@@ -119,6 +120,7 @@ function patchMountainView(container, stats, tKey, monthStats) {
   const todaySection = container.querySelector("#today-section");
   todaySection.innerHTML = stats.activeHabits.length === 0 ? emptyTodayHtml() : todayListHtml(stats, tKey);
   wireTodayList(container, stats, tKey);
+  wirePhotoFallback(todaySection);
 }
 
 function progressCalendarHtml(monthStats, year, month) {
@@ -212,7 +214,7 @@ function todayListHtml(stats, tKey) {
       const value = entries[tKey];
       const done = isDayComplete(habit, value);
       const checkClass = `today-check${justCompleted.has(habit.id) ? " just-completed" : ""}`;
-      const avatar = `<span class="today-item-avatar" style="background:linear-gradient(135deg, ${habit.color}, ${darkenColor(habit.color)})">${habit.icon || ""}</span>`;
+      const avatar = todayAvatarPhoto();
       if (habit.type === "boolean") {
         return `
           <li class="today-item ${done ? "is-done" : ""}" data-habit-id="${habit.id}" data-type="boolean">

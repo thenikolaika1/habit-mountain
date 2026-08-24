@@ -1,6 +1,6 @@
 import { isDayComplete, getNumericTotal } from "../logic/completion.js";
 import { openModal } from "../components/modal.js";
-import { darkenColor } from "../state/habits.js";
+import { todayAvatarPhoto, wirePhotoFallback } from "../illustrations.js";
 
 const MONTH_GENITIVE = [
   "января", "февраля", "марта", "апреля", "мая", "июня",
@@ -29,7 +29,7 @@ export function openDaySummary(dateKey, perHabit) {
         habit.type === "numeric" && done ? `${getNumericTotal(value)}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""}` : "";
       return `
         <li class="today-item ${done ? "is-done" : ""}">
-          <span class="today-item-avatar" style="background:linear-gradient(135deg, ${habit.color}, ${darkenColor(habit.color)})">${habit.icon || ""}</span>
+          ${todayAvatarPhoto()}
           <div class="today-item-body">
             <div class="today-item-name">${escapeHtml(habit.name)}</div>
           </div>
@@ -45,6 +45,7 @@ export function openDaySummary(dateKey, perHabit) {
       <p class="day-detail-date">${formatDateLong(dateKey)}</p>
       <ul class="today-list">${rows || `<li class="empty-state"><p>Нет активных привычек.</p></li>`}</ul>
     `,
+    onMount: (sheet) => wirePhotoFallback(sheet),
   });
 }
 

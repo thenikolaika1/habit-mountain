@@ -612,7 +612,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 2px solid var(--color-border);
+  border: 2px solid var(--color-accent); /* was var(--color-border) — an unchecked ring stayed neutral gray, reading as disconnected from the app's green identity */
   background: var(--color-surface-alt);
   flex-shrink: 0;
   display: flex;
@@ -822,25 +822,28 @@
   }
 }
 
-/* ---------- Habit avatar (emoji + color) ----------
- * A rounded-square "chip" with a two-stop gradient fill (habit.color ->
- * darkenColor(habit.color), see js/state/habits.js) instead of a flat
- * circle — the squircle shape + gradient + inner highlight is the same
- * "icon chip" treatment the reference app uses for its category icons,
- * applied here to the emoji the user already picked rather than a new
- * icon set. */
-.habit-avatar,
+/* ---------- Today-list avatar (universal photo) ----------
+ * A small round photo — the same file for every habit (todayAvatarPhoto(),
+ * js/illustrations.js), not per-habit any more: habit.color/habit.icon
+ * used to drive a gradient-filled squircle chip with the habit's emoji
+ * here, but neither field is rendered anywhere in the app any more (both
+ * stay in the schema for round-robin defaults/back-compat, just
+ * decorative-dead now — same situation habit.icon was already in after
+ * the emoji picker was removed). The accent-green ring is this section's
+ * tie-in to the app's own color identity (see .today-check below too). */
 .today-item-avatar {
   width: 34px;
   height: 34px;
-  border-radius: var(--radius-md);
+  border-radius: 50%;
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.18));
+  object-fit: cover;
+  border: 2px solid var(--color-accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.today-item-avatar--fallback {
+  display: block;
+  background: var(--color-accent);
 }
 
 /* ---------- Habit search ---------- */
