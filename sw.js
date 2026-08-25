@@ -1,11 +1,12 @@
-// Bumped for halving the mountain's tree count (js/mountainSvg.js): the
-// scene read as too crowded, so TREE_GRID.targetAreaPerItem and
-// enforceMinSpacing's minDist were both raised to drop 60 trees to 30
-// while keeping even coverage (grass/sheep untouched). Fetch handler
-// below is cache-first (a hit never re-checks the network), so a new
-// cache name is the only way to make the "activate" handler purge the
-// stale mountain artwork instead of leaving it cached indefinitely.
-const CACHE_NAME = "habit-mountain-v14";
+// Bumped for the sheep redesign (js/mountainSvg.js, css/mountain.css,
+// js/views/mountainView.js): curlier/detailed wool+face, bigger size,
+// full-width placement with a render-order fix so trees can no longer
+// cover them, a desynced grazing animation, and a tap-to-delight hop +
+// heart-pop interaction. Fetch handler below is cache-first (a hit never
+// re-checks the network), so a new cache name is the only way to make the
+// "activate" handler purge the stale mountain artwork instead of leaving
+// it cached indefinitely.
+const CACHE_NAME = "habit-mountain-v15";
 
 const APP_SHELL = [
   "./",

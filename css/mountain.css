@@ -157,24 +157,153 @@
   opacity: 0.85;
 }
 
-/* Sheep (js/mountainSvg.js's sheepMarkup()) — a minimal pale-wool body
- * with a dark head/legs, the common "black-faced sheep" pictogram. Static
- * (no sway/animation) — grazing sheep, unlike foliage, don't move with
- * the wind. */
-.mountain-sheep-body {
+/* Sheep (js/mountainSvg.js's sheepMarkup()/sheepShape()) — curly wool (six
+ * overlapping lumps, not one smooth ellipse), a dark "black-faced" head
+ * with two pale eyes + a pale muzzle, small ears, and four legs. Rendered
+ * as the LAST decorative layer in buildMountainSvg() (after the trees), so
+ * a tree canopy can never cover one. */
+.mountain-sheep {
+  cursor: pointer;
+}
+
+.mountain-sheep-hitarea {
+  fill: transparent;
+}
+
+.mountain-sheep-wool {
   fill: #f7f5ef;
   stroke: var(--color-ink);
-  stroke-width: 1;
+  stroke-width: 1.4;
 }
 
 .mountain-sheep-head {
   fill: var(--color-ink);
 }
 
+.mountain-sheep-eye,
+.mountain-sheep-muzzle {
+  /* Same pale tone as the wool — reads as a bright spot against the dark
+   * head, the same "black-faced sheep" contrast convention as before. */
+  fill: #f7f5ef;
+}
+
+.mountain-sheep-ear {
+  fill: var(--color-ink);
+}
+
 .mountain-sheep-leg {
   stroke: var(--color-ink);
-  stroke-width: 1.2;
+  stroke-width: 2.2;
   stroke-linecap: round;
+}
+
+/* Grazing idle: only the head/face sub-group (.mountain-sheep-graze,
+ * wrapping the ears/head/eyes/muzzle) dips, not the whole sheep — mostly
+ * at rest, with a brief nod-down-and-hold near the end of each cycle
+ * rather than continuous bobbing, so it reads as periodic grazing rather
+ * than a nervous tic. Per-sheep duration/delay (js/mountainSvg.js's
+ * sheepShape()) keep the 5 sheep out of phase, same negative-delay idiom
+ * as tree-sway/grass-sway above. */
+@keyframes sheep-graze {
+  0%,
+  76%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  86%,
+  93% {
+    transform: translateY(3.5px) rotate(9deg);
+  }
+}
+
+.mountain-sheep-graze {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: sheep-graze 5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mountain-sheep-graze {
+    animation: none;
+  }
+}
+
+/* Tap-to-delight: a light hop (whole sheep group) + a small heart that
+ * pops from the head and floats away (js/views/mountainView.js's
+ * triggerSheepTap()). Both are one-shot — JS adds the class/node on tap
+ * and removes it once its animation finishes, so nothing here plays on
+ * its own at rest. */
+@keyframes sheep-hop {
+  0%,
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+
+  30% {
+    transform: translateY(-9px) scaleY(1.08);
+  }
+
+  55% {
+    transform: translateY(0) scaleY(0.94);
+  }
+
+  75% {
+    transform: translateY(-2px) scaleY(1.02);
+  }
+}
+
+.mountain-sheep-hop {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: sheep-hop 480ms ease-out;
+}
+
+@keyframes sheep-heart-pop {
+  0% {
+    transform: translateY(0) scale(0.6);
+    opacity: 0;
+  }
+
+  25% {
+    transform: translateY(-4px) scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-20px) scale(0.9);
+    opacity: 0;
+  }
+}
+
+.mountain-sheep-heart-pop {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sheep-heart-pop 800ms ease-out forwards;
+  pointer-events: none;
+}
+
+.mountain-sheep-heart-pop circle,
+.mountain-sheep-heart-pop path {
+  /* A one-off literal, same precedent as .mountain-trail-walked's
+   * hardcoded gold above — no pink/red token exists in this green/gold
+   * palette, and no other decoration needs one either. */
+  fill: #ff6f91;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mountain-sheep-hop {
+    animation: none;
+  }
+
+  .mountain-sheep-heart-pop {
+    /* Still appears (its base, non-animated state is fully opaque and in
+     * place) and mountainView.js's timeout still removes it shortly after
+     * — a brief static acknowledgment instead of a floating one, matching
+     * how tree/grass/cloud reduced-motion above just turns the animation
+     * off rather than inventing a compensating transition. */
+    animation: none;
+  }
 }
 
 .mountain-trail {
