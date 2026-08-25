@@ -146,6 +146,15 @@
   opacity: 0.62;
 }
 
+/* A locked (non-editable) day that was actually completed still has real
+ * status to show — don't wash it out to the same "nothing here" opacity
+ * as a locked day with no data. The status ring's own muted green
+ * (statusRing's `muted` flag) already carries the "past, not today"
+ * distinction. */
+.day-pill.is-locked.is-done {
+  opacity: 1;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .day-pill:not(:disabled):hover {
     transform: scale(1.02);

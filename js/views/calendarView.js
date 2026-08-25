@@ -76,6 +76,7 @@ function dayPillHtml(habit, entries, cell) {
   const classes = ["day-pill"];
   if (cell.isToday) classes.push("is-today");
   if (locked) classes.push("is-locked");
+  if (done) classes.push("is-done");
 
   // Built from the y/m/d numbers, not new Date(cell.dateKey) — parsing an
   // "YYYY-MM-DD" string is UTC per spec and can roll the weekday over in
@@ -85,7 +86,17 @@ function dayPillHtml(habit, entries, cell) {
   const numericTotal = habit.type === "numeric" ? getNumericTotal(value) : 0;
   const valueLabel = numericTotal > 0 ? `${numericTotal}${habit.unit ? ` ${escapeHtml(habit.unit)}` : ""}` : "";
 
-  const ringState = locked ? "locked" : done ? "done" : "empty";
+  // `locked` only means "outside the editable window" — it must not hide
+  // whether the day was actually completed. Checking `done` first (was:
+  // `locked ? "locked" : done ? "done" : "empty"`) fixed a real bug where
+  // a genuinely completed day older than the 3-day edit window silently
+  // showed as "locked"/not done, because the old ternary never even
+  // looked at `done` once the day was outside that window.
+  const ringState = done ? "done" : locked ? "locked" : "empty";
+  // A completed day that isn't "today" gets the paler/muted checkmark —
+  // visually distinct from today's vivid green, whether or not it's still
+  // editable (viewing status and being able to edit are separate things).
+  const ringMuted = done && !cell.isToday;
 
   return `
     <button type="button" class="${classes.join(" ")}" data-date-key="${cell.dateKey}" ${locked ? 'disabled aria-disabled="true"' : ""}>
@@ -94,7 +105,7 @@ function dayPillHtml(habit, entries, cell) {
         <span class="day-pill-weekday">${weekday}</span>
       </span>
       <span class="day-pill-body">${valueLabel}</span>
-      <span class="day-pill-status">${statusRing({ state: ringState, size: 36 })}</span>
+      <span class="day-pill-status">${statusRing({ state: ringState, size: 36, muted: ringMuted })}</span>
     </button>`;
 }
 

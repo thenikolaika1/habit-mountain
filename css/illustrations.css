@@ -109,6 +109,21 @@
   opacity: 0.5;
 }
 
+/* A completed *past* day (statusRing({ state: "done", muted: true }))
+ * — same green identity, paler fill so it reads as "done, but not
+ * today" rather than competing with a vivid "done today" ring. The
+ * check itself switches to the darker accent shade for contrast against
+ * the lighter fill (the default check color is a near-white contrast
+ * token, which would wash out against a pale fill instead of a solid
+ * one). */
+.status-ring--done.status-ring--muted .status-ring-fill {
+  fill: rgba(var(--color-accent-rgb), 0.35);
+}
+
+.status-ring--done.status-ring--muted .status-ring-check {
+  stroke: var(--color-accent-dark);
+}
+
 /* ---------- Medal (Испытания) ---------- */
 .illustration-ribbon-a,
 .illustration-ribbon-b {

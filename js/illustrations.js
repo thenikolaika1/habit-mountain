@@ -15,9 +15,15 @@ import { pickHabitIconTopic } from "./logic/habitIconTopics.js";
  * day list. `pct` (0-1) is only meaningful in the "empty" state — the
  * monthly challenge cards use it to show how far along an in-progress
  * challenge is; every other call site omits it and gets the plain outline
- * ring exactly as before.
+ * ring exactly as before. `muted` only applies to the "done" state — a
+ * paler green fill + darker check for a *past* completed day, visually
+ * distinct from a vivid "done today". Completion status should always be
+ * shown regardless of whether that day is still editable (that's a
+ * separate concern — see calendarView.js's dayPillHtml), so callers pass
+ * `muted` rather than reaching for the "locked" state on a day that was
+ * actually completed.
  */
-export function statusRing({ state = "empty", size = 44, pct = 0 } = {}) {
+export function statusRing({ state = "empty", size = 44, pct = 0, muted = false } = {}) {
   const r = (size - 4) / 2;
   const c = size / 2;
 
@@ -27,8 +33,9 @@ export function statusRing({ state = "empty", size = 44, pct = 0 } = {}) {
     const d = size * 0.67;
     const e = size * 0.74;
     const f = size * 0.34;
+    const doneClass = muted ? "status-ring status-ring--done status-ring--muted" : "status-ring status-ring--done";
     return `
-      <svg class="status-ring status-ring--done" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" role="img" aria-label="Выполнено">
+      <svg class="${doneClass}" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" role="img" aria-label="Выполнено">
         <circle class="status-ring-fill" cx="${c}" cy="${c}" r="${r}" />
         <path class="status-ring-check" d="M${a},${size * 0.52} L${b},${d} L${e},${f}" />
       </svg>`;
