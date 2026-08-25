@@ -323,115 +323,68 @@ function cloudsMarkup() {
   }).join("");
 }
 
-// ---------- Rock-band accents + snow-cap texture ----------
-// A handful of small decorative marks so the rock band and snow cap don't
-// read as one flat fill. Each is placed via pointBelowRidge(x, margin) —
-// spread across the *whole* rocky x-range (~230-395), not clustered right
-// next to the ridge/trail the way a pointAtProgress()+small-offset
-// approach would — so nothing here needs its own clip-path (the margin
-// guarantees it lands inside the already-filled body).
-const ROCK_DETAILS = [
-  { x: 260, margin: 20, r: 4.5 },
-  { x: 300, margin: 45, r: 5.5 },
-  { x: 340, margin: 30, r: 4 },
-  { x: 280, margin: 80, r: 5 },
-  { x: 320, margin: 100, r: 4.5 },
-  { x: 365, margin: 60, r: 3.5 },
+// ---------- Grass, scattered across the green zones ----------
+// Grass tufts right along the trail (small offset from the ridge curve,
+// same idea as the original ridge-hugging trees) — denser near the foot,
+// where "особенно у подножья" calls for it.
+const GRASS_TRAIL_PROGRESS = [0.03, 0.08, 0.16, 0.22, 0.3, 0.38];
+
+// Grass scattered across the wider grass/forest mass, same idea as
+// SCATTERED_TREES but skewed toward smaller x/margins — grass reads as a
+// foot-of-the-mountain feature, not a forest-canopy one.
+// Margins are kept within each x's actual available depth (600 minus the
+// ridge y there) — the mountain's interior is a thin sliver near x=0 that
+// only widens moving right, so a margin generous enough for x=150 would
+// push a tuft at x=20 or x=25 straight past the canvas bottom edge.
+const SCATTERED_GRASS = [
+  { x: 20, margin: 8 },
+  { x: 50, margin: 20 },
+  { x: 85, margin: 15 },
+  { x: 40, margin: 15 },
+  { x: 110, margin: 30 },
+  { x: 65, margin: 35 },
+  { x: 150, margin: 25 },
+  { x: 25, margin: 8 },
+  { x: 130, margin: 55 },
+  { x: 190, margin: 20 },
 ];
 
-// Flat rounded-rect "ledges" — a second silhouette alongside the round
-// rocks above, for variety.
-const LEDGE_DETAILS = [
-  { x: 270, margin: 55, w: 16, h: 6 },
-  { x: 350, margin: 40, w: 14, h: 5 },
-  { x: 310, margin: 130, w: 18, h: 6 },
-];
+const GRASS_SCALES = [0.8, 1.0, 1.15, 0.9];
 
-const BUSH_DETAILS = [
-  { x: 245, margin: 15 },
-  { x: 290, margin: 60 },
-  { x: 265, margin: 100 },
-];
-
-const ROCK_SNOW_PATCH_DETAILS = [
-  { x: 330, margin: 15, rx: 10, ry: 5 },
-  { x: 300, margin: 55, rx: 9, ry: 4.5 },
-  { x: 355, margin: 45, rx: 8, ry: 4 },
-];
-
-// Pale highlight strokes on the snow cap itself, so the topmost band isn't
-// one flat white shape.
-const SNOW_SPARKLE_DETAILS = [
-  { x: 350, margin: 15, len: 9 },
-  { x: 370, margin: 30, len: 7 },
-  { x: 360, margin: 50, len: 8 },
-  { x: 385, margin: 20, len: 6 },
-];
-
-/** A tiny 3-blob cluster — the same cartoon-silhouette trick as cloudShape,
- * scaled down and colored as foliage by .mountain-bush in mountain.css. */
-function bushShape(x, y) {
+/** A small 3-blade fan, thin triangles splayed left/center/right from one
+ * base point — the grass equivalent of firTree()/slimTree() above. */
+function grassTuft(bx, by, scale) {
+  const h1 = 9 * scale;
+  const h2 = 12 * scale;
+  const h3 = 7 * scale;
   return `
-    <ellipse class="mountain-bush" cx="${x - 4}" cy="${y}" rx="4.5" ry="3.5" />
-    <ellipse class="mountain-bush" cx="${x + 4}" cy="${y - 1}" rx="5" ry="4" />
-    <ellipse class="mountain-bush" cx="${x}" cy="${y - 3}" rx="4.5" ry="3.5" />
+    <polygon class="mountain-grass" points="${bx - 4 * scale},${by} ${bx - 1 * scale},${by} ${bx - 2.5 * scale},${by - h1}" />
+    <polygon class="mountain-grass" points="${bx - 1 * scale},${by} ${bx + 1 * scale},${by} ${bx},${by - h2}" />
+    <polygon class="mountain-grass" points="${bx + 1 * scale},${by} ${bx + 4 * scale},${by} ${bx + 2.5 * scale},${by - h3}" />
   `;
 }
 
-function mountainDetailsMarkup() {
-  const rocks = ROCK_DETAILS.map(({ x, margin, r }) => {
-    const pt = pointBelowRidge(x, margin);
-    return `<circle class="mountain-rock" cx="${pt.x}" cy="${pt.y}" r="${r}" />`;
-  }).join("");
-
-  const ledges = LEDGE_DETAILS.map(({ x, margin, w, h }) => {
-    const pt = pointBelowRidge(x, margin);
-    return `<rect class="mountain-ledge" x="${pt.x - w / 2}" y="${pt.y - h / 2}" width="${w}" height="${h}" rx="3" ry="3" />`;
-  }).join("");
-
-  const bushes = BUSH_DETAILS.map(({ x, margin }) => {
-    const pt = pointBelowRidge(x, margin);
-    return bushShape(pt.x, pt.y);
-  }).join("");
-
-  const snowPatches = ROCK_SNOW_PATCH_DETAILS.map(({ x, margin, rx, ry }) => {
-    const pt = pointBelowRidge(x, margin);
-    return `<ellipse class="mountain-snow-patch" cx="${pt.x}" cy="${pt.y}" rx="${rx}" ry="${ry}" />`;
-  }).join("");
-
-  const sparkles = SNOW_SPARKLE_DETAILS.map(({ x, margin, len }) => {
-    const pt = pointBelowRidge(x, margin);
-    return `<line class="mountain-snow-sparkle" x1="${pt.x - len / 2}" y1="${pt.y}" x2="${pt.x + len / 2}" y2="${pt.y}" />`;
-  }).join("");
-
-  return rocks + ledges + bushes + snowPatches + sparkles;
+function grassInstance(x, y, index) {
+  const jitter = ((index % 3) - 1) * 4;
+  const bx = x + jitter;
+  const by = y + 2;
+  const scale = GRASS_SCALES[index % GRASS_SCALES.length];
+  const shapeMarkup = grassTuft(bx, by, scale);
+  // Faster/wider sway than the trees (real grass flutters quicker than a
+  // tree trunk) — its own keyframe (css/mountain.css), same deterministic
+  // per-instance duration/delay trick as treeShape() so tufts don't
+  // flutter in lockstep.
+  const duration = (1.5 + (index % 4) * 0.25).toFixed(2);
+  const delay = (-(index * 0.37 + (index % 3) * 0.19)).toFixed(2);
+  return `<g class="mountain-grass-sway" style="animation-duration:${duration}s; animation-delay:${delay}s;">${shapeMarkup}</g>`;
 }
 
-// ---------- Light terrain-relief texture, spread across the whole body ----------
-// A deterministic pseudo-random hash (not Math.random() — reproducible
-// across renders/tests, same principle as the tree jitter/sway timing
-// above) placing faint light/dark flecks anywhere from the ridge line down
-// to the canvas bottom, at any x — one mechanism covering all four color
-// zones (grass/forest/rock/snow) at once, instead of separate per-zone
-// detail lists.
-function pseudoRandom(seed) {
-  const v = Math.sin(seed * 12.9898) * 43758.5453;
-  return v - Math.floor(v);
-}
-
-const TEXTURE_DOT_COUNT = 26;
-
-function textureDotsMarkup() {
-  let out = "";
-  for (let i = 0; i < TEXTURE_DOT_COUNT; i++) {
-    const x = 10 + pseudoRandom(i * 3 + 1) * 380;
-    const ridgeY = approxRidgeY(x) + RIDGE_SAFETY_MARGIN;
-    const y = ridgeY + pseudoRandom(i * 3 + 2) * (600 - ridgeY - 10);
-    const r = 1.4 + pseudoRandom(i * 3 + 3) * 1.8;
-    const shade = pseudoRandom(i * 7) > 0.5 ? "dark" : "light";
-    out += `<circle class="mountain-texture-dot mountain-texture-dot--${shade}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" />`;
-  }
-  return out;
+function grassMarkup() {
+  const points = [
+    ...GRASS_TRAIL_PROGRESS.map((p) => pointAtProgress(p)),
+    ...SCATTERED_GRASS.map(({ x, margin }) => pointBelowRidge(x, margin)),
+  ];
+  return points.map(({ x, y }, i) => grassInstance(x, y, i)).join("");
 }
 
 /** Splits a long label into up to 2 roughly-balanced lines at a word boundary. */
@@ -573,8 +526,7 @@ export function buildMountainSvg(overallProgress) {
       <g clip-path="url(#mountainClip)">
         <rect class="mountain-body" x="0" y="0" width="400" height="600" />
       </g>
-      ${mountainDetailsMarkup()}
-      ${textureDotsMarkup()}
+      ${grassMarkup()}
       ${treesMarkup()}
       <path class="mountain-trail" d="${remainingD || `M${RIDGE[ridgeIndexOf(1)].x},${RIDGE[ridgeIndexOf(1)].y}`}" style="${remainingD ? "" : "display:none;"}" />
       <path class="mountain-trail-walked" d="${walkedD}" />

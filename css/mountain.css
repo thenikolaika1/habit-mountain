@@ -125,50 +125,36 @@
   }
 }
 
-/* Small rock-band accents (js/mountainSvg.js's mountainDetailsMarkup()) —
- * pebbles, flat ledges, scrubby bushes, and early snow patches breaking up
- * the flat rock fill, plus a couple of pale highlight strokes on the snow
- * cap. --stage-rocks-pebble/--stage-rocks-ledge (not --stage-rocks-dark,
- * which is a near-black leftover token) keep these in the same grey-green
- * family as the rock band itself instead of reading as black artifacts. */
-.mountain-rock {
-  fill: var(--stage-rocks-pebble);
-  opacity: 0.8;
+/* Grass tufts (js/mountainSvg.js's grassMarkup()) — scattered across the
+ * green zones only, deliberately keeping the rock/snow band completely
+ * clear of decoration. Faster/wider sway than the trees (grass reacts to
+ * wind quicker than a trunk does). */
+@keyframes grass-sway {
+  0%,
+  100% {
+    transform: rotate(-6deg);
+  }
+
+  50% {
+    transform: rotate(6deg);
+  }
 }
 
-.mountain-ledge {
-  fill: var(--stage-rocks-ledge);
-  opacity: 0.75;
+.mountain-grass-sway {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: grass-sway 2s ease-in-out infinite;
 }
 
-.mountain-bush {
-  fill: var(--stage-forest-dark);
-  opacity: 0.8;
+@media (prefers-reduced-motion: reduce) {
+  .mountain-grass-sway {
+    animation: none;
+  }
 }
 
-.mountain-snow-patch {
-  fill: var(--stage-summit);
-  opacity: 0.55;
-}
-
-.mountain-snow-sparkle {
-  stroke: #fff8e6;
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  opacity: 0.5;
-}
-
-/* Faint terrain-relief noise (js/mountainSvg.js's textureDotsMarkup()) —
- * spread across the whole silhouette, very low opacity so it reads as
- * subtle texture rather than visible spots. */
-.mountain-texture-dot--dark {
-  fill: #000000;
-  opacity: 0.05;
-}
-
-.mountain-texture-dot--light {
-  fill: #ffffff;
-  opacity: 0.06;
+.mountain-grass {
+  fill: var(--stage-base-dark);
+  opacity: 0.85;
 }
 
 .mountain-trail {
