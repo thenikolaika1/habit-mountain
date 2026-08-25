@@ -41,12 +41,6 @@ export const MILESTONES = [
   { p: 1.0, icon: null, label: "Success", isSummit: true },
 ];
 
-// Trees stand at these progress values (foot + forest zone only) — pushed
-// up to p=0.53, right at the forest/rocks boundary (RIDGE's "rocks" stage
-// starts at p=0.56), so the ridge-hugging tree line reaches the grey zone
-// border instead of stopping well short of it.
-const TREE_PROGRESS = [0.05, 0.12, 0.19, 0.27, 0.34, 0.41, 0.47, 0.53];
-
 // A fixed pixel cushion added on top of every pointBelowRidge() margin, to
 // absorb the gap between approxRidgeY()'s straight-line approximation and
 // the real (slightly bowed) Catmull-Rom ridge curve — see both functions
@@ -79,43 +73,61 @@ function pointBelowRidge(x, margin) {
   return { x, y: approxRidgeY(x) + RIDGE_SAFETY_MARGIN + margin };
 }
 
-// Extra trees scattered across the wide grass/forest mass that the
-// ridge-hugging TREE_PROGRESS trees below don't reach — the mountain body
-// is one solid fill across the *whole* 400-wide silhouette, not just a
-// strip along the diagonal trail, so a realistic "forest" needs trees off
-// to the side too. Kept to x<=248 (the forest/rock boundary — RIDGE's
-// "rocks" stage starts at x=250) so trees don't appear above the
-// treeline, in the rocky/snowy zone; the highest-x entries here are what
-// carries the forest right up to that border instead of leaving it bare.
-// Margins are each kept comfortably under that x's actual available depth
-// (600 minus the ridge y there, roughly `583 - approxRidgeY(x)` once the
-// safety margin and the tree's own 2px sink are subtracted) — the
-// mountain's interior is a thin sliver near x=0 that only widens moving
-// right, so a margin generous enough for x=150 would push a tree at
-// x=20 past the canvas bottom edge (see the same fix already applied to
-// SCATTERED_GRASS below).
-const SCATTERED_TREES = [
-  { x: 15, margin: 6 },
-  { x: 22, margin: 10 },
-  { x: 30, margin: 14 },
-  { x: 38, margin: 18 },
-  { x: 48, margin: 22 },
-  { x: 58, margin: 30 },
-  { x: 70, margin: 35 },
-  { x: 82, margin: 45 },
-  { x: 95, margin: 55 },
-  { x: 108, margin: 65 },
-  { x: 122, margin: 80 },
-  { x: 135, margin: 95 },
-  { x: 148, margin: 110 },
-  { x: 162, margin: 120 },
-  { x: 178, margin: 140 },
-  { x: 192, margin: 150 },
-  { x: 208, margin: 170 },
-  { x: 222, margin: 60 },
-  { x: 235, margin: 90 },
-  { x: 246, margin: 40 },
-];
+// Deterministic pseudo-random hash (not Math.random() — reproducible
+// across renders/tests), used below to jitter the tree/grass grid so it
+// doesn't read as a rigid lattice.
+function hash(seed) {
+  const v = Math.sin(seed * 12.9898) * 43758.5453;
+  return v - Math.floor(v);
+}
+
+// x-range decorations (trees, grass) are allowed in — the forest/rock
+// border (RIDGE's "rocks" stage starts at x=250), so nothing appears
+// above the treeline in the rocky/snowy zone.
+const GREEN_ZONE_MIN_X = 10;
+const GREEN_ZONE_MAX_X = 248;
+
+/**
+ * A deterministic jittered grid of (x, margin) points spread across the
+ * *whole* green interior — `cols` columns across x, `rows` points per
+ * column spread across that column's actual available depth (not just a
+ * band near the ridge), each nudged by a small pseudo-random offset so
+ * the result reads as naturally scattered rather than a rigid lattice —
+ * while staying evenly spaced overall, unlike the hand-picked coordinate
+ * lists this replaces (which repeatedly drifted into clumping near the
+ * ridge/trail with the deep interior left bare, or margins that didn't
+ * account for how much shallower the silhouette is near x=0).
+ * `marginStartFrac`/`marginEndFrac` (0-1) scale to that column's own
+ * available depth (`583 - approxRidgeY(x)`, the same ceiling
+ * pointBelowRidge()'s callers have always had to respect by hand), so the
+ * grid automatically narrows near the thin left edge and widens near the
+ * deep right edge with no manual margin bookkeeping.
+ */
+function jitteredGreenGrid({ cols, rows, marginStartFrac, marginEndFrac, seed }) {
+  const points = [];
+  const colWidth = (GREEN_ZONE_MAX_X - GREEN_ZONE_MIN_X) / cols;
+  for (let c = 0; c < cols; c++) {
+    const xJitter = (hash(seed + c * 31 + 1) - 0.5) * colWidth * 0.6;
+    const x = Math.max(GREEN_ZONE_MIN_X, Math.min(GREEN_ZONE_MAX_X, GREEN_ZONE_MIN_X + colWidth * (c + 0.5) + xJitter));
+    const avail = 583 - approxRidgeY(x);
+    const marginStart = avail * marginStartFrac;
+    const marginEnd = Math.max(marginStart + 5, avail * marginEndFrac);
+    const rowSpan = (marginEnd - marginStart) / rows;
+    for (let r = 0; r < rows; r++) {
+      const rowJitter = (hash(seed + c * 31 + r * 7 + 2) - 0.5) * rowSpan * 0.7;
+      points.push({ x, margin: Math.max(0, marginStart + rowSpan * (r + 0.5) + rowJitter) });
+    }
+  }
+  return points;
+}
+
+// 8 columns x 4 rows = 32 trees, spread across the whole green interior
+// (not just a ridge-hugging strip) — the total is close to the old 28,
+// but now spans roughly 3x the area (full depth from the ridge down,
+// not just a shallow band next to it), so the *density* near the trail
+// is noticeably lower (fixing the clumping) while the previously-bare
+// deep interior actually reads as filled rather than merely "touched".
+const TREE_GRID = { cols: 8, rows: 4, marginStartFrac: 0.03, marginEndFrac: 0.85, seed: 1 };
 
 function findSegment(p) {
   for (let i = 0; i < RIDGE.length - 1; i++) {
@@ -278,7 +290,7 @@ function slimTree(bx, by, scale) {
 
 const TREE_SHAPES = { fir: firTree, round: roundTree, slim: slimTree };
 
-// Which silhouette + how big at each TREE_PROGRESS slot — deterministic,
+// Which silhouette + how big at each grid slot — deterministic,
 // deliberately not sorted by shape or by size, so the tree line reads as a
 // mixed, natural-looking stand rather than a uniform row.
 const TREE_VARIANTS = [
@@ -310,10 +322,7 @@ function treeShape(x, y, index) {
 }
 
 function treesMarkup() {
-  const points = [
-    ...TREE_PROGRESS.map((p) => pointAtProgress(p)),
-    ...SCATTERED_TREES.map(({ x, margin }) => pointBelowRidge(x, margin)),
-  ];
+  const points = jitteredGreenGrid(TREE_GRID).map(({ x, margin }) => pointBelowRidge(x, margin));
   return points.map(({ x, y }, i) => treeShape(x, y, i)).join("");
 }
 
@@ -346,45 +355,14 @@ function cloudsMarkup() {
 }
 
 // ---------- Grass, scattered across the green zones ----------
-// Grass tufts right along the trail (small offset from the ridge curve,
-// same idea as the original ridge-hugging trees) — pushed up to p=0.5,
-// right at the forest/rocks border, same reasoning as TREE_PROGRESS above.
-const GRASS_TRAIL_PROGRESS = [0.03, 0.08, 0.16, 0.22, 0.3, 0.38, 0.44, 0.5];
-
-// Grass scattered across the wider grass/forest mass — the same
-// pointBelowRidge(x, margin) technique as SCATTERED_TREES, covering the
-// *whole* green mass from the foot up to x=248 (the forest/rock border)
-// rather than just the lower slope. Margins are kept comfortably under
-// each x's actual available depth (see the SCATTERED_TREES comment above
-// for why — the same edge-of-canvas risk applies here).
-const SCATTERED_GRASS = [
-  { x: 12, margin: 3 },
-  { x: 18, margin: 6 },
-  { x: 26, margin: 10 },
-  { x: 34, margin: 8 },
-  { x: 42, margin: 16 },
-  { x: 50, margin: 12 },
-  { x: 58, margin: 20 },
-  { x: 66, margin: 15 },
-  { x: 74, margin: 28 },
-  { x: 82, margin: 18 },
-  { x: 90, margin: 35 },
-  { x: 98, margin: 22 },
-  { x: 106, margin: 45 },
-  { x: 114, margin: 25 },
-  { x: 122, margin: 55 },
-  { x: 130, margin: 30 },
-  { x: 140, margin: 65 },
-  { x: 150, margin: 35 },
-  { x: 162, margin: 75 },
-  { x: 172, margin: 40 },
-  { x: 184, margin: 85 },
-  { x: 196, margin: 45 },
-  { x: 210, margin: 95 },
-  { x: 225, margin: 50 },
-  { x: 238, margin: 60 },
-  { x: 248, margin: 20 },
-];
+// 10 columns x 5 rows = 50 tufts, spread across the whole green interior
+// via the same jitteredGreenGrid() the trees use — a different seed so
+// the two grids don't land in lockstep, and margins reach almost the full
+// available depth (grass is short, so it can sit close to the very
+// bottom edge without looking like it's floating past the silhouette).
+// Grass is cheap visually (small, subtle), so it can afford to be more
+// generous than the trees without recreating the "clumped" look.
+const GRASS_GRID = { cols: 10, rows: 5, marginStartFrac: 0.01, marginEndFrac: 0.92, seed: 101 };
 
 const GRASS_SCALES = [0.8, 1.0, 1.15, 0.9];
 
@@ -417,10 +395,7 @@ function grassInstance(x, y, index) {
 }
 
 function grassMarkup() {
-  const points = [
-    ...GRASS_TRAIL_PROGRESS.map((p) => pointAtProgress(p)),
-    ...SCATTERED_GRASS.map(({ x, margin }) => pointBelowRidge(x, margin)),
-  ];
+  const points = jitteredGreenGrid(GRASS_GRID).map(({ x, margin }) => pointBelowRidge(x, margin));
   return points.map(({ x, y }, i) => grassInstance(x, y, i)).join("");
 }
 
