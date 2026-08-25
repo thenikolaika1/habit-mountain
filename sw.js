@@ -1,11 +1,11 @@
-// Bumped for the v3 habit-photos work (auto-category detection, the medal/
-// category photo pack, and several rounds of object-position crop tuning
-// across css/illustrations.css) — none of that landed here since v2, so
-// anyone with the app already installed was stuck on cache-first stale
-// CSS/JS the whole time (fetch handler below is cache-first: a hit never
-// re-checks the network). A new cache name makes the "activate" handler
-// purge the old cache wholesale instead of leaving a stale mix behind.
-const CACHE_NAME = "habit-mountain-v11";
+// Bumped for the mountain tree/grass density-grid fix (js/mountainSvg.js):
+// overlapping "clumped" trees in the main mass and a bare thin left edge,
+// fixed by replacing the fixed-rows-per-column grid with an area-
+// proportional densityGrid() plus a minimum-spacing pass. Fetch handler
+// below is cache-first (a hit never re-checks the network), so a new
+// cache name is the only way to make the "activate" handler purge the
+// stale mountain artwork instead of leaving it cached indefinitely.
+const CACHE_NAME = "habit-mountain-v12";
 
 const APP_SHELL = [
   "./",
