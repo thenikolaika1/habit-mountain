@@ -1,11 +1,14 @@
-// Bumped for the mountain tree/grass density-grid fix (js/mountainSvg.js):
-// overlapping "clumped" trees in the main mass and a bare thin left edge,
-// fixed by replacing the fixed-rows-per-column grid with an area-
-// proportional densityGrid() plus a minimum-spacing pass. Fetch handler
-// below is cache-first (a hit never re-checks the network), so a new
-// cache name is the only way to make the "activate" handler purge the
-// stale mountain artwork instead of leaving it cached indefinitely.
-const CACHE_NAME = "habit-mountain-v12";
+// Bumped for the mountain tree/grass coverage fix (js/mountainSvg.js): a
+// large empty patch on the right side of the mountain (the fill's color
+// gradient is y-based and independent of x, so the grass-colored surface
+// extends far past the old x=248 decoration cutoff), fixed by clamping
+// each column's usable depth to the real color boundary (VEGETATION_MIN_Y)
+// instead of an arbitrary x limit, and widening the x-range decorations
+// are placed in. Fetch handler below is cache-first (a hit never
+// re-checks the network), so a new cache name is the only way to make the
+// "activate" handler purge the stale mountain artwork instead of leaving
+// it cached indefinitely.
+const CACHE_NAME = "habit-mountain-v13";
 
 const APP_SHELL = [
   "./",

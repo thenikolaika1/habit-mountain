@@ -81,58 +81,77 @@ function hash(seed) {
   return v - Math.floor(v);
 }
 
-// x-range decorations (trees, grass) are allowed in — the forest/rock
-// border (RIDGE's "rocks" stage starts at x=250), so nothing appears
-// above the treeline in the rocky/snowy zone.
+// x-range decorations (trees, grass) are allowed in. Stops 10px short of
+// each edge (0 and 400), the same buffer on both sides, so nothing ever
+// sits flush against the viewBox edge.
 const GREEN_ZONE_MIN_X = 10;
-const GREEN_ZONE_MAX_X = 248;
+const GREEN_ZONE_MAX_X = 390;
+
+// The mountain body's fill is ONE linear gradient over y (grass -> forest
+// -> rock -> snow, see mountainBodyGradient in buildMountainSvg), the same
+// at every x — and the silhouette's bottom edge is y=600 across the WHOLE
+// width (buildMountainSvg's `L400,600 L0,600 Z`), not just near the
+// trail. So the grass/forest-colored surface actually extends far past
+// where the ridge line itself enters the "rocks" stage (RIDGE's x=250) —
+// at any x, however high the ridge climbs, the bottom of that column is
+// still grass-colored. VEGETATION_MIN_Y is that color boundary in
+// absolute viewBox y (not relative to the ridge): the forest->rock
+// gradient stop sits at offset 55%, i.e. y = 600 * (1 - 0.55) = 270.
+// Above this y (smaller y, closer to the peak), the surface reads as
+// rock/snow, so decorations must not go there even where a column's
+// silhouette technically extends that high.
+const VEGETATION_MIN_Y = 270;
 
 /**
- * A deterministic jittered grid of (x, margin) points spread across the
- * *whole* green interior, at a roughly constant DENSITY (items per unit
- * area) rather than a constant count per column. The available depth
- * (`583 - approxRidgeY(x)`, the same ceiling pointBelowRidge()'s callers
- * have always had to respect by hand) varies close to 60x between the
- * thin sliver near x=10 and the wide interior near x=248 — an earlier
- * version of this function put the same fixed `rows` in every column
- * regardless, which meant: the thinnest columns crammed several items
- * into a handful of px of real depth (rowSpan collapsing toward zero, so
- * they visually merged into what looked like empty space), moderate
- * columns packed the same count into a still-small area (canopies
- * overlapping — the reported "clumped" look along the trail), and the
- * widest columns ended up with the same count spread over a much bigger
- * area (comparatively sparse). Scaling `rows` to each column's own area
- * (`colWidth * avail`) at a fixed `targetAreaPerItem` fixes all three at
- * once: near-zero-area columns correctly get 0 items instead of a
- * collapsed cluster, and density stays roughly even everywhere else.
- * Each point still gets a small pseudo-random offset so the result reads
- * as naturally scattered rather than a rigid lattice.
+ * A deterministic jittered grid of (x, y) points spread across the whole
+ * grass/forest-colored surface, at a roughly constant DENSITY (items per
+ * unit area) rather than a constant count per column. Each column's
+ * usable depth runs from `max(approxRidgeY(x) + RIDGE_SAFETY_MARGIN,
+ * VEGETATION_MIN_Y)` down to the silhouette floor (583) — clamping the
+ * top to VEGETATION_MIN_Y (rather than always starting right at the
+ * ridge) is what keeps decorations out of the rock/snow-colored area for
+ * the columns where the ridge climbs well above that color boundary,
+ * while still giving those columns their full share of the (large,
+ * roughly constant) grass/forest depth below it. An earlier version
+ * anchored every column's depth to the ridge itself and stopped
+ * decorations entirely past x=248 (near where the ridge line enters the
+ * "rocks" stage) — but the actual grass-colored fill extends, at the
+ * bottom of the silhouette, almost the full width (see VEGETATION_MIN_Y's
+ * comment), so that left a huge, clearly green, completely undecorated
+ * strip from x=248 to the right edge. Within a column, `rows` is scaled
+ * to that column's own area (`colWidth * depth`) at a fixed
+ * `targetAreaPerItem`, so near-zero-area columns (e.g. the thin sliver
+ * near x=10) correctly get 0 items instead of a collapsed cluster, and
+ * density stays roughly even everywhere else. Each point still gets a
+ * small pseudo-random offset so the result reads as naturally scattered
+ * rather than a rigid lattice.
  */
 function densityGrid({ cols, targetAreaPerItem, marginStartFrac, marginEndFrac, seed }) {
   const points = [];
   const colWidth = (GREEN_ZONE_MAX_X - GREEN_ZONE_MIN_X) / cols;
   for (let c = 0; c < cols; c++) {
     const xCenter = GREEN_ZONE_MIN_X + colWidth * (c + 0.5);
-    const avail = Math.max(0, 583 - approxRidgeY(xCenter));
-    const rows = Math.round((colWidth * avail) / targetAreaPerItem);
+    const usableStart = Math.max(approxRidgeY(xCenter) + RIDGE_SAFETY_MARGIN, VEGETATION_MIN_Y);
+    const depth = Math.max(0, 583 - usableStart);
+    const rows = Math.round((colWidth * depth) / targetAreaPerItem);
     if (rows <= 0) continue; // too thin a sliver to sensibly fit even one
     const xJitter = (hash(seed + c * 31 + 1) - 0.5) * colWidth * 0.6;
     const x = Math.max(GREEN_ZONE_MIN_X, Math.min(GREEN_ZONE_MAX_X, xCenter + xJitter));
-    const marginStart = avail * marginStartFrac;
-    const marginEnd = Math.max(marginStart + 5, avail * marginEndFrac);
-    const rowSpan = (marginEnd - marginStart) / rows;
+    const yStart = usableStart + depth * marginStartFrac;
+    const yEnd = Math.max(yStart + 5, usableStart + depth * marginEndFrac);
+    const rowSpan = (yEnd - yStart) / rows;
     for (let r = 0; r < rows; r++) {
       const rowJitter = (hash(seed + c * 31 + r * 7 + 2) - 0.5) * rowSpan * 0.7;
-      points.push({ x, margin: Math.max(0, marginStart + rowSpan * (r + 0.5) + rowJitter) });
+      points.push({ x, y: Math.max(0, yStart + rowSpan * (r + 0.5) + rowJitter) });
     }
   }
   return points;
 }
 
 /**
- * Drops any point that lands closer than `minDist` (real pixel distance,
- * after pointBelowRidge()) to an already-accepted point, checked in
- * generation order. Per-column jitter alone can't promise this: two
+ * Drops any point that lands closer than `minDist` (real pixel distance)
+ * to an already-accepted point, checked in generation order. Per-column
+ * jitter alone can't promise this: two
  * *adjacent* columns are jittered independently, so nothing stops one
  * column's point from landing right next to its neighbor's — which is
  * exactly what produced the reported overlapping "mess" in the denser
@@ -148,17 +167,20 @@ function enforceMinSpacing(points, minDist) {
   return accepted;
 }
 
-// 16 columns, ~550 sq px per tree candidate before spacing enforcement
-// (total green-zone area is ~32,500 sq px, so this targets ~59 raw
-// candidates) — even density across the whole green interior instead of
-// a fixed count per column (see densityGrid()'s comment for why that
-// clumped near the trail while reading as empty at the thin left edge).
-// The target is deliberately denser than the ~27 trees that actually end
-// up on screen: enforceMinSpacing() below (in treesMarkup()) thins the
-// raw candidates down to that count, and starting from a denser raw set
-// keeps the survivors spread evenly instead of leaving gaps wherever a
-// sparse raw grid happened to reject its only nearby candidate.
-const TREE_GRID = { cols: 16, targetAreaPerItem: 550, marginStartFrac: 0.03, marginEndFrac: 0.85, seed: 1 };
+// 26 columns (same ~15px colWidth as before, over the now much wider
+// x-range) at ~550 sq px per tree candidate before spacing enforcement —
+// even density across the whole grass/forest-colored surface (the extra
+// x-range past the old x=248 cutoff roughly doubles the usable area, see
+// VEGETATION_MIN_Y's comment) instead of a fixed count per column (see
+// densityGrid()'s comment for why that clumped near the trail while
+// reading as empty at the thin left edge and blank across the wide right
+// strip). The target is deliberately denser than the ~60 trees that
+// actually end up on screen: enforceMinSpacing() below (in
+// treesMarkup()) thins the raw candidates down to that count, and
+// starting from a denser raw set keeps the survivors spread evenly
+// instead of leaving gaps wherever a sparse raw grid happened to reject
+// its only nearby candidate.
+const TREE_GRID = { cols: 26, targetAreaPerItem: 550, marginStartFrac: 0.03, marginEndFrac: 0.85, seed: 1 };
 
 function findSegment(p) {
   for (let i = 0; i < RIDGE.length - 1; i++) {
@@ -361,7 +383,7 @@ function treesMarkup() {
   // 24px was chosen from a sweep of (targetAreaPerItem, minDist) pairs
   // as the smallest spacing that still keeps nearest-neighbor distances
   // comfortably clear of visible canopy overlap.)
-  const points = enforceMinSpacing(densityGrid(TREE_GRID).map(({ x, margin }) => pointBelowRidge(x, margin)), 24);
+  const points = enforceMinSpacing(densityGrid(TREE_GRID), 24);
   return points.map(({ x, y }, i) => treeShape(x, y, i)).join("");
 }
 
@@ -394,14 +416,16 @@ function cloudsMarkup() {
 }
 
 // ---------- Grass, scattered across the green zones ----------
-// 20 columns, ~540 sq px per tuft (~61 tufts total) — same densityGrid()
-// technique as the trees, with a different seed so the two grids don't
-// land in lockstep. Margins reach almost the full available depth (grass
-// is short, so it can sit close to the very bottom edge without looking
-// like it's floating past the silhouette). Grass is cheap visually
-// (small, subtle), so it can afford a higher density than the trees
-// without recreating the "clumped" look.
-const GRASS_GRID = { cols: 20, targetAreaPerItem: 540, marginStartFrac: 0.02, marginEndFrac: 0.92, seed: 101 };
+// 32 columns (same ~12px colWidth as before, over the now much wider
+// x-range) at ~480 sq px per tuft candidate — same densityGrid()
+// technique as the trees (including the same wider x-range and
+// VEGETATION_MIN_Y clamp), with a different seed so the two grids don't
+// land in lockstep. Margins reach almost the full usable depth (grass is
+// short, so it can sit close to the very bottom edge without looking like
+// it's floating past the silhouette). Grass is cheap visually (small,
+// subtle), so it can afford a higher density than the trees without
+// recreating the "clumped" look.
+const GRASS_GRID = { cols: 32, targetAreaPerItem: 480, marginStartFrac: 0.02, marginEndFrac: 0.92, seed: 101 };
 
 const GRASS_SCALES = [0.8, 1.0, 1.15, 0.9];
 
@@ -437,7 +461,7 @@ function grassMarkup() {
   // A much smaller minimum than the trees -- grass blades are tiny (~9px
   // across), and a naturally thick "carpet" is meant to sit closer
   // together than trees ever would.
-  const points = enforceMinSpacing(densityGrid(GRASS_GRID).map(({ x, margin }) => pointBelowRidge(x, margin)), 10);
+  const points = enforceMinSpacing(densityGrid(GRASS_GRID), 10);
   return points.map(({ x, y }, i) => grassInstance(x, y, i)).join("");
 }
 
