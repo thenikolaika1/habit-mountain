@@ -424,6 +424,72 @@ function cloudsMarkup() {
   }).join("");
 }
 
+// ---------- Sky: a few birds soaring over the rocky slope ----------
+// Same "not clipped to the silhouette" reasoning as CLOUD_POSITIONS above,
+// and for the same reason: a bird whose flight animation ever dipped below
+// the ridge would get cut off mid-flight by the clip-path if it were
+// clipped, which would read as a bug, not a bird flying "behind" the
+// mountain. Each position was checked by hand against approxRidgeY(x) at
+// every keyframe extreme its `variant` reaches (see bird-fly-a/-b in
+// css/mountain.css) to keep at least ~15px of clearance above the ridge
+// throughout the whole animation, the same safety margin
+// RIDGE_SAFETY_MARGIN uses elsewhere in this file. `variant` picks which
+// keyframe (arc direction/speed) a bird flies -- the silhouette itself
+// (birdShape() below) is left-right symmetric, so there's no separate
+// "facing" to vary; different variants/positions/timings are what make
+// the three birds read as independent rather than copy-pasted.
+const BIRD_POSITIONS = [
+  { x: 250, y: 150, variant: "a", scale: 1.0, duration: 13, delay: -2 },
+  { x: 300, y: 105, variant: "b", scale: 0.85, duration: 16, delay: -8 },
+  { x: 230, y: 175, variant: "a", scale: 0.75, duration: 11, delay: -5 },
+];
+
+/** A minimal double-arc "seagull" silhouette, stroke-only (no fill) --
+ * the classic flat "birds in the sky" doodle. `x`/`y` are baked directly
+ * into the path's own coordinates (not a transform attribute on this
+ * shape or its wrapper), same reasoning treeShape()/sheepShape() already
+ * follow: a transform *attribute* would be silently replaced the instant
+ * the wrapping .mountain-bird-fly class's CSS transform *animation*
+ * kicks in. */
+function birdShape(x, y, scale) {
+  const w = 6 * scale;
+  const h = 4 * scale;
+  return `<path class="mountain-bird" d="M ${x - w},${y} Q ${x - w / 2},${y - h} ${x},${y} Q ${x + w / 2},${y - h} ${x + w},${y}" />`;
+}
+
+function birdsMarkup() {
+  return BIRD_POSITIONS.map(({ x, y, variant, scale, duration, delay }) => {
+    return `<g class="mountain-bird-fly mountain-bird-fly--${variant}" style="animation-duration:${duration}s; animation-delay:${delay}s;">${birdShape(x, y, scale)}</g>`;
+  }).join("");
+}
+
+// ---------- Waterfall, trickling down the rocky slope ----------
+// A single thin wavy path (alternating Q-curves, the same "winding"
+// character a real mountain stream has, without needing a full curve
+// library for one decorative squiggle). Unlike grass/trees/sheep -- which
+// stay inside the silhouette purely by the *coordinates* they're given --
+// this is rendered INSIDE buildMountainSvg()'s existing clip-path group,
+// right after the body rect, so the silhouette boundary itself guarantees
+// it never bleeds past the mountain's edge even at the stroke's full
+// width. The coordinates below were still checked by hand against
+// approxRidgeY(x) (every point sits well inside the silhouette) and against
+// the rock-band's absolute y-range (see VEGETATION_MIN_Y's comment for how
+// that band is computed): y=138 near the top sits just below the rock/snow
+// transition, y=268 near the bottom sits just above the rock/forest one
+// (270) -- the whole path stays in the grey band, never dipping into green
+// or snow.
+function waterfallMarkup() {
+  return `
+    <path class="mountain-waterfall" d="
+      M 340,138
+      Q 332,158 340,176
+      Q 348,194 336,212
+      Q 328,228 338,244
+      Q 344,256 334,268
+    " />
+  `;
+}
+
 // ---------- Grass, scattered across the green zones ----------
 // 32 columns (same ~12px colWidth as before, over the now much wider
 // x-range) at ~480 sq px per tuft candidate — same densityGrid()
@@ -737,10 +803,20 @@ export function buildMountainSvg(overallProgress) {
           <stop class="mountain-gradient-stop mountain-gradient-stop--tree-base" offset="0%" />
           <stop class="mountain-gradient-stop mountain-gradient-stop--tree-tip" offset="100%" />
         </linearGradient>
+        <!-- Opaque at the top, fading toward the bottom -- mist/spray
+             dispersing rather than the stream just stopping dead. Plain
+             top-to-bottom objectBoundingBox axis (unlike the two gradients
+             above, which run inverted for their own unrelated reasons). -->
+        <linearGradient id="waterfallGradient" x1="0" y1="0" x2="0" y2="1">
+          <stop class="mountain-gradient-stop mountain-gradient-stop--waterfall-top" offset="0%" />
+          <stop class="mountain-gradient-stop mountain-gradient-stop--waterfall-bottom" offset="100%" />
+        </linearGradient>
       </defs>
       ${cloudsMarkup()}
+      ${birdsMarkup()}
       <g clip-path="url(#mountainClip)">
         <rect class="mountain-body" x="0" y="0" width="400" height="600" />
+        ${waterfallMarkup()}
       </g>
       ${grassMarkup()}
       ${treesMarkup()}

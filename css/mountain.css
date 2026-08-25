@@ -48,6 +48,16 @@
   stop-color: var(--stage-forest);
 }
 
+.mountain-gradient-stop--waterfall-top {
+  stop-color: #eaf6fb;
+  stop-opacity: 0.95;
+}
+
+.mountain-gradient-stop--waterfall-bottom {
+  stop-color: #eaf6fb;
+  stop-opacity: 0.35;
+}
+
 /* The whole silhouette, one smooth fill (grass -> forest -> rock -> snow)
  * instead of four flat stacked bands — no hard seams between zones. */
 .mountain-body {
@@ -121,6 +131,101 @@
 
 @media (prefers-reduced-motion: reduce) {
   .mountain-cloud {
+    animation: none;
+  }
+}
+
+/* Birds (js/mountainSvg.js's birdsMarkup()) — a minimal stroke-only
+ * silhouette drifting along one of two looping arcs (bird-fly-a/-b below),
+ * per-bird duration/delay (set inline, same deterministic idiom as every
+ * other decoration in this file) so three birds never move in lockstep.
+ * --color-ink itself flips light/dark with the theme (see variables.css),
+ * so this stays a dark silhouette against a pale sky in light mode and a
+ * pale one against the night sky in dark mode without any extra rule here. */
+.mountain-bird {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  opacity: 0.75;
+}
+
+@keyframes bird-fly-a {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  25% {
+    transform: translate(18px, -10px);
+  }
+
+  50% {
+    transform: translate(34px, 2px);
+  }
+
+  75% {
+    transform: translate(16px, 10px);
+  }
+}
+
+@keyframes bird-fly-b {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  30% {
+    transform: translate(-20px, -12px);
+  }
+
+  65% {
+    transform: translate(-8px, 6px);
+  }
+}
+
+.mountain-bird-fly {
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.mountain-bird-fly--a {
+  animation-name: bird-fly-a;
+}
+
+.mountain-bird-fly--b {
+  animation-name: bird-fly-b;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mountain-bird-fly {
+    animation: none;
+  }
+}
+
+/* Waterfall (js/mountainSvg.js's waterfallMarkup()) — a thin wavy stroke
+ * with a running dash pattern (the standard SVG "flowing line" trick:
+ * short dashes animated along the path via stroke-dashoffset) plus a soft
+ * glow for a bit of glinting sparkle, same drop-shadow technique as
+ * .mountain-trail-walked's gold glow further down, different color. */
+@keyframes waterfall-flow {
+  to {
+    stroke-dashoffset: -160;
+  }
+}
+
+.mountain-waterfall {
+  fill: none;
+  stroke: url(#waterfallGradient);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 3 5;
+  filter: drop-shadow(0 0 3px rgba(200, 232, 245, 0.65));
+  animation: waterfall-flow 1.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mountain-waterfall {
     animation: none;
   }
 }

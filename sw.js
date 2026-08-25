@@ -1,12 +1,11 @@
-// Bumped for the sheep redesign (js/mountainSvg.js, css/mountain.css,
-// js/views/mountainView.js): curlier/detailed wool+face, bigger size,
-// full-width placement with a render-order fix so trees can no longer
-// cover them, a desynced grazing animation, and a tap-to-delight hop +
-// heart-pop interaction. Fetch handler below is cache-first (a hit never
-// re-checks the network), so a new cache name is the only way to make the
-// "activate" handler purge the stale mountain artwork instead of leaving
-// it cached indefinitely.
-const CACHE_NAME = "habit-mountain-v15";
+// Bumped for adding a waterfall + flying birds to the mountain's rock zone
+// (js/mountainSvg.js, css/mountain.css): a winding, glinting animated
+// stream clipped inside the mountain silhouette, and 3 unclipped birds
+// drifting along desynced flight-path keyframes above the rock face.
+// Fetch handler below is cache-first (a hit never re-checks the network),
+// so a new cache name is the only way to make the "activate" handler purge
+// the stale mountain artwork instead of leaving it cached indefinitely.
+const CACHE_NAME = "habit-mountain-v16";
 
 const APP_SHELL = [
   "./",
