@@ -41,8 +41,11 @@ export const MILESTONES = [
   { p: 1.0, icon: null, label: "Success", isSummit: true },
 ];
 
-// Trees stand at these progress values (foot + forest zone only).
-const TREE_PROGRESS = [0.05, 0.12, 0.19, 0.27, 0.34, 0.41];
+// Trees stand at these progress values (foot + forest zone only) — pushed
+// up to p=0.53, right at the forest/rocks boundary (RIDGE's "rocks" stage
+// starts at p=0.56), so the ridge-hugging tree line reaches the grey zone
+// border instead of stopping well short of it.
+const TREE_PROGRESS = [0.05, 0.12, 0.19, 0.27, 0.34, 0.41, 0.47, 0.53];
 
 // A fixed pixel cushion added on top of every pointBelowRidge() margin, to
 // absorb the gap between approxRidgeY()'s straight-line approximation and
@@ -80,19 +83,38 @@ function pointBelowRidge(x, margin) {
 // ridge-hugging TREE_PROGRESS trees below don't reach — the mountain body
 // is one solid fill across the *whole* 400-wide silhouette, not just a
 // strip along the diagonal trail, so a realistic "forest" needs trees off
-// to the side too. Kept to x<=250 (roughly the forest/rock boundary) so
-// trees don't appear above the treeline, in the rocky/snowy zone.
+// to the side too. Kept to x<=248 (the forest/rock boundary — RIDGE's
+// "rocks" stage starts at x=250) so trees don't appear above the
+// treeline, in the rocky/snowy zone; the highest-x entries here are what
+// carries the forest right up to that border instead of leaving it bare.
+// Margins are each kept comfortably under that x's actual available depth
+// (600 minus the ridge y there, roughly `583 - approxRidgeY(x)` once the
+// safety margin and the tree's own 2px sink are subtracted) — the
+// mountain's interior is a thin sliver near x=0 that only widens moving
+// right, so a margin generous enough for x=150 would push a tree at
+// x=20 past the canvas bottom edge (see the same fix already applied to
+// SCATTERED_GRASS below).
 const SCATTERED_TREES = [
-  { x: 30, margin: 30 },
-  { x: 75, margin: 55 },
-  { x: 120, margin: 45 },
-  { x: 60, margin: 110 },
-  { x: 175, margin: 70 },
-  { x: 140, margin: 130 },
-  { x: 220, margin: 60 },
-  { x: 95, margin: 160 },
-  { x: 250, margin: 90 },
-  { x: 15, margin: 18 },
+  { x: 15, margin: 6 },
+  { x: 22, margin: 10 },
+  { x: 30, margin: 14 },
+  { x: 38, margin: 18 },
+  { x: 48, margin: 22 },
+  { x: 58, margin: 30 },
+  { x: 70, margin: 35 },
+  { x: 82, margin: 45 },
+  { x: 95, margin: 55 },
+  { x: 108, margin: 65 },
+  { x: 122, margin: 80 },
+  { x: 135, margin: 95 },
+  { x: 148, margin: 110 },
+  { x: 162, margin: 120 },
+  { x: 178, margin: 140 },
+  { x: 192, margin: 150 },
+  { x: 208, margin: 170 },
+  { x: 222, margin: 60 },
+  { x: 235, margin: 90 },
+  { x: 246, margin: 40 },
 ];
 
 function findSegment(p) {
@@ -325,28 +347,43 @@ function cloudsMarkup() {
 
 // ---------- Grass, scattered across the green zones ----------
 // Grass tufts right along the trail (small offset from the ridge curve,
-// same idea as the original ridge-hugging trees) — denser near the foot,
-// where "особенно у подножья" calls for it.
-const GRASS_TRAIL_PROGRESS = [0.03, 0.08, 0.16, 0.22, 0.3, 0.38];
+// same idea as the original ridge-hugging trees) — pushed up to p=0.5,
+// right at the forest/rocks border, same reasoning as TREE_PROGRESS above.
+const GRASS_TRAIL_PROGRESS = [0.03, 0.08, 0.16, 0.22, 0.3, 0.38, 0.44, 0.5];
 
-// Grass scattered across the wider grass/forest mass, same idea as
-// SCATTERED_TREES but skewed toward smaller x/margins — grass reads as a
-// foot-of-the-mountain feature, not a forest-canopy one.
-// Margins are kept within each x's actual available depth (600 minus the
-// ridge y there) — the mountain's interior is a thin sliver near x=0 that
-// only widens moving right, so a margin generous enough for x=150 would
-// push a tuft at x=20 or x=25 straight past the canvas bottom edge.
+// Grass scattered across the wider grass/forest mass — the same
+// pointBelowRidge(x, margin) technique as SCATTERED_TREES, covering the
+// *whole* green mass from the foot up to x=248 (the forest/rock border)
+// rather than just the lower slope. Margins are kept comfortably under
+// each x's actual available depth (see the SCATTERED_TREES comment above
+// for why — the same edge-of-canvas risk applies here).
 const SCATTERED_GRASS = [
-  { x: 20, margin: 8 },
-  { x: 50, margin: 20 },
-  { x: 85, margin: 15 },
-  { x: 40, margin: 15 },
-  { x: 110, margin: 30 },
-  { x: 65, margin: 35 },
-  { x: 150, margin: 25 },
-  { x: 25, margin: 8 },
-  { x: 130, margin: 55 },
-  { x: 190, margin: 20 },
+  { x: 12, margin: 3 },
+  { x: 18, margin: 6 },
+  { x: 26, margin: 10 },
+  { x: 34, margin: 8 },
+  { x: 42, margin: 16 },
+  { x: 50, margin: 12 },
+  { x: 58, margin: 20 },
+  { x: 66, margin: 15 },
+  { x: 74, margin: 28 },
+  { x: 82, margin: 18 },
+  { x: 90, margin: 35 },
+  { x: 98, margin: 22 },
+  { x: 106, margin: 45 },
+  { x: 114, margin: 25 },
+  { x: 122, margin: 55 },
+  { x: 130, margin: 30 },
+  { x: 140, margin: 65 },
+  { x: 150, margin: 35 },
+  { x: 162, margin: 75 },
+  { x: 172, margin: 40 },
+  { x: 184, margin: 85 },
+  { x: 196, margin: 45 },
+  { x: 210, margin: 95 },
+  { x: 225, margin: 50 },
+  { x: 238, margin: 60 },
+  { x: 248, margin: 20 },
 ];
 
 const GRASS_SCALES = [0.8, 1.0, 1.15, 0.9];
@@ -385,6 +422,49 @@ function grassMarkup() {
     ...SCATTERED_GRASS.map(({ x, margin }) => pointBelowRidge(x, margin)),
   ];
   return points.map(({ x, y }, i) => grassInstance(x, y, i)).join("");
+}
+
+// ---------- Sheep, grazing among the grass ----------
+// A handful ("несколько" — not many, so they stay a small find rather than
+// crowding the scene) scattered across the green zone, same
+// pointBelowRidge(x, margin) placement as the grass/trees above so they
+// never land above the treeline. Static, no sway — grazing sheep don't
+// flutter in the wind the way foliage does.
+const SHEEP_POSITIONS = [
+  { x: 40, margin: 18, facing: 1 },
+  { x: 90, margin: 40, facing: -1 },
+  { x: 150, margin: 70, facing: 1 },
+  { x: 200, margin: 100, facing: -1 },
+  { x: 230, margin: 50, facing: 1 },
+];
+
+/** A minimal flat sheep pictogram: a pale fluffy-wool body (light fill,
+ * dark outline) with a dark head and two dark legs — the common
+ * "black-faced sheep" silhouette convention, easy to read even at this
+ * small size. `facing` (1 or -1) mirrors which side the head sits on. */
+function sheepShape(x, y, facing) {
+  const bodyRx = 7;
+  const bodyRy = 5;
+  const headR = 2.6;
+  const headX = x + facing * (bodyRx - 1);
+  const headY = y - bodyRy - 0.5;
+  const legTop = y + bodyRy - 1;
+  const legBottom = y + bodyRy + 3;
+  return `
+    <g class="mountain-sheep">
+      <line class="mountain-sheep-leg" x1="${x - bodyRx * 0.5}" y1="${legTop}" x2="${x - bodyRx * 0.5}" y2="${legBottom}" />
+      <line class="mountain-sheep-leg" x1="${x + bodyRx * 0.5}" y1="${legTop}" x2="${x + bodyRx * 0.5}" y2="${legBottom}" />
+      <ellipse class="mountain-sheep-body" cx="${x}" cy="${y}" rx="${bodyRx}" ry="${bodyRy}" />
+      <circle class="mountain-sheep-head" cx="${headX}" cy="${headY}" r="${headR}" />
+    </g>
+  `;
+}
+
+function sheepMarkup() {
+  return SHEEP_POSITIONS.map(({ x, margin, facing }) => {
+    const pt = pointBelowRidge(x, margin);
+    return sheepShape(pt.x, pt.y, facing);
+  }).join("");
 }
 
 /** Splits a long label into up to 2 roughly-balanced lines at a word boundary. */
@@ -527,6 +607,7 @@ export function buildMountainSvg(overallProgress) {
         <rect class="mountain-body" x="0" y="0" width="400" height="600" />
       </g>
       ${grassMarkup()}
+      ${sheepMarkup()}
       ${treesMarkup()}
       <path class="mountain-trail" d="${remainingD || `M${RIDGE[ridgeIndexOf(1)].x},${RIDGE[ridgeIndexOf(1)].y}`}" style="${remainingD ? "" : "display:none;"}" />
       <path class="mountain-trail-walked" d="${walkedD}" />

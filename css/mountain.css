@@ -157,6 +157,26 @@
   opacity: 0.85;
 }
 
+/* Sheep (js/mountainSvg.js's sheepMarkup()) — a minimal pale-wool body
+ * with a dark head/legs, the common "black-faced sheep" pictogram. Static
+ * (no sway/animation) — grazing sheep, unlike foliage, don't move with
+ * the wind. */
+.mountain-sheep-body {
+  fill: #f7f5ef;
+  stroke: var(--color-ink);
+  stroke-width: 1;
+}
+
+.mountain-sheep-head {
+  fill: var(--color-ink);
+}
+
+.mountain-sheep-leg {
+  stroke: var(--color-ink);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+
 .mountain-trail {
   fill: none;
   stroke: #fff8e6;
