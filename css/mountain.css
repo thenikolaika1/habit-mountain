@@ -58,6 +58,14 @@
   stop-opacity: 0.35;
 }
 
+.mountain-gradient-stop--wool-center {
+  stop-color: #fffcf5;
+}
+
+.mountain-gradient-stop--wool-edge {
+  stop-color: #f0ead9;
+}
+
 /* The whole silhouette, one smooth fill (grass -> forest -> rock -> snow)
  * instead of four flat stacked bands — no hard seams between zones. */
 .mountain-body {
@@ -262,11 +270,19 @@
   opacity: 0.85;
 }
 
-/* Sheep (js/mountainSvg.js's sheepMarkup()/sheepShape()) — curly wool (six
- * overlapping lumps, not one smooth ellipse), a dark "black-faced" head
- * with two pale eyes + a pale muzzle, small ears, and four legs. Rendered
- * as the LAST decorative layer in buildMountainSvg() (after the trees), so
- * a tree canopy can never cover one. */
+/* Sheep (js/mountainSvg.js's sheepMarkup()/sheepShape()) — a dense curly
+ * wool cloud (9 overlapping lumps with a soft radial-gradient fill for
+ * volume), a slightly turned/tilted dark-charcoal face with big
+ * highlighted cartoon eyes, pink two-layer ears, a pink heart-shaped nose,
+ * and four legs. Rendered as the LAST decorative layer in
+ * buildMountainSvg() (after the trees), so a tree canopy can never cover
+ * one. Every sheep gets the exact same markup structure (every wrapper
+ * group below always exists); which ONE (or two, for the fifth) of the
+ * four "life" animations actually plays on a given sheep is which
+ * `*--active` modifier class js/mountainSvg.js's SHEEP_LIFE_ANIM added --
+ * every base wrapper class below only sets transform-box/transform-origin
+ * (harmless with no animation), the `--active` sibling class is the only
+ * one that actually declares `animation`. */
 .mountain-sheep {
   cursor: pointer;
 }
@@ -276,39 +292,50 @@
 }
 
 .mountain-sheep-wool {
-  fill: #f7f5ef;
+  fill: url(#sheepWoolGradient);
   stroke: var(--color-ink);
   stroke-width: 1.4;
 }
 
 .mountain-sheep-head {
-  fill: var(--color-ink);
+  /* Fixed, not var(--color-ink) -- an animal's face has its own coloring,
+   * it shouldn't turn pale in dark mode (see SHEEP_DARK's comment). */
+  fill: #332f36;
 }
 
-.mountain-sheep-eye,
-.mountain-sheep-muzzle {
-  /* Same pale tone as the wool — reads as a bright spot against the dark
-   * head, the same "black-faced sheep" contrast convention as before. */
-  fill: #f7f5ef;
+.mountain-sheep-eye-sclera {
+  fill: #fbf8f2;
 }
 
-.mountain-sheep-ear {
-  fill: var(--color-ink);
+.mountain-sheep-eye-pupil {
+  fill: #201d22;
+}
+
+.mountain-sheep-eye-highlight {
+  fill: #ffffff;
+}
+
+.mountain-sheep-ear-outer {
+  fill: #332f36;
+}
+
+.mountain-sheep-ear-inner {
+  fill: #f5abc0;
+}
+
+.mountain-sheep-nose {
+  fill: #f5abc0;
 }
 
 .mountain-sheep-leg {
-  stroke: var(--color-ink);
-  stroke-width: 2.2;
+  stroke: #332f36;
+  stroke-width: 2.4;
   stroke-linecap: round;
 }
 
-/* Grazing idle: only the head/face sub-group (.mountain-sheep-graze,
- * wrapping the ears/head/eyes/muzzle) dips, not the whole sheep — mostly
- * at rest, with a brief nod-down-and-hold near the end of each cycle
+/* 1) Grazing idle -- a brief nod-down-and-hold near the end of each cycle
  * rather than continuous bobbing, so it reads as periodic grazing rather
- * than a nervous tic. Per-sheep duration/delay (js/mountainSvg.js's
- * sheepShape()) keep the 5 sheep out of phase, same negative-delay idiom
- * as tree-sway/grass-sway above. */
+ * than a nervous tic. */
 @keyframes sheep-graze {
   0%,
   76%,
@@ -325,11 +352,89 @@
 .mountain-sheep-graze {
   transform-box: fill-box;
   transform-origin: center bottom;
+}
+
+.mountain-sheep-graze--active {
   animation: sheep-graze 5s ease-in-out infinite;
 }
 
+/* 2) Rare blinking -- eyes open almost all the time, one short squash-flat
+ * "blink" per cycle. */
+@keyframes sheep-blink {
+  0%,
+  94%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  96%,
+  98% {
+    transform: scaleY(0.08);
+  }
+}
+
+.mountain-sheep-eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.mountain-sheep-eyes--active {
+  animation: sheep-blink 7s ease-in-out infinite;
+}
+
+/* 3) Whole-body sway -- like tree-sway, but slower/subtler (this is an
+ * idle shift, not wind). */
+@keyframes sheep-body-sway {
+  0%,
+  100% {
+    transform: rotate(-2deg);
+  }
+
+  50% {
+    transform: rotate(2deg);
+  }
+}
+
+.mountain-sheep-body-sway {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+
+.mountain-sheep-body-sway--active {
+  animation: sheep-body-sway 6.5s ease-in-out infinite;
+}
+
+/* 4) Ear twitch -- ears rest at their own static tilt (baked into the
+ * rotate() *attribute* one level up, see sheepEarMarkup()) almost all the
+ * time, with an occasional quick flick layered on top via this element's
+ * own animated transform *property*. */
+@keyframes sheep-ear-twitch {
+  0%,
+  90%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  93%,
+  96% {
+    transform: rotate(14deg);
+  }
+}
+
+.mountain-sheep-ear {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.mountain-sheep-ear--active {
+  animation: sheep-ear-twitch 5.8s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .mountain-sheep-graze {
+  .mountain-sheep-graze--active,
+  .mountain-sheep-eyes--active,
+  .mountain-sheep-body-sway--active,
+  .mountain-sheep-ear--active {
     animation: none;
   }
 }
