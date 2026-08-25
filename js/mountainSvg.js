@@ -167,20 +167,22 @@ function enforceMinSpacing(points, minDist) {
   return accepted;
 }
 
-// 26 columns (same ~15px colWidth as before, over the now much wider
-// x-range) at ~550 sq px per tree candidate before spacing enforcement —
-// even density across the whole grass/forest-colored surface (the extra
-// x-range past the old x=248 cutoff roughly doubles the usable area, see
-// VEGETATION_MIN_Y's comment) instead of a fixed count per column (see
+// 26 columns (same ~15px colWidth as before) at ~1000 sq px per tree
+// candidate before spacing enforcement — even density across the whole
+// grass/forest-colored surface instead of a fixed count per column (see
 // densityGrid()'s comment for why that clumped near the trail while
 // reading as empty at the thin left edge and blank across the wide right
-// strip). The target is deliberately denser than the ~60 trees that
-// actually end up on screen: enforceMinSpacing() below (in
-// treesMarkup()) thins the raw candidates down to that count, and
-// starting from a denser raw set keeps the survivors spread evenly
+// strip). `targetAreaPerItem` was doubled from 550 -- the previous
+// setting -- to roughly halve the overall tree count on request (the
+// scene read as too crowded); `cols` is untouched so the grid's spatial
+// resolution (how finely x is sliced) stays the same, only how many
+// points survive per slice changes. The target is deliberately denser
+// than the ~30 trees that actually end up on screen: enforceMinSpacing()
+// below (in treesMarkup()) thins the raw candidates down to that count,
+// and starting from a denser raw set keeps the survivors spread evenly
 // instead of leaving gaps wherever a sparse raw grid happened to reject
 // its only nearby candidate.
-const TREE_GRID = { cols: 26, targetAreaPerItem: 550, marginStartFrac: 0.03, marginEndFrac: 0.85, seed: 1 };
+const TREE_GRID = { cols: 26, targetAreaPerItem: 1000, marginStartFrac: 0.03, marginEndFrac: 0.85, seed: 1 };
 
 function findSegment(p) {
   for (let i = 0; i < RIDGE.length - 1; i++) {
@@ -375,15 +377,16 @@ function treeShape(x, y, index) {
 }
 
 function treesMarkup() {
-  // 24px -- close to a canopy's own width (up to ~35-40px across at the
-  // largest scale), so two tree centers can't land close enough to
-  // visibly overlap. (28px was tried first and was too aggressive: it
-  // rejected so many of the raw candidates that the result read as
-  // sparse again -- the very "empty" complaint this was meant to fix.
-  // 24px was chosen from a sweep of (targetAreaPerItem, minDist) pairs
-  // as the smallest spacing that still keeps nearest-neighbor distances
-  // comfortably clear of visible canopy overlap.)
-  const points = enforceMinSpacing(densityGrid(TREE_GRID), 24);
+  // 34px -- comfortably beyond a canopy's own width (up to ~35-40px
+  // across at the largest scale), so two tree centers can't land close
+  // enough to visibly overlap. Raised from 24px alongside
+  // TREE_GRID.targetAreaPerItem's own increase (see its comment): halving
+  // the tree count roughly doubles the average area per tree, so the
+  // minimum spacing was scaled up to match (~sqrt(2) x 24 ≈ 34) rather
+  // than left at the old, now too-tight-relative-to-the-new-density
+  // value -- a sweep of (targetAreaPerItem, minDist) pairs confirmed 34px
+  // lands the count exactly at half (30) with good, even spacing.
+  const points = enforceMinSpacing(densityGrid(TREE_GRID), 34);
   return points.map(({ x, y }, i) => treeShape(x, y, i)).join("");
 }
 

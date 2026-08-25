@@ -1,14 +1,11 @@
-// Bumped for the mountain tree/grass coverage fix (js/mountainSvg.js): a
-// large empty patch on the right side of the mountain (the fill's color
-// gradient is y-based and independent of x, so the grass-colored surface
-// extends far past the old x=248 decoration cutoff), fixed by clamping
-// each column's usable depth to the real color boundary (VEGETATION_MIN_Y)
-// instead of an arbitrary x limit, and widening the x-range decorations
-// are placed in. Fetch handler below is cache-first (a hit never
-// re-checks the network), so a new cache name is the only way to make the
-// "activate" handler purge the stale mountain artwork instead of leaving
-// it cached indefinitely.
-const CACHE_NAME = "habit-mountain-v13";
+// Bumped for halving the mountain's tree count (js/mountainSvg.js): the
+// scene read as too crowded, so TREE_GRID.targetAreaPerItem and
+// enforceMinSpacing's minDist were both raised to drop 60 trees to 30
+// while keeping even coverage (grass/sheep untouched). Fetch handler
+// below is cache-first (a hit never re-checks the network), so a new
+// cache name is the only way to make the "activate" handler purge the
+// stale mountain artwork instead of leaving it cached indefinitely.
+const CACHE_NAME = "habit-mountain-v14";
 
 const APP_SHELL = [
   "./",
