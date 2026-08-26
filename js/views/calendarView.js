@@ -29,6 +29,16 @@ export function renderCalendarView(container, { habitId }) {
   }
   const current = viewMonthByHabit.get(habitId);
 
+  // A fresh navigation into this habit's screen (from the habits list, or
+  // from a different habit's screen) vs. an in-place re-render of the
+  // screen already showing (subscribe(render) firing from an unrelated
+  // state change anywhere in the app, or a cal-prev/cal-next month-nav
+  // click) — only the former should jump the scroll position to today
+  // below. Checked BEFORE container.innerHTML is overwritten, while the
+  // previous screen's content (or nothing, on first load) is still there.
+  const existingList = container.querySelector(".day-pill-list");
+  const isFreshMount = !existingList || existingList.dataset.habitId !== habitId;
+
   // buildMonthGrid pads to full weeks with null filler cells (for the
   // 7-column calendar grid used elsewhere) — this screen is a plain
   // vertical list of real days, so the filler cells are simply dropped.
@@ -56,7 +66,7 @@ export function renderCalendarView(container, { habitId }) {
         <button type="button" class="calendar-nav-btn" id="cal-next" aria-label="Следующий месяц">›</button>
       </div>
 
-      <div class="day-pill-list" id="day-pill-list">
+      <div class="day-pill-list" id="day-pill-list" data-habit-id="${habitId}">
         ${days.map((cell) => dayPillHtml(habit, entries, cell)).join("")}
       </div>
       <p class="calendar-swipe-hint">Свайп или стрелки — соседний месяц</p>
@@ -67,6 +77,17 @@ export function renderCalendarView(container, { habitId }) {
 
   wireEvents(container, habit, entries, habitId);
   wirePhotoFallback(container);
+
+  // Jump straight to today's pill on first open, rather than leaving the
+  // user looking at the 1st of the month — only when today actually falls
+  // within the month currently shown (always true on first open, since
+  // viewMonthByHabit seeds with today's month above; not necessarily true
+  // if the user had already paged to a different month before navigating
+  // away and back, in which case there's simply no today pill to jump to).
+  if (isFreshMount) {
+    const todayPill = container.querySelector(".day-pill.is-today");
+    if (todayPill) todayPill.scrollIntoView({ block: "center" });
+  }
 }
 
 function dayPillHtml(habit, entries, cell) {
