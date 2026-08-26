@@ -1521,6 +1521,63 @@ ${treesMarkup()}` рисовало барашков ДО деревьев.
   `.mountain-fog`). Итого 89 проверок (было 83). Итого 528 (полный
   набор), все проходят. `sw.js`'s `CACHE_NAME` — v18 → v19.
 
+Шестнадцатый заход (та же сессия) — «полностью убрать барашков с горы».
+Прямая просьба убрать всех 5 барашков целиком: SVG, все 4 анимации
+жизни (выпас, моргание, покачивание тела, подёргивание ушей),
+тап-интерактивность (прыжок + сердечко). Остальной декор (деревья,
+трава, тропа, птицы, облака, туман) не трогать.
+- **`js/mountainSvg.js`**: удалён весь блок «Sheep» целиком —
+  `SHEEP_POSITIONS`, `WOOL_LUMPS`, `SHEEP_LIFE_ANIM`,
+  `sheepNoseMarkup()`, `sheepEarMarkup()`, `sheepShape()`,
+  `sheepMarkup()`, экспорт `sheepHeartPopMarkup()`. Заодно удалена
+  `pointBelowRidge()` — с прошлого захода, где деревья/трава перешли на
+  `densityGrid()`, барашки были её единственным оставшимся вызывающим;
+  после их удаления функция стала мёртвым кодом, убрана вместе со своим
+  doc-комментарием (та же гигиена, что уже применялась в сессии к
+  другим осиротевшим функциям типа `jitteredGreenGrid()`). Комментарий
+  над `RIDGE_SAFETY_MARGIN` (ссылался на `pointBelowRidge()` по имени)
+  переписан — константа по-прежнему нужна `densityGrid()`. В
+  `buildMountainSvg()` убраны `${sheepMarkup()}` из тела SVG и
+  `<radialGradient id="sheepWoolGradient">` из `<defs>`. Попутно
+  зачищена одна осиротевшая перекрёстная ссылка на `sheepShape()`
+  внутри doc-комментария `birdShape()` («та же логика, что уже
+  применяет treeShape()/sheepShape()» → только `treeShape()`).
+- **`css/mountain.css`**: удалён весь блок между `.mountain-grass` и
+  `.mountain-trail` — все `.mountain-sheep*` правила, все 4
+  `@keyframes sheep-graze/-blink/-body-sway/-ear-twitch` с их
+  `--active`-модификаторами, `@keyframes sheep-hop`/`sheep-heart-pop` и
+  оба их `prefers-reduced-motion`-блока. Отдельно удалены
+  `.mountain-gradient-stop--wool-center`/`--wool-edge` (стопы цвета
+  удалённого `sheepWoolGradient`, лежали в самом начале файла рядом с
+  другими `--*-gradient-stop`-классами, вне только что удалённого
+  диапазона).
+- **`js/views/mountainView.js`**: убран `sheepHeartPopMarkup` из
+  импорта `../mountainSvg.js`; удалены `wireMountainSheep()`,
+  `triggerSheepTap()` целиком и вызов `wireMountainSheep(container)` в
+  `renderFreshMountainView()`.
+- Подтверждено скриншотами (светлая и тёмная тема): барашков нигде на
+  горе нет, деревья/трава/тропа/птицы/облака/туман — на месте, визуально
+  не изменились. Прямая DOM-проверка:
+  `document.querySelectorAll(".mountain-sheep")` и любой
+  `[class*="mountain-sheep"]` — 0 узлов; клик по месту, где раньше
+  сидел барашек, не создаёт ни `.mountain-sheep-hop`, ни
+  `.mountain-sheep-heart-pop`.
+- `test-mountain-scenery.mjs`: удалён весь раздел «5: sheep» (структура
+  барашка, привязка к теме, 5 разных анимаций жизни, порядок рендера
+  после деревьев) и раздел «6: tap interaction» (тап → прыжок +
+  сердечко, барашек не удаляется), убраны 4 проверки
+  `prefers-reduced-motion` на `sheep-graze/-eyes/-body-sway/-ear`,
+  `.mountain-sheep-wool` убран из общего селектора границ viewBox,
+  упрощена проверка «fog/birds не делят классы» (пункт про
+  `mountain-sheep` заменён на самопроверку `mountain-fog`, барашков
+  больше нет как класса для сравнения), поправлена формулировка
+  комментария у проверки числа деревьев («grass/sheep untouched» →
+  «grass untouched»). Итого 59 проверок в файле (было 89 — ушёл весь
+  блок про барашков и тап). Полный набор `test-*.mjs`: 498/498 (29
+  файлов), все проходят. Бандл (`build-preview.mjs`) пересобран и
+  проверен напрямую (`file://`) — 0 барашков, остальной декор на
+  месте. `sw.js`'s `CACHE_NAME` — v19 → v20.
+
 ## Файловая карта (кратко)
 
 ```

@@ -41,10 +41,9 @@ export const MILESTONES = [
   { p: 1.0, icon: null, label: "Success", isSummit: true },
 ];
 
-// A fixed pixel cushion added on top of every pointBelowRidge() margin, to
-// absorb the gap between approxRidgeY()'s straight-line approximation and
-// the real (slightly bowed) Catmull-Rom ridge curve — see both functions
-// below.
+// A fixed pixel cushion added on top of approxRidgeY()'s reading, to
+// absorb the gap between that straight-line approximation and the real
+// (slightly bowed) Catmull-Rom ridge curve.
 const RIDGE_SAFETY_MARGIN = 15;
 
 /** Piecewise-linear approximation of the ridge's y at an arbitrary x —
@@ -62,21 +61,6 @@ function approxRidgeY(x) {
     }
   }
   return RIDGE[RIDGE.length - 1].y;
-}
-
-/** A point a fixed pixel `margin` straight down from the ridge at x —
- * safely inside the already-filled mountain body, unlike
- * pointAtProgress()+dy which only reaches the narrow strip hugging the
- * ridge/trail itself. This is what lets decorative details spread across
- * the *whole* silhouette instead of clustering next to the trail. Clamped
- * against VEGETATION_MIN_Y the same way densityGrid() clamps tree/grass
- * placement (see that constant's comment) and against the silhouette's own
- * floor (583, same value densityGrid() uses) — this is now sheep's only
- * caller, so the clamp lives here directly rather than in a parallel
- * copy-pasted helper. */
-function pointBelowRidge(x, margin) {
-  const usableY = Math.max(approxRidgeY(x) + RIDGE_SAFETY_MARGIN, VEGETATION_MIN_Y);
-  return { x, y: Math.min(usableY + margin, 583) };
 }
 
 // Deterministic pseudo-random hash (not Math.random() — reproducible
@@ -468,8 +452,8 @@ const BIRD_POSITIONS = [
 /** A minimal double-arc "seagull" silhouette, stroke-only (no fill) --
  * the classic flat "birds in the sky" doodle. `x`/`y` are baked directly
  * into the path's own coordinates (not a transform attribute on this
- * shape or its wrapper), same reasoning treeShape()/sheepShape() already
- * follow: a transform *attribute* would be silently replaced the instant
+ * shape or its wrapper), same reasoning treeShape() already follows: a
+ * transform *attribute* would be silently replaced the instant
  * the wrapping .mountain-bird-fly class's CSS transform *animation*
  * kicks in. */
 function birdShape(x, y, scale) {
@@ -570,265 +554,6 @@ function grassMarkup() {
   // together than trees ever would.
   const points = enforceMinSpacing(densityGrid(GRASS_GRID), 10);
   return points.map(({ x, y }, i) => grassInstance(x, y, i)).join("");
-}
-
-// ---------- Sheep, grazing among the grass ----------
-// A handful ("несколько" — not many, so they stay a small find rather than
-// crowding the scene) scattered across the *whole* green zone width, same
-// pointBelowRidge(x, margin) placement as the grass/trees above (which now
-// also clamps against VEGETATION_MIN_Y, so a sheep placed at a high-x spot
-// where the ridge climbs into rock territory still lands on grass). Two of
-// these five (x=260, x=365) sit past the point where that clamp actually
-// kicks in -- deliberate, so the clamp isn't dead code. Sheep render AFTER
-// trees in buildMountainSvg() (last decorative layer), so a tree canopy
-// can never cover one.
-const SHEEP_POSITIONS = [
-  { x: 30, margin: 12, facing: 1 },
-  { x: 95, margin: 45, facing: -1 },
-  { x: 175, margin: 70, facing: 1 },
-  { x: 260, margin: 60, facing: -1 },
-  { x: 365, margin: 80, facing: 1 },
-];
-
-// Wool lumps, relative to the sheep's own body center -- nine overlapping
-// circles (not one smooth ellipse) so the *outline itself* reads as a dense
-// fluffy cloud, each lump's own edge visible where it pokes past its
-// neighbors. Same "several overlapping same-style shapes" construction as
-// cloudShape()'s three ellipses above, just denser/rounder. Kept to
-// roughly the same overall dx/dy envelope as the original 6-lump version
-// (per request: same footprint, richer cluster) -- three more lumps filling
-// out the top and bottom of the silhouette rather than growing it outward.
-const WOOL_LUMPS = [
-  { dx: 0, dy: -2, r: 9.5 },
-  { dx: -12, dy: 1, r: 7 },
-  { dx: 12, dy: 1, r: 7 },
-  { dx: -7, dy: -9, r: 6.2 },
-  { dx: 7, dy: -9, r: 6.2 },
-  { dx: 0, dy: -11, r: 5.8 },
-  { dx: 0, dy: 6.5, r: 7.5 },
-  { dx: -15, dy: 6, r: 5.5 },
-  { dx: 15, dy: 6, r: 5.5 },
-];
-
-// Face/ears/legs use a fixed, non-theme-flipping dark charcoal in CSS
-// (.mountain-sheep-head etc. in css/mountain.css) rather than
-// var(--color-ink) (used elsewhere in this file for things that should
-// contrast with whatever's behind them) -- an animal's face has its own
-// fixed coloring, it shouldn't turn pale in dark mode. Same reasoning for
-// the ears'/nose's pink. Both are literal hex kept in CSS, same precedent
-// as .mountain-trail-walked's hardcoded gold or the tap heart's hardcoded
-// pink -- no JS-side color constant needed here, colors for this file
-// always live in CSS.
-
-// Which "life" animation(s) each of the 5 sheep gets, purely by index (not
-// stored on SHEEP_POSITIONS -- it's a property of "which sheep this is",
-// same spirit as treeShape()'s index-driven variant/timing). Every sheep
-// gets the SAME markup structure (see sheepShape()) with every wrapper
-// group always present; only whether a given wrapper's *-active modifier
-// class (and thus its actual @keyframes animation, see css/mountain.css)
-// gets added depends on this table. One trait per sheep except the last,
-// which deliberately combines two (blink + ear-twitch -- two small,
-// non-competing gestures, rather than the bigger graze/sway moves, so the
-// combo doesn't read as busier than the others).
-const SHEEP_LIFE_ANIM = [
-  { graze: true },
-  { blink: true },
-  { sway: true },
-  { ears: true },
-  { blink: true, ears: true },
-];
-
-/** A heart-shaped nose (two small lobes + a point), the same "two circles +
- * a triangle" construction sheepHeartPopMarkup() below uses for the tap
- * effect -- a different, smaller instance for a different purpose (a
- * permanent facial feature, not a transient effect), not a shared function,
- * since the two never need to change in sync. */
-function sheepNoseMarkup(cx, cy) {
-  return `
-    <circle class="mountain-sheep-nose" cx="${cx - 0.75}" cy="${cy - 0.35}" r="0.85" />
-    <circle class="mountain-sheep-nose" cx="${cx + 0.75}" cy="${cy - 0.35}" r="0.85" />
-    <path class="mountain-sheep-nose" d="M ${cx - 1.5},${cy} L ${cx},${cy + 1.8} L ${cx + 1.5},${cy} Z" />
-  `;
-}
-
-/** One ear: an outer dark lobe + a smaller inner pink lobe, both inside a
- * static rotate() wrapper (attribute, not animated) that tilts the whole
- * ear outward from the pivot point (px, py) -- then, nested one level
- * further in, an unconditional `.mountain-sheep-ear` group that ONLY grows
- * an actual `animation` when `active` (see SHEEP_LIFE_ANIM/css's
- * `--active` modifier). Splitting the static tilt (attribute, outer) from
- * the twitch (CSS transform property, inner) is the same fix as
- * treeShape()'s -sway wrapper: a transform *attribute* would otherwise be
- * silently replaced the instant a CSS transform *animation* touched the
- * same element. */
-function sheepEarMarkup(px, py, tiltDeg, active, duration, delay) {
-  const activeClass = active ? " mountain-sheep-ear--active" : "";
-  const style = active ? ` style="animation-duration:${duration}s; animation-delay:${delay}s;"` : "";
-  return `
-    <g transform="rotate(${tiltDeg} ${px} ${py})">
-      <g class="mountain-sheep-ear${activeClass}"${style}>
-        <ellipse class="mountain-sheep-ear-outer" cx="${px}" cy="${py}" rx="2.6" ry="4" />
-        <ellipse class="mountain-sheep-ear-inner" cx="${px}" cy="${py + 0.6}" rx="1.3" ry="2.3" />
-      </g>
-    </g>
-  `;
-}
-
-/** A flat sheep pictogram: a dense fluffy wool cloud (WOOL_LUMPS), a
- * slightly turned/tilted dark-charcoal face with big cartoon eyes (a pale
- * sclera + dark pupil + tiny highlight dot each, for a "living" glint),
- * pink two-layer ears, a pink heart-shaped nose, and four legs. `facing`
- * (1 or -1) mirrors which side the head sits on. `feetX`/`feetY` is the
- * ground point (where the legs meet the slope) -- everything else is
- * measured up/out from there. `index` (0-4) drives which SHEEP_LIFE_ANIM
- * entry this particular sheep plays. */
-function sheepShape(feetX, feetY, facing, index) {
-  const bodyCenterY = feetY - 19;
-  const anim = SHEEP_LIFE_ANIM[index % SHEEP_LIFE_ANIM.length];
-
-  // Legs are drawn BEFORE the wool so the wool paints over their top
-  // portion -- the same layering the original version got for free by
-  // drawing its one body ellipse after its legs. Drawing wool first would
-  // leave the legs poking visibly through the belly instead of emerging
-  // from underneath it.
-  const legXs = [-10, -3.5, 3.5, 10];
-  const legTop = feetY - 10;
-  const legsMarkup = legXs
-    .map((dx) => `<line class="mountain-sheep-leg" x1="${feetX + dx}" y1="${legTop}" x2="${feetX + dx}" y2="${feetY}" />`)
-    .join("");
-
-  const woolMarkup = WOOL_LUMPS.map(
-    ({ dx, dy, r }) => `<circle class="mountain-sheep-wool" cx="${feetX + dx}" cy="${bodyCenterY + dy}" r="${r}" />`,
-  ).join("");
-
-  const headCx = feetX + facing * 17;
-  const headCy = bodyCenterY - 3;
-
-  // Eyes: sclera (pale, big) + pupil (dark, nudged toward `facing` so the
-  // gaze reads as looking the way the head is turned) + a tiny pale
-  // highlight dot nudged up-left within the pupil -- the "живость"
-  // (liveliness) glint the reference asks for. Wrapped in their own group
-  // so a per-sheep blink (scaleY) can target just this, not the whole head.
-  const eyeDx = 2.8;
-  const eyeCy = headCy - 1.2;
-  const eyesActive = Boolean(anim.blink);
-  const eyesDuration = (6.5 + ((index + 2) % 3) * 0.9).toFixed(2);
-  const eyesDelay = (-(index * 2.1 + 0.7)).toFixed(2);
-  const eyesStyle = eyesActive ? ` style="animation-duration:${eyesDuration}s; animation-delay:${eyesDelay}s;"` : "";
-  const eyeMarkup = (ex) => {
-    const px = ex + facing * 0.3;
-    return `
-      <circle class="mountain-sheep-eye-sclera" cx="${ex}" cy="${eyeCy}" r="1.9" />
-      <circle class="mountain-sheep-eye-pupil" cx="${px}" cy="${eyeCy + 0.1}" r="1.15" />
-      <circle class="mountain-sheep-eye-highlight" cx="${px - 0.5}" cy="${eyeCy - 0.5}" r="0.45" />
-    `;
-  };
-  const eyesMarkup = `
-    <g class="mountain-sheep-eyes${eyesActive ? " mountain-sheep-eyes--active" : ""}"${eyesStyle}>
-      ${eyeMarkup(headCx - eyeDx)}
-      ${eyeMarkup(headCx + eyeDx)}
-    </g>
-  `;
-
-  const earsActive = Boolean(anim.ears);
-  const earDuration = (5.5 + ((index + 1) % 3) * 0.6).toFixed(2);
-  const earDelayLeft = (-(index * 1.5 + 0.5)).toFixed(2);
-  const earDelayRight = (-(index * 1.5 + 0.8)).toFixed(2); // slightly offset from the left ear
-  const earsMarkup =
-    sheepEarMarkup(headCx - 6.8, headCy - 5.7, -25, earsActive, earDuration, earDelayLeft) +
-    sheepEarMarkup(headCx + 6.8, headCy - 5.7, 25, earsActive, earDuration, earDelayRight);
-
-  // A slight static tilt (attribute, not animated -- see sheepEarMarkup()'s
-  // comment for why that split matters) on the head ellipse itself gives
-  // the "голова слегка повёрнута/наклонена" friendliness the reference
-  // asks for; a circle wouldn't show a rotation at all, hence ellipse.
-  const headMarkup = `<ellipse class="mountain-sheep-head" cx="${headCx}" cy="${headCy}" rx="8" ry="7.3" transform="rotate(${facing * 11} ${headCx} ${headCy})" />`;
-
-  // Everything above sits inside .mountain-sheep-graze, dipped together
-  // when this sheep's SHEEP_LIFE_ANIM entry includes `graze` -- no
-  // transform attribute on this <g> itself (coordinates are baked into
-  // the child shapes instead), same reasoning as sheepEarMarkup()'s split.
-  const grazeActive = Boolean(anim.graze);
-  const grazeDuration = (4.8 + (index % 3) * 0.4).toFixed(2);
-  const grazeDelay = (-(index * 1.1 + 0.3)).toFixed(2);
-  const grazeStyle = grazeActive ? ` style="animation-duration:${grazeDuration}s; animation-delay:${grazeDelay}s;"` : "";
-  const faceMarkup = `
-    <g class="mountain-sheep-graze${grazeActive ? " mountain-sheep-graze--active" : ""}"${grazeStyle}>
-      ${earsMarkup}
-      ${headMarkup}
-      ${eyesMarkup}
-      ${sheepNoseMarkup(headCx, headCy + 4.6)}
-    </g>
-  `;
-
-  // Whole-body sway, wrapped INSIDE .mountain-sheep (not applied to that
-  // outer group itself) so it never fights the tap-triggered hop -- both
-  // would otherwise be two different animations racing for the same
-  // element's `transform` property. Nesting instead composes: the hop
-  // (outer) and the sway (inner) both apply, same trick already used for
-  // the tap heart's static-position/animated-pop split below.
-  const swayActive = Boolean(anim.sway);
-  const swayDuration = (6 + ((index + 1) % 3) * 0.8).toFixed(2);
-  const swayDelay = (-(index * 1.7 + 0.4)).toFixed(2);
-  const swayStyle = swayActive ? ` style="animation-duration:${swayDuration}s; animation-delay:${swayDelay}s;"` : "";
-  const bodyMarkup = `
-    <g class="mountain-sheep-body-sway${swayActive ? " mountain-sheep-body-sway--active" : ""}"${swayStyle}>
-      ${legsMarkup}
-      ${woolMarkup}
-      ${faceMarkup}
-    </g>
-  `;
-
-  // A generously padded, invisible hit-area, first (so it's drawn behind
-  // everything else, but still captures taps) -- the sheep's individual
-  // parts (legs, ears) are each much thinner than a comfortable mobile tap
-  // target. `fill: transparent` (not `none`) deliberately, so the shape
-  // still counts as "painted" for SVG's default pointer-events hit-testing.
-  // Kept OUTSIDE the body-sway wrapper -- it's invisible, so whether it
-  // sways along makes no visual difference, and keeping it a direct,
-  // never-moving child of .mountain-sheep keeps its own coordinates simple.
-  const hitarea = `<ellipse class="mountain-sheep-hitarea" cx="${feetX}" cy="${bodyCenterY - 8}" rx="26" ry="24" />`;
-
-  // data-heart-x/y mark where the tap effect's heart (sheepHeartPopMarkup(),
-  // wired up in mountainView.js's triggerSheepTap()) should be centered --
-  // near the head, above the face. The heart's own coordinates are drawn
-  // relative to (0,0), so triggerSheepTap() reads these back off the DOM
-  // and wraps the inserted heart in its own translate() rather than trying
-  // to inherit a position this outer <g> doesn't otherwise carry (it has no
-  // transform of its own -- every child shape above is already placed in
-  // absolute viewBox coordinates, not relative to a group offset).
-  return `<g class="mountain-sheep" data-heart-x="${headCx}" data-heart-y="${headCy - 9}">${hitarea}${bodyMarkup}</g>`;
-}
-
-function sheepMarkup() {
-  return SHEEP_POSITIONS.map(({ x, margin, facing }, index) => {
-    const pt = pointBelowRidge(x, margin);
-    return sheepShape(pt.x, pt.y, facing, index);
-  }).join("");
-}
-
-/** A small hand-drawn heart (two lobes + a pointed base) -- only used for
- * the sheep tap "pop" effect (js/views/mountainView.js's triggerSheepTap()),
- * never part of a sheep's normal render output. `x`/`y` (read by the caller
- * off the tapped sheep's data-heart-x/y, see sheepShape()) position it via
- * a plain, static translate() on an OUTER wrapper group -- deliberately
- * NOT on the inner `.mountain-sheep-heart-pop` group itself, which is where
- * the CSS pop/float animation's `transform` property lives. A transform
- * *attribute* on that same element would get silently overwritten the
- * instant the animation's transform *property* kicks in (the same trap
- * treeShape()'s -sway wrapper avoids); nesting the static position outside
- * the animated group sidesteps it, since SVG/CSS compose nested
- * transforms instead of one overwriting the other. */
-export function sheepHeartPopMarkup(x, y) {
-  return `
-    <g transform="translate(${x},${y})">
-      <g class="mountain-sheep-heart-pop">
-        <circle cx="-2.2" cy="-1.5" r="2.6" />
-        <circle cx="2.2" cy="-1.5" r="2.6" />
-        <path d="M -4.6 -0.5 L 0 4.5 L 4.6 -0.5 Z" />
-      </g>
-    </g>
-  `;
 }
 
 /** Splits a long label into up to 2 roughly-balanced lines at a word boundary. */
@@ -965,15 +690,6 @@ export function buildMountainSvg(overallProgress) {
           <stop class="mountain-gradient-stop mountain-gradient-stop--tree-base" offset="0%" />
           <stop class="mountain-gradient-stop mountain-gradient-stop--tree-tip" offset="100%" />
         </linearGradient>
-        <!-- Soft volume for every sheep's wool lump (js/mountainSvg.js's
-             WOOL_LUMPS) -- one shared def, referenced by all ~9 lumps on
-             all 5 sheep, cream center fading to a slightly deeper warm
-             cream at the edge for a puffy look without a separate shadow
-             layer underneath each lump. -->
-        <radialGradient id="sheepWoolGradient">
-          <stop class="mountain-gradient-stop mountain-gradient-stop--wool-center" offset="0%" />
-          <stop class="mountain-gradient-stop mountain-gradient-stop--wool-edge" offset="100%" />
-        </radialGradient>
       </defs>
       ${cloudsMarkup()}
       ${birdsMarkup()}
@@ -983,7 +699,6 @@ export function buildMountainSvg(overallProgress) {
       ${fogMarkup()}
       ${grassMarkup()}
       ${treesMarkup()}
-      ${sheepMarkup()}
       <path class="mountain-trail" d="${remainingD || `M${RIDGE[ridgeIndexOf(1)].x},${RIDGE[ridgeIndexOf(1)].y}`}" style="${remainingD ? "" : "display:none;"}" />
       <path class="mountain-trail-walked" d="${walkedD}" />
       ${milestoneMarkup(overallProgress)}

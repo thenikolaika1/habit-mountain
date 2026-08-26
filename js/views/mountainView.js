@@ -2,7 +2,7 @@ import { getAppStats } from "../state/derive.js";
 import { setEntry } from "../state/entries.js";
 import { todayKey, todayParts, monthLabel, weekdayHeader, buildMonthGrid } from "../logic/dateUtils.js";
 import { isDayComplete } from "../logic/completion.js";
-import { buildMountainSvg, buildProgressTrailPaths, MILESTONES, sheepHeartPopMarkup } from "../mountainSvg.js";
+import { buildMountainSvg, buildProgressTrailPaths, MILESTONES } from "../mountainSvg.js";
 import { stageForProgress } from "../logic/progress.js";
 import { CHALLENGE_POOL } from "../logic/challenges.js";
 import { showToast } from "../components/toast.js";
@@ -83,50 +83,6 @@ function renderFreshMountainView(container, stats, tKey, monthStats) {
 
   wireTodayList(container, stats, tKey);
   wireProgressCalendar(container, stats);
-  wireMountainSheep(container);
-}
-
-// One delegated listener on the persisted <svg> root, wired only on fresh
-// mount (patchMountainView() below never rebuilds decorative markup, so
-// there's nothing to re-wire on a later patch — the listener and every
-// sheep node it targets both survive every subsequent patch untouched).
-function wireMountainSheep(container) {
-  const svg = container.querySelector(".mountain-svg");
-  if (!svg) return;
-  svg.addEventListener("click", (e) => {
-    const sheep = e.target.closest(".mountain-sheep");
-    if (sheep) triggerSheepTap(sheep);
-  });
-}
-
-// Never removes the sheep group itself — only ever adds a transient class
-// (the hop) and a transient child node (the heart), both cleaned up after
-// their own animation. patchMountainView() never rebuilds decorative
-// markup, so a tap effect that ever removed the sheep node itself would
-// have no way back onto the mountain.
-function triggerSheepTap(sheepEl) {
-  // Remove -> force reflow -> add, so a rapid repeat tap always restarts
-  // the hop from scratch instead of being ignored mid-animation.
-  sheepEl.classList.remove("mountain-sheep-hop");
-  void sheepEl.getBBox();
-  sheepEl.classList.add("mountain-sheep-hop");
-
-  // A fresh heart node per tap (never reused), positioned via the sheep's
-  // own data-heart-x/y (see sheepShape() in mountainSvg.js) — overlapping
-  // taps just stack multiple hearts instead of fighting over one shared
-  // node.
-  const heartX = sheepEl.dataset.heartX;
-  const heartY = sheepEl.dataset.heartY;
-  sheepEl.insertAdjacentHTML("beforeend", sheepHeartPopMarkup(heartX, heartY));
-  const heartWrapper = sheepEl.lastElementChild;
-  const cleanup = () => heartWrapper.remove();
-  const animatedHeart = heartWrapper.querySelector(".mountain-sheep-heart-pop");
-  animatedHeart.addEventListener("animationend", cleanup, { once: true });
-  // Fallback: under prefers-reduced-motion the heart's animation is
-  // `none`, so animationend never fires — this timeout is what actually
-  // removes it in that case (and is a harmless no-op double-cleanup
-  // otherwise, since removing an already-removed node is safe).
-  setTimeout(cleanup, 900);
 }
 
 function patchMountainView(container, stats, tKey, monthStats) {
