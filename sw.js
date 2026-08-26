@@ -1,11 +1,11 @@
-// Bumped for going from 3 to 5 birds and swapping the rock-zone waterfall
-// (removed, didn't land visually) for a static stone cairn -- a hiking
-// trail marker fitting the app's own trail/milestone theme
-// (js/mountainSvg.js, css/mountain.css). Fetch handler below is
-// cache-first (a hit never re-checks the network), so a new cache name is
-// the only way to make the "activate" handler purge the stale mountain
-// artwork instead of leaving it cached indefinitely.
-const CACHE_NAME = "habit-mountain-v18";
+// Bumped for spreading clouds across the whole sky height (3 -> 7,
+// including the middle/lower sky, not just the very top) and swapping the
+// rock-zone stone cairn (removed on request, read as "камни/валуны") for
+// soft drifting fog layers (js/mountainSvg.js, css/mountain.css). Fetch
+// handler below is cache-first (a hit never re-checks the network), so a
+// new cache name is the only way to make the "activate" handler purge the
+// stale mountain artwork instead of leaving it cached indefinitely.
+const CACHE_NAME = "habit-mountain-v19";
 
 const APP_SHELL = [
   "./",

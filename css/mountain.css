@@ -201,19 +201,45 @@
   }
 }
 
-/* Cairn (js/mountainSvg.js's cairnMarkup()) — a small static stack of
- * stones, a hiking trail marker fitting the app's own trail/milestone
- * theme. Fixed literal colors (not var(--color-ink) or the mountain's own
- * --stage-rocks* tokens) so it reads as a distinct object against the
- * cooler grey rock fill rather than blending into it, in either theme —
- * same "this object has its own fixed coloring" reasoning already applied
- * to the sheep's face and the birds. No animation (deliberately): the sky
- * above already has 5 independently-timed birds, so a second moving
- * element down here would just be clutter. */
-.mountain-cairn-stone {
-  fill: #b0a495;
-  stroke: #4d453c;
-  stroke-width: 1.2;
+/* Fog (js/mountainSvg.js's fogMarkup()) — soft, low-opacity haze drifting
+ * over the rock zone, replacing the removed stone cairn. Same
+ * white-at-low-opacity approach as .mountain-cloud above (even dimmer, so
+ * it reads as a subtle veil rather than competing with the clouds
+ * themselves), and the same slower/wider drift than a cloud's -- fog is
+ * "heavier" and lazier than a cumulus cloud drifting by. */
+@keyframes fog-drift {
+  0%,
+  100% {
+    transform: translateX(-10px);
+  }
+
+  50% {
+    transform: translateX(10px);
+  }
+}
+
+.mountain-fog {
+  fill: #f5f7f6;
+  opacity: 0.22;
+  animation: fog-drift 46s ease-in-out infinite;
+}
+
+/* Dimmer in dark mode, same reasoning/pairing as .mountain-cloud above --
+ * fog should look fainter in the dark, not brighter. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .mountain-fog {
+    opacity: 0.12;
+  }
+}
+
+:root[data-theme="dark"] .mountain-fog {
+  opacity: 0.12;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mountain-fog {
+    animation: none;
+  }
 }
 
 /* Grass tufts (js/mountainSvg.js's grassMarkup()) — scattered across the

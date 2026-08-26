@@ -396,17 +396,31 @@ function treesMarkup() {
   return points.map(({ x, y }, i) => treeShape(x, y, i)).join("");
 }
 
-// ---------- Sky: a few slow-drifting clouds ----------
+// ---------- Sky: slow-drifting clouds, spread across the whole sky height ----------
 // Plain sky decoration, not clipped to the mountain silhouette — rendered
 // before the mountain body (see buildMountainSvg) so the mountain would
 // occlude any cloud that ever dipped below the ridge line, though none of
-// these positions currently do (all sit well above the ridge y at their x).
-// x stays under ~260 so clouds don't crowd the two rightmost milestones'
-// captions near the summit (x≈325-378).
+// these positions do (all checked against approxRidgeY(x) with a big
+// margin). x stays under ~260 so clouds don't crowd the two rightmost
+// milestones' captions near the summit (x≈325-378). The first three
+// entries were the original set, clustered in a narrow band near the very
+// top (y≈26-72) -- the other four fill out the middle and lower sky. The
+// key to "lower" here is smaller x, not bigger y at the same x: the ridge
+// is a diagonal, so how far down the sky extends before hitting it varies
+// enormously by x (at x=0 the ridge itself is already down at y=585, so
+// the sky column there reaches almost the full frame height; at x=250 it's
+// only down to y=255). Reusing the same x as an existing cloud and just
+// bumping y risks putting the new cloud below the ridge at that x -- these
+// new entries instead pick smaller/middling x specifically so there's
+// still a generous margin at a much larger y.
 const CLOUD_POSITIONS = [
   { x: 55, y: 45, scale: 1.0, duration: 27, delay: -4 },
   { x: 155, y: 26, scale: 0.8, duration: 33, delay: -14 },
   { x: 255, y: 72, scale: 0.9, duration: 24, delay: -9 },
+  { x: 25, y: 180, scale: 0.7, duration: 30, delay: -11 },
+  { x: 110, y: 260, scale: 0.85, duration: 21, delay: -6 },
+  { x: 190, y: 200, scale: 0.65, duration: 36, delay: -18 },
+  { x: 70, y: 340, scale: 0.75, duration: 25, delay: -3 },
 ];
 
 /** Three overlapping ellipses — the classic cartoon-cloud silhouette. */
@@ -470,30 +484,42 @@ function birdsMarkup() {
   }).join("");
 }
 
-// ---------- Cairn, a small trail-marker stack of stones on the rocky slope ----------
-// A hiking trail marker fits the app's own "trail/milestones/summit flag"
-// theme, and (unlike the waterfall this replaces -- removed on request, it
-// didn't land visually) needs no animation: birds above are already 5 now,
-// giving the grey zone plenty of life on their own, so a second animated
-// element here would just be clutter. Three flattened stones stacked wide-
-// to-narrow, each nudged slightly off-center from the one below (an
-// unevenly-balanced stack is what actually reads as a cairn, not a neat
-// pyramid) -- same "a few overlapping same-style shapes" construction as
-// cloudShape()/WOOL_LUMPS. Rendered INSIDE buildMountainSvg()'s existing
-// clip-path group, right after the body rect (like the waterfall was),
-// so the silhouette boundary itself guarantees it never bleeds past the
-// mountain's edge. The anchor was checked against approxRidgeY(x) (310 ->
-// ridge y ~149, so y=195 sits a comfortable ~46px inside the silhouette)
-// and against the rock band's absolute y-range (VEGETATION_MIN_Y's comment
-// explains how that's computed).
-function cairnMarkup() {
-  const x = 310;
-  const y = 195;
+// ---------- Fog, soft atmospheric haze drifting over the rocky slope ----------
+// Replaces the stone cairn (removed on request -- read as "камни/валуны",
+// didn't land visually). Unlike the cairn (or the waterfall before it),
+// this is deliberately NOT rendered inside buildMountainSvg()'s clip-path
+// group: a hard cutoff right at the silhouette edge would read as a
+// geometric shape with a clipped boundary, not atmospheric mist -- real
+// fog has no crisp edge, and drifting slightly past the ridge into the sky
+// is exactly what makes it look like haze rather than a sticker. Same
+// "not clipped" reasoning CLOUD_POSITIONS/BIRD_POSITIONS already rely on.
+// Wide, flat, low-opacity wisps (two overlapping ellipses per layer,
+// wider and flatter than a cloud's puffier three-ellipse silhouette --
+// fog spreads sideways along the slope rather than piling up vertically
+// like a cumulus cloud) positioned over the same rock-zone area birds fly
+// through (x≈210-390), within the rock band's y-range (see
+// VEGETATION_MIN_Y's comment for how that's computed) -- "atmospheric
+// depth near the summit," as requested.
+const FOG_POSITIONS = [
+  { x: 260, y: 230, scale: 1.3, duration: 46, delay: -10 },
+  { x: 330, y: 160, scale: 1.1, duration: 58, delay: -25 },
+  { x: 300, y: 260, scale: 1.0, duration: 40, delay: -5 },
+  { x: 355, y: 130, scale: 0.9, duration: 52, delay: -33 },
+];
+
+/** Two overlapping flat ellipses -- a soft horizontal wisp, the fog
+ * equivalent of cloudShape() above. */
+function fogShape(x, y, scale) {
   return `
-    <ellipse class="mountain-cairn-stone" cx="${x}" cy="${y}" rx="9" ry="5" />
-    <ellipse class="mountain-cairn-stone" cx="${x + 2}" cy="${y - 8}" rx="7" ry="4.2" />
-    <ellipse class="mountain-cairn-stone" cx="${x - 1.5}" cy="${y - 15}" rx="5" ry="3.4" />
+    <ellipse cx="${x - 18 * scale}" cy="${y}" rx="${22 * scale}" ry="${8 * scale}" />
+    <ellipse cx="${x + 16 * scale}" cy="${y + 2 * scale}" rx="${20 * scale}" ry="${7 * scale}" />
   `;
+}
+
+function fogMarkup() {
+  return FOG_POSITIONS.map(({ x, y, scale, duration, delay }) => {
+    return `<g class="mountain-fog" style="animation-duration:${duration}s; animation-delay:${delay}s;">${fogShape(x, y, scale)}</g>`;
+  }).join("");
 }
 
 // ---------- Grass, scattered across the green zones ----------
@@ -953,8 +979,8 @@ export function buildMountainSvg(overallProgress) {
       ${birdsMarkup()}
       <g clip-path="url(#mountainClip)">
         <rect class="mountain-body" x="0" y="0" width="400" height="600" />
-        ${cairnMarkup()}
       </g>
+      ${fogMarkup()}
       ${grassMarkup()}
       ${treesMarkup()}
       ${sheepMarkup()}
