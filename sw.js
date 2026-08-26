@@ -1,13 +1,11 @@
-// Bumped for the sheep illustration redesign (js/mountainSvg.js,
-// css/mountain.css): denser gradient-shaded wool, bigger highlighted eyes,
-// two-layer ears, a heart-shaped nose, a fixed (non-theme-flipping) dark
-// face, and 5 sheep each playing a different, independently-timed "life"
-// animation (graze / blink / body-sway / ear-twitch / a two-trait combo)
-// instead of all five grazing in sync. Fetch handler below is cache-first
-// (a hit never re-checks the network), so a new cache name is the only way
-// to make the "activate" handler purge the stale mountain artwork instead
-// of leaving it cached indefinitely.
-const CACHE_NAME = "habit-mountain-v17";
+// Bumped for going from 3 to 5 birds and swapping the rock-zone waterfall
+// (removed, didn't land visually) for a static stone cairn -- a hiking
+// trail marker fitting the app's own trail/milestone theme
+// (js/mountainSvg.js, css/mountain.css). Fetch handler below is
+// cache-first (a hit never re-checks the network), so a new cache name is
+// the only way to make the "activate" handler purge the stale mountain
+// artwork instead of leaving it cached indefinitely.
+const CACHE_NAME = "habit-mountain-v18";
 
 const APP_SHELL = [
   "./",

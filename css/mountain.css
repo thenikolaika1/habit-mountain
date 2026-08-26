@@ -48,16 +48,6 @@
   stop-color: var(--stage-forest);
 }
 
-.mountain-gradient-stop--waterfall-top {
-  stop-color: #eaf6fb;
-  stop-opacity: 0.95;
-}
-
-.mountain-gradient-stop--waterfall-bottom {
-  stop-color: #eaf6fb;
-  stop-opacity: 0.35;
-}
-
 .mountain-gradient-stop--wool-center {
   stop-color: #fffcf5;
 }
@@ -211,31 +201,19 @@
   }
 }
 
-/* Waterfall (js/mountainSvg.js's waterfallMarkup()) — a thin wavy stroke
- * with a running dash pattern (the standard SVG "flowing line" trick:
- * short dashes animated along the path via stroke-dashoffset) plus a soft
- * glow for a bit of glinting sparkle, same drop-shadow technique as
- * .mountain-trail-walked's gold glow further down, different color. */
-@keyframes waterfall-flow {
-  to {
-    stroke-dashoffset: -160;
-  }
-}
-
-.mountain-waterfall {
-  fill: none;
-  stroke: url(#waterfallGradient);
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  stroke-dasharray: 3 5;
-  filter: drop-shadow(0 0 3px rgba(200, 232, 245, 0.65));
-  animation: waterfall-flow 1.8s linear infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mountain-waterfall {
-    animation: none;
-  }
+/* Cairn (js/mountainSvg.js's cairnMarkup()) — a small static stack of
+ * stones, a hiking trail marker fitting the app's own trail/milestone
+ * theme. Fixed literal colors (not var(--color-ink) or the mountain's own
+ * --stage-rocks* tokens) so it reads as a distinct object against the
+ * cooler grey rock fill rather than blending into it, in either theme —
+ * same "this object has its own fixed coloring" reasoning already applied
+ * to the sheep's face and the birds. No animation (deliberately): the sky
+ * above already has 5 independently-timed birds, so a second moving
+ * element down here would just be clutter. */
+.mountain-cairn-stone {
+  fill: #b0a495;
+  stroke: #4d453c;
+  stroke-width: 1.2;
 }
 
 /* Grass tufts (js/mountainSvg.js's grassMarkup()) — scattered across the

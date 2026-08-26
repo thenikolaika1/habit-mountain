@@ -424,7 +424,7 @@ function cloudsMarkup() {
   }).join("");
 }
 
-// ---------- Sky: a few birds soaring over the rocky slope ----------
+// ---------- Sky: birds soaring over the rocky slope ----------
 // Same "not clipped to the silhouette" reasoning as CLOUD_POSITIONS above,
 // and for the same reason: a bird whose flight animation ever dipped below
 // the ridge would get cut off mid-flight by the clip-path if it were
@@ -433,15 +433,22 @@ function cloudsMarkup() {
 // every keyframe extreme its `variant` reaches (see bird-fly-a/-b in
 // css/mountain.css) to keep at least ~15px of clearance above the ridge
 // throughout the whole animation, the same safety margin
-// RIDGE_SAFETY_MARGIN uses elsewhere in this file. `variant` picks which
-// keyframe (arc direction/speed) a bird flies -- the silhouette itself
-// (birdShape() below) is left-right symmetric, so there's no separate
-// "facing" to vary; different variants/positions/timings are what make
-// the three birds read as independent rather than copy-pasted.
+// RIDGE_SAFETY_MARGIN uses elsewhere in this file -- the 4th position
+// below (x=340ish, near the summit) failed exactly this check on a first
+// pass (the ridge climbs too high there for a bird arcing further right to
+// stay clear) and was moved to x=300 instead; kept as a reminder that
+// "base position looks fine" isn't sufficient, every keyframe extreme has
+// to be checked. `variant` picks which keyframe (arc direction/speed) a
+// bird flies -- the silhouette itself (birdShape() below) is left-right
+// symmetric, so there's no separate "facing" to vary; different
+// variants/positions/timings are what make the five birds read as
+// independent rather than copy-pasted.
 const BIRD_POSITIONS = [
   { x: 250, y: 150, variant: "a", scale: 1.0, duration: 13, delay: -2 },
   { x: 300, y: 105, variant: "b", scale: 0.85, duration: 16, delay: -8 },
   { x: 230, y: 175, variant: "a", scale: 0.75, duration: 11, delay: -5 },
+  { x: 300, y: 140, variant: "b", scale: 0.9, duration: 14, delay: -6 },
+  { x: 210, y: 205, variant: "a", scale: 0.7, duration: 12, delay: -9 },
 ];
 
 /** A minimal double-arc "seagull" silhouette, stroke-only (no fill) --
@@ -463,30 +470,29 @@ function birdsMarkup() {
   }).join("");
 }
 
-// ---------- Waterfall, trickling down the rocky slope ----------
-// A single thin wavy path (alternating Q-curves, the same "winding"
-// character a real mountain stream has, without needing a full curve
-// library for one decorative squiggle). Unlike grass/trees/sheep -- which
-// stay inside the silhouette purely by the *coordinates* they're given --
-// this is rendered INSIDE buildMountainSvg()'s existing clip-path group,
-// right after the body rect, so the silhouette boundary itself guarantees
-// it never bleeds past the mountain's edge even at the stroke's full
-// width. The coordinates below were still checked by hand against
-// approxRidgeY(x) (every point sits well inside the silhouette) and against
-// the rock-band's absolute y-range (see VEGETATION_MIN_Y's comment for how
-// that band is computed): y=138 near the top sits just below the rock/snow
-// transition, y=268 near the bottom sits just above the rock/forest one
-// (270) -- the whole path stays in the grey band, never dipping into green
-// or snow.
-function waterfallMarkup() {
+// ---------- Cairn, a small trail-marker stack of stones on the rocky slope ----------
+// A hiking trail marker fits the app's own "trail/milestones/summit flag"
+// theme, and (unlike the waterfall this replaces -- removed on request, it
+// didn't land visually) needs no animation: birds above are already 5 now,
+// giving the grey zone plenty of life on their own, so a second animated
+// element here would just be clutter. Three flattened stones stacked wide-
+// to-narrow, each nudged slightly off-center from the one below (an
+// unevenly-balanced stack is what actually reads as a cairn, not a neat
+// pyramid) -- same "a few overlapping same-style shapes" construction as
+// cloudShape()/WOOL_LUMPS. Rendered INSIDE buildMountainSvg()'s existing
+// clip-path group, right after the body rect (like the waterfall was),
+// so the silhouette boundary itself guarantees it never bleeds past the
+// mountain's edge. The anchor was checked against approxRidgeY(x) (310 ->
+// ridge y ~149, so y=195 sits a comfortable ~46px inside the silhouette)
+// and against the rock band's absolute y-range (VEGETATION_MIN_Y's comment
+// explains how that's computed).
+function cairnMarkup() {
+  const x = 310;
+  const y = 195;
   return `
-    <path class="mountain-waterfall" d="
-      M 340,138
-      Q 332,158 340,176
-      Q 348,194 336,212
-      Q 328,228 338,244
-      Q 344,256 334,268
-    " />
+    <ellipse class="mountain-cairn-stone" cx="${x}" cy="${y}" rx="9" ry="5" />
+    <ellipse class="mountain-cairn-stone" cx="${x + 2}" cy="${y - 8}" rx="7" ry="4.2" />
+    <ellipse class="mountain-cairn-stone" cx="${x - 1.5}" cy="${y - 15}" rx="5" ry="3.4" />
   `;
 }
 
@@ -933,14 +939,6 @@ export function buildMountainSvg(overallProgress) {
           <stop class="mountain-gradient-stop mountain-gradient-stop--tree-base" offset="0%" />
           <stop class="mountain-gradient-stop mountain-gradient-stop--tree-tip" offset="100%" />
         </linearGradient>
-        <!-- Opaque at the top, fading toward the bottom -- mist/spray
-             dispersing rather than the stream just stopping dead. Plain
-             top-to-bottom objectBoundingBox axis (unlike the two gradients
-             above, which run inverted for their own unrelated reasons). -->
-        <linearGradient id="waterfallGradient" x1="0" y1="0" x2="0" y2="1">
-          <stop class="mountain-gradient-stop mountain-gradient-stop--waterfall-top" offset="0%" />
-          <stop class="mountain-gradient-stop mountain-gradient-stop--waterfall-bottom" offset="100%" />
-        </linearGradient>
         <!-- Soft volume for every sheep's wool lump (js/mountainSvg.js's
              WOOL_LUMPS) -- one shared def, referenced by all ~9 lumps on
              all 5 sheep, cream center fading to a slightly deeper warm
@@ -955,7 +953,7 @@ export function buildMountainSvg(overallProgress) {
       ${birdsMarkup()}
       <g clip-path="url(#mountainClip)">
         <rect class="mountain-body" x="0" y="0" width="400" height="600" />
-        ${waterfallMarkup()}
+        ${cairnMarkup()}
       </g>
       ${grassMarkup()}
       ${treesMarkup()}
