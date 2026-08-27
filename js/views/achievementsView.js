@@ -1,7 +1,7 @@
 import { getAppStats } from "../state/derive.js";
 import { CHALLENGE_POOL, DIFFICULTY_META, getCompletedChallengesMap, getIncompleteChallengesMap, getMedalForChallenge } from "../logic/challenges.js";
 import { monthLabel } from "../logic/dateUtils.js";
-import { trophyIllustration, challengeHeroForId, challengeProgressBadge, wirePhotoFallback } from "../illustrations.js";
+import { achievementsBannerHtml, challengeHeroForId, challengeProgressBadge, wirePhotoFallback } from "../illustrations.js";
 
 export function renderAchievementsView(container) {
   // Recompute stats so anything earned this instant shows immediately.
@@ -25,7 +25,7 @@ export function renderAchievementsView(container) {
         <h1>Достижения</h1>
       </div>
 
-      <div class="illustration-frame">${trophyIllustration()}</div>
+      ${achievementsBannerHtml()}
 
       <h3 class="section-heading">Пройденные испытания</h3>
       ${

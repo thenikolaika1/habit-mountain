@@ -143,7 +143,12 @@ export function medalIllustration() {
     </svg>`;
 }
 
-/** Trophy hero illustration for the "Достижения" screen header. */
+/** Trophy hero illustration — no longer shown directly on the "Достижения"
+ * screen header (replaced by the real-photo achievementsBannerHtml() below),
+ * but kept exported and wired as that banner's data-fallback-achievements
+ * target in wirePhotoFallback(): the same "always a themed illustration,
+ * real photo or drawn" guarantee every other photo call site in this file
+ * gets if its file 404s. */
 export function trophyIllustration() {
   return `
     <svg class="illustration illustration-trophy" viewBox="0 0 120 120" role="img" aria-label="Кубок">
@@ -154,6 +159,29 @@ export function trophyIllustration() {
       <rect class="illustration-trophy-base" x="38" y="98" width="44" height="12" rx="4" />
       <path class="illustration-trophy-star" d="M60 40 L64 50 L74 51 L66 58 L69 68 L60 62 L51 68 L54 58 L46 51 L56 50 Z" />
     </svg>`;
+}
+
+/**
+ * Full-width photo banner for the "Достижения" screen header — a real
+ * photo of gold trophy/shield/crown/coin/star medals
+ * (assets/habits/achievements_banner.jpg), replacing the small
+ * trophyIllustration() icon frame that used to sit there (redundant once
+ * the banner itself already reads as "achievements/trophies" at a glance).
+ * Its own .achievements-banner wrapper (css/illustrations.css), not
+ * .habit-hero-photo — that one is built for a full-bleed, cropped 4:5
+ * frame; this banner needs the whole photo visible edge to edge across the
+ * full width with no crop, so five medals in a row never lose one at the
+ * sides. data-fallback-achievements lets wirePhotoFallback() below swap in
+ * trophyIllustration() if the photo file 404s.
+ */
+export function achievementsBannerHtml() {
+  // filename kept as its own variable (not inlined straight into the
+  // template) so the src="./assets/habits/${filename}" substring matches
+  // the exact pattern build-preview.mjs's Artifact-bundler looks for and
+  // patches into an inlined data: URI — see that script's own comment on
+  // heroPhotoFrame()/categoryPhotoFrame()/medalHeroFrame() for why.
+  const filename = "achievements_banner.jpg";
+  return `<div class="achievements-banner"><img src="./assets/habits/${filename}" alt="Достижения" loading="lazy" data-fallback-achievements /></div>`;
 }
 
 /** Sprout-in-a-pot illustration for the "Привычки" empty state. */
@@ -586,7 +614,9 @@ export function todayAvatarIcon(habit) {
  */
 export function wirePhotoFallback(container) {
   container
-    .querySelectorAll("img[data-fallback-icon], img[data-fallback-challenge-id], img[data-fallback-header], img[data-fallback-category]")
+    .querySelectorAll(
+      "img[data-fallback-icon], img[data-fallback-challenge-id], img[data-fallback-header], img[data-fallback-category], img[data-fallback-achievements]"
+    )
     .forEach((img) => {
       img.addEventListener(
         "error",
@@ -599,6 +629,8 @@ export function wirePhotoFallback(container) {
           } else if (img.dataset.fallbackCategory !== undefined) {
             const build = CATEGORY_FALLBACK_BUILD[img.dataset.fallbackCategory] || heroDefault;
             img.outerHTML = build();
+          } else if (img.dataset.fallbackAchievements !== undefined) {
+            img.outerHTML = trophyIllustration();
           } else {
             const build = HERO_BY_EMOJI[img.dataset.fallbackIcon] || heroDefault;
             img.outerHTML = build();

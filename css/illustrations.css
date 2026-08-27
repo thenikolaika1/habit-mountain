@@ -19,6 +19,29 @@
   height: 72px;
 }
 
+/* Full-width photo banner (js/illustrations.js's achievementsBannerHtml())
+ * on the "Достижения" screen header — same rounded-corner language as
+ * .illustration-frame above and .media-card's shared card shell
+ * (components.css), but its own simpler wrapper: no crop/aspect-ratio
+ * forcing like .media-card's object-fit:cover, since the photo needs to
+ * stay whole (five medals in a row, cropping could lose one at an edge).
+ * width:100%; height:auto on the <img> keeps the source's own aspect
+ * ratio at any viewport width instead. */
+.achievements-banner {
+  display: block;
+  width: 100%;
+  margin: 0 auto var(--space-4);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.achievements-banner img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 /* ---------- Status ring (habit list, challenges, day pills) ---------- */
 .status-ring {
   flex-shrink: 0;

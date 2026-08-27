@@ -1,11 +1,11 @@
-// Bumped for removing all 5 sheep from the mountain entirely (SVG, every
-// life animation, tap interactivity) on request — trees/grass/trail/
-// birds/clouds/fog untouched (js/mountainSvg.js, css/mountain.css,
-// js/views/mountainView.js). Fetch handler below is cache-first (a hit
+// Bumped for the new full-width achievements_banner.jpg photo banner on
+// the "Достижения" screen (js/illustrations.js, css/illustrations.css,
+// js/views/achievementsView.js), replacing the small trophyIllustration()
+// icon that used to sit there. Fetch handler below is cache-first (a hit
 // never re-checks the network), so a new cache name is the only way to
-// make the "activate" handler purge the stale mountain artwork instead of
-// leaving it cached indefinitely.
-const CACHE_NAME = "habit-mountain-v20";
+// make the "activate" handler purge any stale cached state and pick up
+// the new asset instead of leaving the old screen cached indefinitely.
+const CACHE_NAME = "habit-mountain-v21";
 
 const APP_SHELL = [
   "./",
