@@ -1,13 +1,12 @@
-// Bumped for the "Настройки" screen rework: a redesigned solid-gear header
-// icon on a green-gradient plate (replacing the old thin-outline gear that
-// read ambiguously at small size), a custom rounded/green-accent dropdown
-// replacing the native <select> for the default-unit setting, and a
-// developer credit line in "О приложении" (js/illustrations.js,
-// css/illustrations.css, css/components.css, js/views/settingsView.js).
-// Fetch handler below is cache-first (a hit never re-checks the network),
-// so a new cache name is the only way to make the "activate" handler purge
-// the stale screen instead of leaving it cached indefinitely.
-const CACHE_NAME = "habit-mountain-v22";
+// Bumped for the new interactive first-run onboarding tutorial — a
+// spotlight overlay (js/components/onboarding.js, css/onboarding.css)
+// that walks a new user through the tab bar, adding a habit, marking it
+// done, the mountain, and the Испытания/Достижения tabs, plus a "Показать
+// обучение заново" entry in Настройки. Fetch handler below is cache-first
+// (a hit never re-checks the network), so a new cache name is the only way
+// to make the "activate" handler pick up the new files instead of leaving
+// the old app shell cached indefinitely.
+const CACHE_NAME = "habit-mountain-v23";
 
 const APP_SHELL = [
   "./",
@@ -19,6 +18,7 @@ const APP_SHELL = [
   "./css/mountain.css",
   "./css/calendar.css",
   "./css/illustrations.css",
+  "./css/onboarding.css",
   "./js/app.js",
   "./js/illustrations.js",
   "./js/mountainSvg.js",
@@ -47,6 +47,7 @@ const APP_SHELL = [
   "./js/components/modal.js",
   "./js/components/monthSummary.js",
   "./js/components/monthRecap.js",
+  "./js/components/onboarding.js",
   "./js/components/toast.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

@@ -17,6 +17,11 @@ function emptyState() {
       completedChallenges: {},
       incompleteChallenges: {},
       lastSeenMonth: null,
+      // False only here (emptyState() — a genuinely first-ever visit, or a
+      // raw save so old/malformed it has no meta object at all, see the
+      // migrate() comment below) — this is the one flag whose "unset"
+      // default must mean "show the onboarding tour", not "already seen".
+      onboardingCompleted: false,
       settings: { theme: "system", notificationsEnabled: false, defaultUnit: "раз" },
     },
   };
@@ -49,6 +54,15 @@ function migrate(raw) {
         ? raw.meta.incompleteChallenges
         : {};
     state.meta.lastSeenMonth = typeof raw.meta.lastSeenMonth === "string" ? raw.meta.lastSeenMonth : null;
+    // Unlike every other field above (which fall back to a fresh default
+    // when missing), this one inverts: a *missing* onboardingCompleted
+    // means "this save predates the onboarding feature" — an existing
+    // user, who must NOT suddenly see a first-run tour after an update —
+    // so it defaults to true (already seen), not false. The only way this
+    // legitimately comes out false is an explicit stored `false`, meaning
+    // a genuinely new install that reloaded before finishing/skipping the
+    // tour — that one real case must keep showing it.
+    state.meta.onboardingCompleted = raw.meta.onboardingCompleted !== false;
     const rawSettings = raw.meta.settings && typeof raw.meta.settings === "object" ? raw.meta.settings : {};
     state.meta.settings = {
       theme: ["system", "light", "dark"].includes(rawSettings.theme) ? rawSettings.theme : "system",

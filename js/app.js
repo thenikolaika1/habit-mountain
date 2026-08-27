@@ -7,6 +7,7 @@ import { renderAchievementsView } from "./views/achievementsView.js";
 import { renderChallengesView } from "./views/challengesView.js";
 import { renderSettingsView } from "./views/settingsView.js";
 import { maybeShowMonthRecap } from "./components/monthRecap.js";
+import { startOnboarding, onOnboardingTick } from "./components/onboarding.js";
 import { applyTheme } from "./logic/theme.js";
 
 const viewContainer = document.getElementById("view-container");
@@ -87,6 +88,12 @@ function render() {
     clearTimeout(viewTransitionTimer);
     viewTransitionTimer = setTimeout(() => viewContainer.classList.remove("view-transition"), 500);
   }
+
+  // Unconditional, every render pass — a no-op whenever no tour is
+  // running. Must run last: by this point the tab bar and the current
+  // view have both already been fully rebuilt above, so onboarding always
+  // sees the current DOM/route, never a stale pre-render snapshot.
+  onOnboardingTick();
 }
 
 window.addEventListener("hashchange", render);
@@ -99,6 +106,12 @@ render();
 // of last month's mountain the first time the app is opened in a new
 // calendar month, then marks that month as seen so it won't show again.
 maybeShowMonthRecap();
+
+// Same "once per boot, after the first render()" slot as the recap above —
+// no-ops immediately if the tour was already completed (js/state/
+// storage.js's meta.onboardingCompleted). Placed after the initial
+// render() call so the tab bar (step 1's target) already exists in the DOM.
+startOnboarding();
 
 // Registered right away rather than gated on window.load: `register()` is
 // async and doesn't compete with rendering, and waiting for `load` ties SW

@@ -1,8 +1,9 @@
 import { loadState, saveState } from "../state/storage.js";
 import { openConfirm } from "../components/modal.js";
 import { showToast } from "../components/toast.js";
+import { startOnboarding } from "../components/onboarding.js";
 import { UNITS, UNIT_ICONS } from "../logic/units.js";
-import { gearIllustration, iconTheme, iconUnit, iconBell, iconDownload, iconTrash, iconInfo, iconChevronDown } from "../illustrations.js";
+import { gearIllustration, iconTheme, iconUnit, iconBell, iconDownload, iconTrash, iconInfo, iconChevronDown, iconHelp } from "../illustrations.js";
 
 const APP_VERSION = "2.0";
 
@@ -93,6 +94,16 @@ export function renderSettingsView(container) {
         <button type="button" class="btn btn-danger" id="reset-account-btn">Сбросить</button>
       </div>
 
+      <h3 class="section-heading">Обучение</h3>
+      <div class="card settings-row">
+        <span class="settings-row-icon">${iconHelp()}</span>
+        <div class="settings-row-label">
+          <div class="settings-row-title">Показать обучение заново</div>
+          <div class="settings-row-desc">Пройти интерактивный тур по приложению ещё раз</div>
+        </div>
+        <button type="button" class="btn" id="replay-onboarding-btn">Показать</button>
+      </div>
+
       <h3 class="section-heading">О приложении</h3>
       <div class="card settings-row">
         <span class="settings-row-icon">${iconInfo()}</span>
@@ -155,6 +166,12 @@ function wireSettings(container) {
         location.reload();
       },
     });
+  });
+
+  // force: true — runs regardless of meta.onboardingCompleted, since this
+  // is an explicit on-demand replay, not the first-run auto-trigger.
+  container.querySelector("#replay-onboarding-btn").addEventListener("click", () => {
+    startOnboarding({ force: true });
   });
 }
 

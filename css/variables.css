@@ -73,6 +73,7 @@
   --font-display: "Fredoka", var(--font-sans);
 
   --z-tabbar: 50;
+  --z-onboarding: 90;
   --z-modal-backdrop: 100;
   --z-modal: 101;
 }

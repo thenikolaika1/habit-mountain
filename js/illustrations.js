@@ -274,6 +274,11 @@ export function iconChevronDown() {
   return `<svg class="settings-dropdown-chevron-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9.5 12 15.5 18 9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
 
+/** Replay/circular-arrow icon for the "Показать обучение заново" settings row. */
+export function iconHelp() {
+  return `<svg class="settings-row-icon-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 1 2.4 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M4.2 16.5V12.8H7.9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
 // ---------- Habit detail hero illustrations ----------
 // Full-width "photo banner" scenes for the per-habit screen
 // (js/views/calendarView.js) and, at a smaller size, the "Популярные
