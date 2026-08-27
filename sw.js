@@ -1,10 +1,11 @@
-// Bumped for the achievements-summary modal's title text
-// ("Сводка достижений" -> "Копилка твоих достижений",
-// js/views/achievementsView.js). Fetch handler below is cache-first (a hit
-// never re-checks the network), so a new cache name is the only way to
-// make the "activate" handler pick up the change instead of leaving the
-// old app shell cached indefinitely.
-const CACHE_NAME = "habit-mountain-v25";
+// Bumped again: the achievements-banner button's aria-label still said the
+// old "Сводка достижений" (js/illustrations.js, achievementsBannerHtml())
+// even after the modal title itself was fixed to "Копилка твоих
+// достижений" last time — now both match. Fetch handler below is
+// cache-first (a hit never re-checks the network), so a new cache name is
+// the only way to make the "activate" handler pick up the change instead
+// of leaving the old app shell cached indefinitely.
+const CACHE_NAME = "habit-mountain-v26";
 
 const APP_SHELL = [
   "./",

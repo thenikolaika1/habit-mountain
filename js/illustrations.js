@@ -188,7 +188,7 @@ export function achievementsBannerHtml() {
   // patches into an inlined data: URI — see that script's own comment on
   // heroPhotoFrame()/categoryPhotoFrame()/medalHeroFrame() for why.
   const filename = "achievements_banner.jpg";
-  return `<button type="button" class="achievements-banner" aria-label="Сводка достижений"><img src="./assets/habits/${filename}" alt="" loading="lazy" data-fallback-achievements /></button>`;
+  return `<button type="button" class="achievements-banner" aria-label="Копилка твоих достижений"><img src="./assets/habits/${filename}" alt="" loading="lazy" data-fallback-achievements /></button>`;
 }
 
 /** Sprout-in-a-pot illustration for the "Привычки" empty state. */
