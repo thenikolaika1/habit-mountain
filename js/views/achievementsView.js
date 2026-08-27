@@ -99,7 +99,7 @@ function openAchievementsSummary(stats) {
         </ul>`;
 
   openModal({
-    title: "Сводка достижений",
+    title: "Копилка твоих достижений",
     bodyHtml: `
       <div class="stat-pill achievements-summary-stat">
         <div class="stat-value">${unlockedList.length}</div>
