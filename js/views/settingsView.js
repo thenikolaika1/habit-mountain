@@ -1,8 +1,8 @@
 import { loadState, saveState } from "../state/storage.js";
 import { openConfirm } from "../components/modal.js";
 import { showToast } from "../components/toast.js";
-import { UNITS } from "../logic/units.js";
-import { gearIllustration, iconTheme, iconUnit, iconBell, iconDownload, iconTrash, iconInfo } from "../illustrations.js";
+import { UNITS, UNIT_ICONS } from "../logic/units.js";
+import { gearIllustration, iconTheme, iconUnit, iconBell, iconDownload, iconTrash, iconInfo, iconChevronDown } from "../illustrations.js";
 
 const APP_VERSION = "2.0";
 
@@ -21,7 +21,7 @@ export function renderSettingsView(container) {
         <h1>Настройки</h1>
       </div>
 
-      <div class="illustration-frame">${gearIllustration()}</div>
+      <div class="illustration-frame illustration-frame--accent">${gearIllustration()}</div>
 
       <h3 class="section-heading">Оформление</h3>
       <div class="card settings-row">
@@ -44,9 +44,22 @@ export function renderSettingsView(container) {
           <div class="settings-row-title">Единица измерения по умолчанию</div>
           <div class="settings-row-desc">Подставляется в форму новой числовой привычки</div>
         </div>
-        <select class="settings-select" id="default-unit-select">
-          ${UNITS.map((u) => `<option value="${u}" ${u === settings.defaultUnit ? "selected" : ""}>${u}</option>`).join("")}
-        </select>
+        <div class="settings-dropdown" id="default-unit-dropdown">
+          <button type="button" class="settings-dropdown-trigger" id="default-unit-trigger" aria-haspopup="listbox" aria-expanded="false">
+            <span class="settings-dropdown-trigger-icon">${UNIT_ICONS[settings.defaultUnit] || ""}</span>
+            <span class="settings-dropdown-trigger-label">${settings.defaultUnit}</span>
+            <span class="settings-dropdown-chevron">${iconChevronDown()}</span>
+          </button>
+          <div class="settings-dropdown-menu" id="default-unit-menu" role="listbox" hidden>
+            ${UNITS.map(
+              (u) => `
+              <button type="button" role="option" class="settings-dropdown-option${u === settings.defaultUnit ? " is-selected" : ""}" data-value="${u}" aria-selected="${u === settings.defaultUnit}">
+                <span class="settings-dropdown-option-icon">${UNIT_ICONS[u] || ""}</span>
+                <span class="settings-dropdown-option-label">${u}</span>
+              </button>`
+            ).join("")}
+          </div>
+        </div>
       </div>
 
       <h3 class="section-heading">Уведомления</h3>
@@ -83,7 +96,10 @@ export function renderSettingsView(container) {
       <h3 class="section-heading">О приложении</h3>
       <div class="card settings-row">
         <span class="settings-row-icon">${iconInfo()}</span>
-        <p class="modal-message">Habit Mountain ${APP_VERSION} — трекер привычек с горой прогресса, испытаниями и достижениями. Данные хранятся только на этом устройстве (localStorage), приложение работает офлайн и устанавливается как обычное приложение.</p>
+        <div class="settings-about-text">
+          <p class="modal-message">Habit Mountain ${APP_VERSION} — трекер привычек с горой прогресса, испытаниями и достижениями. Данные хранятся только на этом устройстве (localStorage), приложение работает офлайн и устанавливается как обычное приложение.</p>
+          <p class="settings-about-credit">Приложение разработано Капустиным Николаем</p>
+        </div>
       </div>
     </section>
   `;
@@ -96,9 +112,7 @@ function wireSettings(container) {
     btn.addEventListener("click", () => updateSettings({ theme: btn.dataset.value }));
   });
 
-  container.querySelector("#default-unit-select").addEventListener("change", (e) => {
-    updateSettings({ defaultUnit: e.target.value });
-  });
+  wireUnitDropdown(container);
 
   container.querySelector("#notifications-toggle").addEventListener("click", async () => {
     const state = loadState();
@@ -140,6 +154,64 @@ function wireSettings(container) {
         localStorage.clear();
         location.reload();
       },
+    });
+  });
+}
+
+// Custom listbox replacing a native <select> — a native select's own popup
+// is drawn by the browser/OS (its highlight color, corner radius, etc. are
+// entirely outside CSS's reach), so matching the app's rounded/soft-shadow/
+// green-accent style requires a real custom widget instead.
+function wireUnitDropdown(container) {
+  const dropdown = container.querySelector("#default-unit-dropdown");
+  const trigger = container.querySelector("#default-unit-trigger");
+  const menu = container.querySelector("#default-unit-menu");
+
+  // Attached to `document` only while the menu is open, and always removed
+  // the instant it closes (whichever of the paths below does the closing).
+  // renderSettingsView() rebuilds this whole subtree from scratch on every
+  // state change (subscribe(render) in app.js), so a listener left
+  // dangling on `document` across a render would never get cleaned up —
+  // one more piling up on every single unit selection.
+  let outsideClickHandler = null;
+
+  const close = () => {
+    menu.hidden = true;
+    trigger.setAttribute("aria-expanded", "false");
+    dropdown.classList.remove("is-open");
+    if (outsideClickHandler) {
+      document.removeEventListener("click", outsideClickHandler);
+      outsideClickHandler = null;
+    }
+  };
+
+  const open = () => {
+    menu.hidden = false;
+    trigger.setAttribute("aria-expanded", "true");
+    dropdown.classList.add("is-open");
+    outsideClickHandler = (e) => {
+      if (!dropdown.contains(e.target)) close();
+    };
+    document.addEventListener("click", outsideClickHandler);
+  };
+
+  // stopPropagation keeps this same click from immediately reaching the
+  // outsideClickHandler just registered above and closing the menu it was
+  // meant to open.
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (menu.hidden) open();
+    else close();
+  });
+
+  trigger.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") close();
+  });
+
+  menu.querySelectorAll(".settings-dropdown-option").forEach((opt) => {
+    opt.addEventListener("click", () => {
+      updateSettings({ defaultUnit: opt.dataset.value });
+      close();
     });
   });
 }

@@ -1,11 +1,13 @@
-// Bumped for the new full-width achievements_banner.jpg photo banner on
-// the "Достижения" screen (js/illustrations.js, css/illustrations.css,
-// js/views/achievementsView.js), replacing the small trophyIllustration()
-// icon that used to sit there. Fetch handler below is cache-first (a hit
-// never re-checks the network), so a new cache name is the only way to
-// make the "activate" handler purge any stale cached state and pick up
-// the new asset instead of leaving the old screen cached indefinitely.
-const CACHE_NAME = "habit-mountain-v21";
+// Bumped for the "Настройки" screen rework: a redesigned solid-gear header
+// icon on a green-gradient plate (replacing the old thin-outline gear that
+// read ambiguously at small size), a custom rounded/green-accent dropdown
+// replacing the native <select> for the default-unit setting, and a
+// developer credit line in "О приложении" (js/illustrations.js,
+// css/illustrations.css, css/components.css, js/views/settingsView.js).
+// Fetch handler below is cache-first (a hit never re-checks the network),
+// so a new cache name is the only way to make the "activate" handler purge
+// the stale screen instead of leaving it cached indefinitely.
+const CACHE_NAME = "habit-mountain-v22";
 
 const APP_SHELL = [
   "./",

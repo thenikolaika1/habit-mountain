@@ -789,6 +789,10 @@
     color: var(--color-text);
   }
 
+  .settings-dropdown-option:hover {
+    background: var(--color-surface-alt);
+  }
+
   .check-toggle:hover {
     transform: scale(1.02);
     border-color: var(--color-accent);
@@ -1076,9 +1080,15 @@
   border-color: rgba(217, 83, 79, 0.35);
 }
 
-.settings-row > .modal-message {
+.settings-about-text {
   flex: 1;
   min-width: 0;
+}
+
+.settings-about-credit {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: var(--space-2);
 }
 
 .settings-row-icon {
@@ -1103,13 +1113,78 @@
   height: 19px;
 }
 
-.settings-select {
+/* Custom listbox replacing a native <select> (js/views/settingsView.js's
+ * wireUnitDropdown()) — a native select's own popup is drawn by the
+ * browser/OS itself (highlight color, corner radius, etc. are entirely
+ * outside CSS's reach), so this app's rounded/soft-shadow/green-accent
+ * language needs a real custom widget instead. */
+.settings-dropdown {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.settings-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   padding: 10px 12px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
   background: var(--color-surface-alt);
   font-weight: 600;
-  flex-shrink: 0;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.settings-dropdown-chevron-svg {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-muted);
+  transition: transform 180ms ease;
+}
+
+.settings-dropdown.is-open .settings-dropdown-chevron-svg {
+  transform: rotate(180deg);
+}
+
+.settings-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 5;
+  min-width: 160px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+
+.settings-dropdown-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-text);
+  text-align: left;
+  transition: background-color 150ms ease;
+}
+
+.settings-dropdown-option + .settings-dropdown-option {
+  margin-top: 2px;
+}
+
+.settings-dropdown-option.is-selected {
+  background: rgba(var(--color-accent-rgb), 0.14);
+  color: var(--color-accent-dark);
 }
 
 .settings-theme-picker {

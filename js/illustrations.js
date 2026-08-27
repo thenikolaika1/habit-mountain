@@ -196,22 +196,24 @@ export function sproutIllustration() {
     </svg>`;
 }
 
-/** Gear-with-leaf illustration for the "Настройки" screen header. */
+/**
+ * Solid cog/gear illustration for the "Настройки" screen header — sits on
+ * the green-gradient .illustration-frame--accent plate (illustrations.css),
+ * same gradient .settings-row-icon/.day-pill.is-today already use. One
+ * compound path (10 teeth + fill-rule="evenodd" center hole, so the hole
+ * is real transparency showing the gradient plate through it, not a
+ * same-color paint-over that could show a seam) instead of the previous
+ * 4-piece thin-outline gear-with-leaf, which read ambiguously (closer to a
+ * lightbulb than a gear) at this icon's small display size.
+ */
 export function gearIllustration() {
   return `
     <svg class="illustration illustration-gear" viewBox="0 0 120 120" role="img" aria-label="Настройки">
       <path
-        class="illustration-gear-body"
-        d="M60 30 a30 30 0 0 1 0 60 a30 30 0 0 1 0 -60 Z"
+        class="illustration-gear-glyph"
+        fill-rule="evenodd"
+        d="M64.4 23.3 L69.5 15.0 L78.8 18.0 L78.0 27.7 L85.2 32.9 L94.1 29.1 L99.9 37.1 L93.6 44.5 L96.3 52.8 L105.7 55.1 L105.7 64.9 L96.3 67.2 L93.6 75.5 L99.9 82.9 L94.1 90.9 L85.2 87.1 L78.0 92.3 L78.8 102.0 L69.5 105.0 L64.4 96.7 L55.6 96.7 L50.5 105.0 L41.2 102.0 L42.0 92.3 L34.8 87.1 L25.9 90.9 L20.1 82.9 L26.4 75.5 L23.7 67.2 L14.3 64.9 L14.3 55.1 L23.7 52.8 L26.4 44.5 L20.1 37.1 L25.9 29.1 L34.8 32.9 L42.0 27.7 L41.2 18.0 L50.5 15.0 L55.6 23.3 Z M76 60 A16 16 0 1 1 44 60 A16 16 0 1 1 76 60 Z"
       />
-      ${Array.from({ length: 8 })
-        .map((_, i) => {
-          const angle = (i * 360) / 8;
-          return `<rect class="illustration-gear-tooth" x="56" y="10" width="8" height="16" rx="2" transform="rotate(${angle} 60 60)" />`;
-        })
-        .join("")}
-      <circle class="illustration-gear-hole" cx="60" cy="60" r="12" />
-      <path class="illustration-gear-leaf" d="M60 60 C48 52 48 40 58 32 C66 42 64 54 60 60 Z" />
     </svg>`;
 }
 
@@ -265,6 +267,11 @@ export function iconTrash() {
 
 export function iconInfo() {
   return `<svg class="settings-row-icon-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="7.5" stroke="currentColor" stroke-width="1.7" fill="currentColor" fill-opacity="0.12"/><circle cx="12" cy="8.4" r="1.15" fill="currentColor"/><path d="M12 11.2V16.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+}
+
+/** Chevron for the custom .settings-dropdown trigger (settingsView.js) — rotates 180° via .settings-dropdown.is-open in components.css instead of needing a second "up" variant. */
+export function iconChevronDown() {
+  return `<svg class="settings-dropdown-chevron-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9.5 12 15.5 18 9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
 
 // ---------- Habit detail hero illustrations ----------

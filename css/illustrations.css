@@ -14,6 +14,13 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* "Настройки" screen only — same green gradient .settings-row-icon and
+ * .day-pill.is-today already use, instead of the neutral background
+ * .illustration-frame's other user (Испытания) keeps. */
+.illustration-frame--accent {
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
+}
+
 .illustration {
   width: 72px;
   height: 72px;
@@ -214,22 +221,8 @@
 }
 
 /* ---------- Gear (Настройки) ---------- */
-.illustration-gear-body {
-  fill: var(--color-surface);
-  stroke: var(--color-ink);
-  stroke-width: 2.5;
-}
-
-.illustration-gear-tooth {
-  fill: var(--color-ink);
-}
-
-.illustration-gear-hole {
-  fill: var(--color-bg);
-}
-
-.illustration-gear-leaf {
-  fill: var(--color-accent);
+.illustration-gear-glyph {
+  fill: var(--color-accent-contrast);
 }
 
 /* ---------- Habit detail hero (js/illustrations.js heroXxx functions) ----------
