@@ -2028,6 +2028,37 @@ Artifact-ссылкой, старая версия могла продолжат
 (заголовок + aria-label); Playwright-проверка того же бандла (`file://`)
 подтвердила оба значения визуально/через DOM.
 
+Двадцать четвёртый заход (та же сессия) — «убрать кликабельность
+баннера «Achievements»» — полный откат фичи из 22-23 заходов. Баннер
+снова стал простым статичным `<div>` без `aria-label` и интерактивных
+состояний (было — `<button>`). Удалено целиком: обработчик клика и
+функция `openAchievementsSummary()` (`js/views/achievementsView.js`,
+вместе с ставшими ненужными импортами `getAppStats`, `openModal`,
+`ACHIEVEMENTS`, `getUnlockedMap`, `getNextAchievementProgress`);
+экспорт `getNextAchievementProgress()` и поле `progress` у всех 7
+объектов в `ACHIEVEMENTS` (`js/logic/achievements.js` — `check` и
+`evaluateAndUnlock()` не тронуты, разблокировка достижений в фоне
+продолжает работать как и раньше через `mountainView.js`'s
+`getAppStats()`, независимо от этого экрана); классы
+`.achievements-summary-stat/-next/-next--complete/-icon`
+(`css/components.css`); button-хром и `:hover`/`:active` состояния
+`.achievements-banner` (`css/illustrations.css` — оставлены только
+`display/width/margin/border-radius/overflow/box-shadow`, как у
+баннера до кликабельности). Постоянный `test-achievements-summary.mjs`
+удалён (проверял полностью убранную фичу), вместо него добавлен
+`test-achievements-banner-static.mjs` (7 проверок): баннер — `<div>`,
+не `<button>`; без `aria-label`; `cursor` не `pointer`; клик не
+открывает модалку; элемент не фокусируется с клавиатуры; в DOM нет
+классов `achievements-summary-*`; `data-fallback-achievements` на фото
+по-прежнему работает. Полный набор `test-*.mjs` (31 файл, без
+`test-achievements-summary.mjs`) — без регрессий. Бандл пересобран;
+grep по собранному HTML — 0 вхождений `achievements-summary`,
+`openAchievementsSummary`, `getNextAchievementProgress` и обеих
+формулировок заголовка модалки; Playwright-проверка того же бандла
+(`file://`) — баннер `<div>`, клик ничего не открывает, скриншот
+подтверждает разметку без визуальных регрессий. `sw.js`'s
+`CACHE_NAME` — v26 → v27.
+
 ## Файловая карта (кратко)
 
 ```

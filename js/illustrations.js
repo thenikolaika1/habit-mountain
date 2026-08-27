@@ -174,12 +174,7 @@ export function trophyIllustration() {
  * sides. data-fallback-achievements lets wirePhotoFallback() below swap in
  * trophyIllustration() if the photo file 404s.
  *
- * A real <button>, not a plain <div> — clicking it opens the achievements
- * summary modal (achievementsView.js wires the click). Same pattern
- * habitsView.js's .popular-habit-card already uses for a clickable photo
- * card (a real button wrapping the illustration, not a role="button" div
- * with hand-rolled keydown handling like .habit-card) — keyboard
- * activation (Enter/Space) comes for free this way.
+ * A plain, non-interactive <div> — purely decorative, no click handler.
  */
 export function achievementsBannerHtml() {
   // filename kept as its own variable (not inlined straight into the
@@ -188,7 +183,7 @@ export function achievementsBannerHtml() {
   // patches into an inlined data: URI — see that script's own comment on
   // heroPhotoFrame()/categoryPhotoFrame()/medalHeroFrame() for why.
   const filename = "achievements_banner.jpg";
-  return `<button type="button" class="achievements-banner" aria-label="Копилка твоих достижений"><img src="./assets/habits/${filename}" alt="" loading="lazy" data-fallback-achievements /></button>`;
+  return `<div class="achievements-banner"><img src="./assets/habits/${filename}" alt="" loading="lazy" data-fallback-achievements /></div>`;
 }
 
 /** Sprout-in-a-pot illustration for the "Привычки" empty state. */

@@ -4,14 +4,6 @@ import { loadState, saveState } from "../state/storage.js";
 // by logic/progress.js's computeAppStats(). Unlocking is a one-way ratchet:
 // once earned it is never revoked, even if the underlying streak later
 // breaks — see evaluateAndUnlock() below.
-//
-// `progress` mirrors `check` as a 0..1 fraction instead of a boolean, for
-// the achievements-summary modal's "progress toward the next one" ring
-// (achievementsView.js) — same threshold, just expressed as how close
-// rather than whether met yet. combo_day/first_step have no meaningful
-// partial credit (their real-world condition is essentially "has this ever
-// happened"), so their progress is the same 0-or-1 as their check —
-// correct, not a shortcut.
 export const ACHIEVEMENTS = [
   {
     id: "first_step",
@@ -19,7 +11,6 @@ export const ACHIEVEMENTS = [
     description: "Отметьте любую привычку выполненной первый раз",
     icon: "🥾",
     check: (s) => s.totalCompletedDays >= 1,
-    progress: (s) => Math.min(1, s.totalCompletedDays / 1),
   },
   {
     id: "streak_7",
@@ -27,7 +18,6 @@ export const ACHIEVEMENTS = [
     description: "Стрик 7 дней подряд по одной привычке",
     icon: "🔥",
     check: (s) => s.bestStreakOverall >= 7,
-    progress: (s) => Math.min(1, s.bestStreakOverall / 7),
   },
   {
     id: "streak_30",
@@ -35,7 +25,6 @@ export const ACHIEVEMENTS = [
     description: "Стрик 30 дней подряд по одной привычке",
     icon: "🏅",
     check: (s) => s.bestStreakOverall >= 30,
-    progress: (s) => Math.min(1, s.bestStreakOverall / 30),
   },
   {
     id: "combo_day",
@@ -43,7 +32,6 @@ export const ACHIEVEMENTS = [
     description: "Все привычки выполнены в один день (от 3 привычек)",
     icon: "⭐",
     check: (s) => s.activeHabits.length >= 3 && s.overallCurrentStreak >= 1,
-    progress: (s) => (s.activeHabits.length >= 3 && s.overallCurrentStreak >= 1 ? 1 : 0),
   },
   {
     id: "combo_week",
@@ -51,7 +39,6 @@ export const ACHIEVEMENTS = [
     description: "7 дней подряд выполнены абсолютно все привычки",
     icon: "🌈",
     check: (s) => s.overallCurrentStreak >= 7,
-    progress: (s) => Math.min(1, s.overallCurrentStreak / 7),
   },
   {
     id: "hundred_club",
@@ -59,7 +46,6 @@ export const ACHIEVEMENTS = [
     description: "100 выполненных дней-привычек суммарно",
     icon: "💯",
     check: (s) => s.totalCompletedDays >= 100,
-    progress: (s) => Math.min(1, s.totalCompletedDays / 100),
   },
   {
     id: "summit",
@@ -67,7 +53,6 @@ export const ACHIEVEMENTS = [
     description: "Гора покорена — прогресс 100%",
     icon: "🚩",
     check: (s) => s.overallProgress >= 1,
-    progress: (s) => Math.min(1, s.overallProgress),
   },
 ];
 
@@ -75,25 +60,6 @@ export const ACHIEVEMENTS = [
 export function getUnlockedMap() {
   const state = loadState();
   return state.meta.unlockedAchievements || {};
-}
-
-/**
- * Among achievements not yet unlocked, picks the one the user is closest to
- * earning (highest current progress(stats)), not simply the first one in
- * ACHIEVEMENTS' declaration order — that's the one actually worth showing
- * as "next" in the achievements-summary modal (achievementsView.js). Ties
- * broken by declaration order (Array#reduce keeps the earlier one on a
- * strict >, not >=). Returns null once every achievement is unlocked.
- */
-export function getNextAchievementProgress(stats) {
-  const unlocked = getUnlockedMap();
-  const locked = ACHIEVEMENTS.filter((a) => !unlocked[a.id]);
-  if (locked.length === 0) return null;
-
-  return locked.reduce((best, achievement) => {
-    const progress = achievement.progress(stats);
-    return !best || progress > best.progress ? { achievement, progress } : best;
-  }, null);
 }
 
 /**

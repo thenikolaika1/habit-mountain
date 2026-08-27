@@ -33,45 +33,21 @@
  * forcing like .media-card's object-fit:cover, since the photo needs to
  * stay whole (five medals in a row, cropping could lose one at an edge).
  * width:100%; height:auto on the <img> keeps the source's own aspect
- * ratio at any viewport width instead. */
-/* A real <button> (see achievementsBannerHtml()'s own comment) — border/
- * background/padding/text-align reset explicitly, the same way .media-card
- * already resets itself, so no native button chrome shows through (a
- * <button> with no explicit border/background of its own keeps the
- * browser's default outset border otherwise — caught once already on
- * .settings-dropdown-option, not repeating it here). */
+ * ratio at any viewport width instead. Purely decorative — no click
+ * handler, no interactive states. */
 .achievements-banner {
   display: block;
   width: 100%;
   margin: 0 auto var(--space-4);
-  border: none;
-  background: none;
-  padding: 0;
-  text-align: left;
-  cursor: pointer;
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
-  transition: transform 180ms ease, box-shadow 180ms ease;
-}
-
-.achievements-banner:active {
-  transform: scale(0.98);
 }
 
 .achievements-banner img {
   display: block;
   width: 100%;
   height: auto;
-}
-
-/* Gated to real pointer devices — see the matching comment in
- * components.css — so a touch tap never leaves a "stuck" hover style. */
-@media (hover: hover) and (pointer: fine) {
-  .achievements-banner:hover {
-    transform: scale(1.015);
-    box-shadow: var(--shadow-md);
-  }
 }
 
 /* ---------- Status ring (habit list, challenges, day pills) ---------- */

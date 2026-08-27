@@ -1,11 +1,11 @@
-// Bumped again: the achievements-banner button's aria-label still said the
-// old "Сводка достижений" (js/illustrations.js, achievementsBannerHtml())
-// even after the modal title itself was fixed to "Копилка твоих
-// достижений" last time — now both match. Fetch handler below is
-// cache-first (a hit never re-checks the network), so a new cache name is
-// the only way to make the "activate" handler pick up the change instead
-// of leaving the old app shell cached indefinitely.
-const CACHE_NAME = "habit-mountain-v26";
+// Bumped again: the achievements-banner click handler and its summary
+// modal were removed entirely (js/illustrations.js/js/views/
+// achievementsView.js) — the banner is back to a plain, non-interactive
+// photo. Fetch handler below is cache-first (a hit never re-checks the
+// network), so a new cache name is the only way to make the "activate"
+// handler pick up the change instead of leaving the old app shell cached
+// indefinitely.
+const CACHE_NAME = "habit-mountain-v27";
 
 const APP_SHELL = [
   "./",

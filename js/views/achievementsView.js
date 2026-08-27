@@ -1,15 +1,8 @@
-import { getAppStats } from "../state/derive.js";
 import { CHALLENGE_POOL, DIFFICULTY_META, getCompletedChallengesMap, getIncompleteChallengesMap, getMedalForChallenge } from "../logic/challenges.js";
-import { ACHIEVEMENTS, getUnlockedMap, getNextAchievementProgress } from "../logic/achievements.js";
 import { monthLabel } from "../logic/dateUtils.js";
-import { openModal } from "../components/modal.js";
 import { achievementsBannerHtml, challengeHeroForId, challengeProgressBadge, wirePhotoFallback } from "../illustrations.js";
 
 export function renderAchievementsView(container) {
-  // Recompute stats so anything earned this instant shows immediately —
-  // also needed below for the achievements-summary modal's "progress
-  // toward the next one" ring.
-  const { stats } = getAppStats();
   const completedChallenges = getCompletedChallengesMap();
   const incompleteChallenges = getIncompleteChallengesMap();
 
@@ -48,70 +41,6 @@ export function renderAchievementsView(container) {
   `;
 
   wirePhotoFallback(container);
-  container.querySelector(".achievements-banner").addEventListener("click", () => openAchievementsSummary(stats));
-}
-
-/**
- * Read-only rollup of the app's 7 fixed lifetime achievements
- * (js/logic/achievements.js's ACHIEVEMENTS/getUnlockedMap) — distinct from
- * the challenge cards above this modal is triggered from (those are the
- * monthly-rotating CHALLENGE_POOL). These 7 already unlock/persist on
- * every render (getAppStats() -> evaluateAndUnlock()) but had no UI
- * surfacing them at all until now. Facts only, no motivational copy, per
- * the request this was built for.
- */
-function openAchievementsSummary(stats) {
-  const unlocked = getUnlockedMap();
-  const unlockedList = ACHIEVEMENTS.filter((a) => unlocked[a.id]).sort(
-    (a, b) => new Date(unlocked[b.id].unlockedAt) - new Date(unlocked[a.id].unlockedAt)
-  );
-  const next = getNextAchievementProgress(stats);
-
-  const nextHtml = next
-    ? `
-      <div class="card achievements-summary-next">
-        ${challengeProgressBadge({ pct: next.progress, done: false, size: 64 })}
-        <div>
-          <div class="settings-row-title">${next.achievement.title}</div>
-          <div class="settings-row-desc">${next.achievement.description}</div>
-        </div>
-      </div>`
-    : `<div class="card achievements-summary-next achievements-summary-next--complete">
-        <div class="settings-row-title">Все награды получены</div>
-      </div>`;
-
-  const listHtml =
-    unlockedList.length === 0
-      ? `<div class="empty-state card"><p>Пока нет полученных наград.</p></div>`
-      : `<ul class="today-list">
-          ${unlockedList
-            .map(
-              (a) => `
-              <li class="today-item">
-                <span class="achievements-summary-icon">${a.icon}</span>
-                <div class="today-item-body">
-                  <div class="today-item-name">${a.title}</div>
-                </div>
-                <span class="summary-value">${formatShortDate(unlocked[a.id].unlockedAt)}</span>
-              </li>`
-            )
-            .join("")}
-        </ul>`;
-
-  openModal({
-    title: "Копилка твоих достижений",
-    bodyHtml: `
-      <div class="stat-pill achievements-summary-stat">
-        <div class="stat-value">${unlockedList.length}</div>
-        <div class="stat-label">из ${ACHIEVEMENTS.length} наград получено</div>
-      </div>
-
-      ${nextHtml}
-
-      <h3 class="section-heading">Полученные награды</h3>
-      ${listHtml}
-    `,
-  });
 }
 
 function achievementCardHtml(a, info) {
