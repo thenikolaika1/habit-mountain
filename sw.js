@@ -1,12 +1,13 @@
-// Bumped for the new interactive first-run onboarding tutorial — a
-// spotlight overlay (js/components/onboarding.js, css/onboarding.css)
-// that walks a new user through the tab bar, adding a habit, marking it
-// done, the mountain, and the Испытания/Достижения tabs, plus a "Показать
-// обучение заново" entry in Настройки. Fetch handler below is cache-first
-// (a hit never re-checks the network), so a new cache name is the only way
-// to make the "activate" handler pick up the new files instead of leaving
-// the old app shell cached indefinitely.
-const CACHE_NAME = "habit-mountain-v23";
+// Bumped for the clickable "Достижения" banner — it now opens a modal
+// summarizing the app's 7 fixed lifetime achievements (unlocked count,
+// progress toward the closest one, dated list of unlocked ones), which had
+// no UI surface at all before this (js/views/achievementsView.js,
+// js/logic/achievements.js, css/components.css, css/illustrations.css).
+// Fetch handler below is cache-first (a hit never re-checks the network),
+// so a new cache name is the only way to make the "activate" handler pick
+// up the new files instead of leaving the old app shell cached
+// indefinitely.
+const CACHE_NAME = "habit-mountain-v24";
 
 const APP_SHELL = [
   "./",
