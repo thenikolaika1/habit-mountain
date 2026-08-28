@@ -1,11 +1,10 @@
-// Bumped again: "Достижения" (js/views/achievementsView.js) now surfaces
-// long-term achievements (js/logic/achievements.js's ACHIEVEMENTS -- 100-day
-// streaks and the like, tracked continuously across month boundaries) as
-// their own section, alongside the existing monthly-challenge cards.
-// Fetch handler below is cache-first (a hit never re-checks the network),
-// so a new cache name is the only way to make the "activate" handler pick
-// up the change instead of leaving the old app shell cached indefinitely.
-const CACHE_NAME = "habit-mountain-v31";
+// Bumped again: a fullscreen confetti celebration (js/components/
+// summitCelebration.js, css/celebration.css) now fires once per month the
+// first time the mountain hits 100%, from any screen. Fetch handler below
+// is cache-first (a hit never re-checks the network), so a new cache name
+// is the only way to make the "activate" handler pick up the change
+// instead of leaving the old app shell cached indefinitely.
+const CACHE_NAME = "habit-mountain-v32";
 
 const APP_SHELL = [
   "./",
@@ -18,6 +17,7 @@ const APP_SHELL = [
   "./css/calendar.css",
   "./css/illustrations.css",
   "./css/onboarding.css",
+  "./css/celebration.css",
   "./js/app.js",
   "./js/illustrations.js",
   "./js/mountainSvg.js",
@@ -47,6 +47,7 @@ const APP_SHELL = [
   "./js/components/monthSummary.js",
   "./js/components/monthRecap.js",
   "./js/components/onboarding.js",
+  "./js/components/summitCelebration.js",
   "./js/components/toast.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

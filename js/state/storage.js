@@ -17,6 +17,12 @@ function emptyState() {
       completedChallenges: {},
       incompleteChallenges: {},
       lastSeenMonth: null,
+      // "YYYY-MM" of the month the summit-celebration confetti (js/
+      // components/summitCelebration.js) was last shown for, or null —
+      // same nullable-monthKey shape as lastSeenMonth above, just a
+      // separate flag since the two fire on unrelated conditions (a new
+      // month starting vs. reaching 100% within the current one).
+      summitCelebrationShownMonth: null,
       // False only here (emptyState() — a genuinely first-ever visit, or a
       // raw save so old/malformed it has no meta object at all, see the
       // migrate() comment below) — this is the one flag whose "unset"
@@ -54,6 +60,8 @@ function migrate(raw) {
         ? raw.meta.incompleteChallenges
         : {};
     state.meta.lastSeenMonth = typeof raw.meta.lastSeenMonth === "string" ? raw.meta.lastSeenMonth : null;
+    state.meta.summitCelebrationShownMonth =
+      typeof raw.meta.summitCelebrationShownMonth === "string" ? raw.meta.summitCelebrationShownMonth : null;
     // Unlike every other field above (which fall back to a fresh default
     // when missing), this one inverts: a *missing* onboardingCompleted
     // means "this save predates the onboarding feature" — an existing

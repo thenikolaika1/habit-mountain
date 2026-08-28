@@ -76,6 +76,11 @@
   --z-onboarding: 90;
   --z-modal-backdrop: 100;
   --z-modal: 101;
+  /* Above even an open modal -- the summit-celebration confetti
+     (js/components/summitCelebration.js) can fire from any screen at any
+     moment, including with a modal already open (e.g. mid day-detail
+     edit), and should always read as the topmost thing on screen. */
+  --z-celebration: 110;
 }
 
 /* Dark tokens are defined twice on purpose (see artifact-design's

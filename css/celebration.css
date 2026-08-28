@@ -1,0 +1,123 @@
+/* Summit-celebration confetti overlay (js/components/summitCelebration.js)
+ * — fires once per calendar month, the first time the current month's
+ * mountain hits 100%, from any screen. #celebration-root lives as a
+ * sibling of #app in index.html, same reasoning as #onboarding-root right
+ * next to it: never touched by #view-container's frequent rebuilds, never
+ * at risk of landing inside a transformed ancestor (see the warning
+ * comment on #app in base.css). */
+#celebration-root {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.summit-celebration {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-celebration);
+  pointer-events: auto;
+  overflow: hidden;
+  background: rgba(15, 25, 20, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.summit-confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -12px;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0.95;
+  animation-name: confetti-fall;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) translateX(0) rotate(var(--rotate-start));
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) translateX(var(--drift)) rotate(calc(var(--rotate-start) + 360deg));
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confetti-piece {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+.summit-celebration-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-6) var(--space-5);
+  cursor: default;
+}
+
+.summit-celebration-emoji {
+  font-size: 56px;
+  margin-bottom: var(--space-2);
+}
+
+.summit-celebration-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.2;
+  margin-bottom: var(--space-3);
+}
+
+.summit-celebration-subtitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+  max-width: 300px;
+  margin-bottom: var(--space-5);
+}
+
+/* A solid gold-accent pill, not .btn-primary's green gradient -- this
+ * screen's own backdrop is already a dark neutral scrim (not the flat
+ * green .onboarding-welcome uses), so the green gradient would read fine
+ * too, but gold reads as "prize/trophy" and ties into the confetti's own
+ * warning-gold pieces. */
+.summit-celebration-btn {
+  border: none;
+  border-radius: var(--radius-round);
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #3a2a05;
+  background: linear-gradient(135deg, #f0c94a, var(--color-warning));
+  box-shadow: var(--shadow-md);
+  transition: transform 180ms ease;
+}
+
+.summit-celebration-btn:active {
+  transform: scale(0.96);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .summit-celebration-btn:hover {
+    transform: scale(1.03);
+  }
+}

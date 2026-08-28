@@ -8,6 +8,7 @@ import { renderChallengesView } from "./views/challengesView.js";
 import { renderSettingsView } from "./views/settingsView.js";
 import { maybeShowMonthRecap } from "./components/monthRecap.js";
 import { startOnboarding, onOnboardingTick } from "./components/onboarding.js";
+import { checkSummitCelebration } from "./components/summitCelebration.js";
 import { applyTheme } from "./logic/theme.js";
 
 const viewContainer = document.getElementById("view-container");
@@ -94,6 +95,13 @@ function render() {
   // view have both already been fully rebuilt above, so onboarding always
   // sees the current DOM/route, never a stale pre-render snapshot.
   onOnboardingTick();
+
+  // Same "every render pass, unconditional" slot — fires the confetti
+  // overlay the moment ANY state mutation (a habit ticked on Привычки, a
+  // day-detail save, anything) brings the current month's mountain to
+  // 100%, regardless of which screen is showing. A no-op almost every
+  // call (already shown this month, or not yet at 100%).
+  checkSummitCelebration();
 }
 
 window.addEventListener("hashchange", render);
