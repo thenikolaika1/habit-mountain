@@ -276,6 +276,15 @@ export function iconChevronDown() {
   return `<svg class="settings-dropdown-chevron-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9.5 12 15.5 18 9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
 
+/** Prev/next month arrows for the "Прогресс" screen's month nav (mountainView.js) — same stroke weight/cap as iconChevronDown() above, just two more rotations instead of reusing that one class + a CSS transform, since these are two permanently-different icons (not one icon toggling open/closed). */
+export function iconChevronLeft() {
+  return `<svg class="progress-month-nav-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14.5 6 8.5 12 14.5 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+export function iconChevronRight() {
+  return `<svg class="progress-month-nav-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9.5 6 15.5 12 9.5 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
 /** Replay/circular-arrow icon for the "Показать обучение заново" settings row. */
 export function iconHelp() {
   return `<svg class="settings-row-icon-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 1 2.4 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M4.2 16.5V12.8H7.9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;

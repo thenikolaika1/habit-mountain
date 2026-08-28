@@ -46,15 +46,22 @@ export function computeBestStreak(habit, entries) {
  * Combined streak across ALL active habits: a day counts only if every
  * active habit was completed that day. Used for "perfect day/week"
  * achievements and as a bonus signal for mountain progress.
+ *
+ * `asOfKey` defaults to today (every existing caller gets the exact same
+ * behavior as before) but lets mountainView.js's month-history browsing ask
+ * "what did this streak stand at by the end of month X" instead — pass the
+ * viewed month's last day (or today, if that month is still in progress)
+ * and the same backward walk just starts from there. A day past `asOfKey`
+ * is never looked at, so a streak that's still running today doesn't leak
+ * into a past month's "as of" reading.
  */
-export function computeOverallCurrentStreak(habits, entriesByHabit) {
+export function computeOverallCurrentStreak(habits, entriesByHabit, asOfKey = todayKey()) {
   if (habits.length === 0) return 0;
-  const tKey = todayKey();
 
   const allCompleteOn = (dateKey) =>
     habits.every((h) => isDayComplete(h, (entriesByHabit[h.id] || {})[dateKey]));
 
-  let cursor = allCompleteOn(tKey) ? tKey : addDaysToKey(tKey, -1);
+  let cursor = allCompleteOn(asOfKey) ? asOfKey : addDaysToKey(asOfKey, -1);
   let streak = 0;
   while (allCompleteOn(cursor)) {
     streak++;

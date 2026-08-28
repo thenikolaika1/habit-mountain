@@ -181,6 +181,58 @@ a:visited {
   font-weight: 600;
 }
 
+/* ---------- "Прогресс" screen's month nav (mountainView.js) ---------- */
+.progress-month-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Deliberately not the same 22px gradient-text treatment as .view-header
+ * h1 just above it -- two stacked headline-weight gradients would compete
+ * for attention. A solid accent color at subtitle scale keeps "Прогресс"
+ * as the one big heading. */
+.progress-month-nav-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-accent-dark);
+}
+
+.progress-month-nav-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-surface-alt);
+  color: var(--color-accent-dark);
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+.progress-month-nav-btn:active {
+  transform: scale(0.9);
+}
+
+/* Reached the current month -- nothing further to browse forward to. */
+.progress-month-nav-btn:disabled {
+  opacity: 0.35;
+}
+
+.progress-month-nav-svg {
+  width: 18px;
+  height: 18px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .progress-month-nav-btn:not(:disabled):hover {
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
 .back-button {
   display: inline-flex;
   align-items: center;

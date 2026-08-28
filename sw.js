@@ -1,11 +1,11 @@
-// Bumped again: the first-run tour (js/components/onboarding.js,
-// css/onboarding.css) was rebuilt -- a fullscreen welcome screen, then a
-// spotlight inviting a tap on any tab (no forced order), then a short
-// popup per tab. Fetch handler below is cache-first (a hit never re-checks
-// the network), so a new cache name is the only way to make the "activate"
-// handler pick up the change instead of leaving the old app shell cached
-// indefinitely.
-const CACHE_NAME = "habit-mountain-v29";
+// Bumped again: "Прогресс" (js/views/mountainView.js) now supports
+// browsing past months -- nav arrows, month-scoped header stats, and the
+// mountain/calendar rendering whatever month is selected instead of always
+// the current one. Fetch handler below is cache-first (a hit never
+// re-checks the network), so a new cache name is the only way to make the
+// "activate" handler pick up the change instead of leaving the old app
+// shell cached indefinitely.
+const CACHE_NAME = "habit-mountain-v30";
 
 const APP_SHELL = [
   "./",

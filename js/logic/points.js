@@ -1,7 +1,13 @@
 import { addDaysToKey, todayKey, earliestRelevantDateKey } from "./dateUtils.js";
 import { isDayComplete } from "./completion.js";
 
-const POINTS_PER_DAY = 10;
+// Exported for mountainView.js's month-history header stats — a simple
+// "days completed this month × POINTS_PER_DAY" reading (see
+// computeViewedMonthData() there), deliberately not the full bonus-crossing
+// algorithm below: that one only makes sense as a lifetime running total
+// (a streak bonus can be earned mid-streak, and streaks routinely cross
+// month boundaries), so it isn't a meaningful thing to bucket by month.
+export const POINTS_PER_DAY = 10;
 const BONUS_AT_7 = 50;
 const BONUS_AT_30 = 200;
 
