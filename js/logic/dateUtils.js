@@ -65,8 +65,13 @@ export function editableDateRange() {
 }
 
 export function isDateEditable(dateKey) {
-  const { minKey, maxKey } = editableDateRange();
-  return dateKey >= minKey && dateKey <= maxKey;
+  // ВРЕМЕННО ОТКЛЮЧЕНО для наполнения тестовых данных — снимает
+  // ограничение «только последние 3 дня» на запись (js/state/entries.js's
+  // setEntry()). Чтобы вернуть ограничение — раскомментировать две строки
+  // ниже и удалить временный `return true;`.
+  // const { minKey, maxKey } = editableDateRange();
+  // return dateKey >= minKey && dateKey <= maxKey;
+  return true;
 }
 
 export function weekdayHeader() {
