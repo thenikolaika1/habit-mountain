@@ -400,6 +400,18 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* Long-term achievements (openLongTermAchievementDetail()) have no medal
+ * photo of their own to fill this box with — just their emoji, centered
+ * on the app's usual accent gradient instead of the photo variant's plain
+ * surface background. */
+.achievement-detail-medal--icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
+}
+
 .achievement-detail-meta {
   display: flex;
   align-items: center;
@@ -774,6 +786,17 @@
   border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--color-surface-alt);
+}
+
+/* Long-term achievements (achievementsView.js's longTermTileHtml()) have
+ * no CHALLENGE_POOL-style medal photo — just their own emoji, centered on
+ * the app's usual accent gradient. */
+.achievement-tile-medal--icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
 }
 
 .achievement-tile-body {

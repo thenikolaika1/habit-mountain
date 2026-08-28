@@ -1,11 +1,11 @@
-// Bumped again: "Прогресс" (js/views/mountainView.js) now supports
-// browsing past months -- nav arrows, month-scoped header stats, and the
-// mountain/calendar rendering whatever month is selected instead of always
-// the current one. Fetch handler below is cache-first (a hit never
-// re-checks the network), so a new cache name is the only way to make the
-// "activate" handler pick up the change instead of leaving the old app
-// shell cached indefinitely.
-const CACHE_NAME = "habit-mountain-v30";
+// Bumped again: "Достижения" (js/views/achievementsView.js) now surfaces
+// long-term achievements (js/logic/achievements.js's ACHIEVEMENTS -- 100-day
+// streaks and the like, tracked continuously across month boundaries) as
+// their own section, alongside the existing monthly-challenge cards.
+// Fetch handler below is cache-first (a hit never re-checks the network),
+// so a new cache name is the only way to make the "activate" handler pick
+// up the change instead of leaving the old app shell cached indefinitely.
+const CACHE_NAME = "habit-mountain-v31";
 
 const APP_SHELL = [
   "./",

@@ -1,11 +1,29 @@
+import { getAppStats } from "../state/derive.js";
 import { CHALLENGE_POOL, DIFFICULTY_META, getCompletedChallengesMap, getIncompleteChallengesMap, getMedalForChallenge } from "../logic/challenges.js";
+import { ACHIEVEMENTS, getUnlockedMap } from "../logic/achievements.js";
 import { monthLabel } from "../logic/dateUtils.js";
 import { openModal } from "../components/modal.js";
 import { achievementsBannerHtml, challengeHeroForId, challengeProgressBadge, wirePhotoFallback } from "../illustrations.js";
 
 export function renderAchievementsView(container) {
+  // Called only for its side effect (evaluateAndUnlock()/
+  // evaluateAndUnlockChallenges() inside it) — this screen otherwise just
+  // reads already-persisted maps below. Without this, a newly-earned
+  // long-term achievement or monthly challenge wouldn't actually get
+  // evaluated/saved until the user happened to visit Прогресс/Испытания
+  // first — this screen used to have that same gap for challenges too.
+  getAppStats();
+
+  const unlockedAchievements = getUnlockedMap();
   const completedChallenges = getCompletedChallengesMap();
   const incompleteChallenges = getIncompleteChallengesMap();
+
+  // Long-term achievements (js/logic/achievements.js's ACHIEVEMENTS) track
+  // continuously across month boundaries — no reset, unlike CHALLENGE_POOL
+  // below — so they get their own section, in ACHIEVEMENTS' own declared
+  // order (easiest first, "Покоритель вершины" last).
+  const earnedAchievements = ACHIEVEMENTS.filter((a) => unlockedAchievements[a.id]);
+  const achievementCards = earnedAchievements.map((a) => longTermTileHtml(a, unlockedAchievements[a.id])).join("");
 
   const passedChallenges = CHALLENGE_POOL.filter((c) => completedChallenges[c.id]);
   const challengeCards = passedChallenges.map((c) => achievementTileHtml(c, completedChallenges[c.id])).join("");
@@ -25,6 +43,13 @@ export function renderAchievementsView(container) {
 
       ${achievementsBannerHtml()}
 
+      <h3 class="section-heading">Особые достижения</h3>
+      ${
+        earnedAchievements.length === 0
+          ? `<div class="empty-state card"><p>Пока нет особых достижений — сложные долгосрочные цели (например, 100-дневный стрик) появятся здесь автоматически, как только будут выполнены.</p></div>`
+          : `<div class="achievements-list">${achievementCards}</div>`
+      }
+
       <h3 class="section-heading">Пройденные испытания</h3>
       ${
         passedChallenges.length === 0
@@ -43,10 +68,47 @@ export function renderAchievementsView(container) {
 
   wirePhotoFallback(container);
 
-  container.querySelectorAll(".achievement-tile").forEach((tile) => {
+  container.querySelectorAll(".achievement-tile[data-achievement-id]").forEach((tile) => {
+    const achievement = ACHIEVEMENTS.find((a) => a.id === tile.dataset.achievementId);
+    const info = unlockedAchievements[tile.dataset.achievementId];
+    if (achievement && info) tile.addEventListener("click", () => openLongTermAchievementDetail(achievement, info));
+  });
+
+  container.querySelectorAll(".achievement-tile[data-challenge-id]").forEach((tile) => {
     const challenge = CHALLENGE_POOL.find((c) => c.id === tile.dataset.challengeId);
     const info = completedChallenges[tile.dataset.challengeId];
     if (challenge && info) tile.addEventListener("click", () => openAchievementDetail(challenge, info));
+  });
+}
+
+/** Same compact row as achievementTileHtml() below, for a long-term
+ * ACHIEVEMENTS entry instead of a CHALLENGE_POOL one — the medal slot is
+ * the achievement's own emoji in a plain gradient badge
+ * (.achievement-tile-medal--icon) rather than challengeHeroForId()'s
+ * photo/SVG, since these aren't tied to any month's medal rotation. */
+function longTermTileHtml(a, info) {
+  const date = formatShortDate(info.unlockedAt);
+  return `
+    <button type="button" class="achievement-tile" data-achievement-id="${a.id}">
+      <div class="achievement-tile-medal achievement-tile-medal--icon">${a.icon}</div>
+      <div class="achievement-tile-body">
+        <div class="settings-row-title">${a.title}</div>
+        <div class="settings-row-desc">Получено ${date}</div>
+      </div>
+    </button>`;
+}
+
+/** Detail popup for a long-term achievement tile — mirrors
+ * openAchievementDetail() below, minus the difficulty badge (ACHIEVEMENTS
+ * entries have no CHALLENGE_POOL-style difficulty tier). */
+function openLongTermAchievementDetail(achievement, info) {
+  openModal({
+    title: achievement.title,
+    bodyHtml: `
+      <div class="achievement-detail-medal achievement-detail-medal--icon">${achievement.icon}</div>
+      <p class="modal-message">${achievement.description}</p>
+      <p class="modal-message"><span class="summary-value">Получено ${formatShortDate(info.unlockedAt)}</span></p>
+    `,
   });
 }
 

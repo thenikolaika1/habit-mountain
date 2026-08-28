@@ -41,11 +41,25 @@ export const ACHIEVEMENTS = [
     check: (s) => s.overallCurrentStreak >= 7,
   },
   {
+    id: "fifty_marks",
+    title: "Полтинник",
+    description: "50 выполненных дней-привычек суммарно",
+    icon: "🥇",
+    check: (s) => s.totalCompletedDays >= 50,
+  },
+  {
     id: "hundred_club",
     title: "Сто отметок",
     description: "100 выполненных дней-привычек суммарно",
     icon: "💯",
     check: (s) => s.totalCompletedDays >= 100,
+  },
+  {
+    id: "streak_100",
+    title: "Сто дней силы",
+    description: "Стрик 100 дней подряд по одной привычке",
+    icon: "🏆",
+    check: (s) => s.bestStreakOverall >= 100,
   },
   {
     id: "summit",
