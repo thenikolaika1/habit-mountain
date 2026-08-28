@@ -93,12 +93,7 @@ export function renderCalendarView(container, { habitId }) {
 function dayPillHtml(habit, entries, cell) {
   const value = entries[cell.dateKey];
   const done = isDayComplete(habit, value);
-  // ВРЕМЕННО ОТКЛЮЧЕНО (см. dateUtils.js's isDateEditable()) — снимает
-  // UI-блокировку (disabled/«is-locked»/кольцо) с дней вне 3-дневного
-  // окна, включая будущие даты. Чтобы вернуть — раскомментировать строку
-  // ниже и удалить временный `const locked = false;`.
-  // const locked = cell.isFuture || cell.isTooOld;
-  const locked = false;
+  const locked = cell.isFuture || cell.isTooOld;
   const classes = ["day-pill"];
   if (cell.isToday) classes.push("is-today");
   if (locked) classes.push("is-locked");

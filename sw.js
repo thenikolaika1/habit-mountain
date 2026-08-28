@@ -1,10 +1,11 @@
-// Bumped again: a fullscreen confetti celebration (js/components/
-// summitCelebration.js, css/celebration.css) now fires once per month the
-// first time the mountain hits 100%, from any screen. Fetch handler below
-// is cache-first (a hit never re-checks the network), so a new cache name
+// Bumped again: the 3-day editable-window restriction (only today/
+// yesterday/the day before can be checked off or edited) is restored in
+// js/logic/dateUtils.js and js/views/calendarView.js after being
+// temporarily disabled for test-data seeding. Fetch handler below is
+// cache-first (a hit never re-checks the network), so a new cache name
 // is the only way to make the "activate" handler pick up the change
 // instead of leaving the old app shell cached indefinitely.
-const CACHE_NAME = "habit-mountain-v32";
+const CACHE_NAME = "habit-mountain-v33";
 
 const APP_SHELL = [
   "./",
