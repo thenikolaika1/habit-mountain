@@ -1,11 +1,10 @@
-// Bumped again: the achievements-banner click handler and its summary
-// modal were removed entirely (js/illustrations.js/js/views/
-// achievementsView.js) — the banner is back to a plain, non-interactive
-// photo. Fetch handler below is cache-first (a hit never re-checks the
-// network), so a new cache name is the only way to make the "activate"
-// handler pick up the change instead of leaving the old app shell cached
-// indefinitely.
-const CACHE_NAME = "habit-mountain-v27";
+// Bumped again: completed-achievement cards (js/views/achievementsView.js)
+// are now compact clickable rows instead of full-width photo cards, with
+// a new detail popup. Fetch handler below is cache-first (a hit never
+// re-checks the network), so a new cache name is the only way to make the
+// "activate" handler pick up the change instead of leaving the old app
+// shell cached indefinitely.
+const CACHE_NAME = "habit-mountain-v28";
 
 const APP_SHELL = [
   "./",

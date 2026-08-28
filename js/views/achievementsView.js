@@ -1,5 +1,6 @@
 import { CHALLENGE_POOL, DIFFICULTY_META, getCompletedChallengesMap, getIncompleteChallengesMap, getMedalForChallenge } from "../logic/challenges.js";
 import { monthLabel } from "../logic/dateUtils.js";
+import { openModal } from "../components/modal.js";
 import { achievementsBannerHtml, challengeHeroForId, challengeProgressBadge, wirePhotoFallback } from "../illustrations.js";
 
 export function renderAchievementsView(container) {
@@ -7,7 +8,7 @@ export function renderAchievementsView(container) {
   const incompleteChallenges = getIncompleteChallengesMap();
 
   const passedChallenges = CHALLENGE_POOL.filter((c) => completedChallenges[c.id]);
-  const challengeCards = passedChallenges.map((c) => achievementCardHtml(c, completedChallenges[c.id])).join("");
+  const challengeCards = passedChallenges.map((c) => achievementTileHtml(c, completedChallenges[c.id])).join("");
 
   // A challenge only ever shows here once it's completed OR its month has
   // actually ended without completing (see archiveEndedMonthChallenges()) —
@@ -28,7 +29,7 @@ export function renderAchievementsView(container) {
       ${
         passedChallenges.length === 0
           ? `<div class="empty-state card"><p>Пока ни одно испытание не пройдено — загляните во вкладку «Испытания».</p></div>`
-          : `<div class="achievements-grid">${challengeCards}</div>`
+          : `<div class="achievements-list">${challengeCards}</div>`
       }
 
       ${
@@ -41,18 +42,59 @@ export function renderAchievementsView(container) {
   `;
 
   wirePhotoFallback(container);
+
+  container.querySelectorAll(".achievement-tile").forEach((tile) => {
+    const challenge = CHALLENGE_POOL.find((c) => c.id === tile.dataset.challengeId);
+    const info = completedChallenges[tile.dataset.challengeId];
+    if (challenge && info) tile.addEventListener("click", () => openAchievementDetail(challenge, info));
+  });
 }
 
-function achievementCardHtml(a, info) {
+/**
+ * Compact clickable row — a small medal thumbnail + title/date, instead of
+ * the full-bleed .media-card photo the challenge cards elsewhere use. A
+ * lifetime achievement earned in some past month doesn't need a big hero
+ * photo to stay legible, and a list of several used to read as a wall of
+ * near-identical giant cards; this scales down cleanly to any count. A
+ * real <button> (same reasoning as .popular-habit-card/.achievements-banner
+ * elsewhere) — keyboard activation comes for free. challengeHeroForId()'s
+ * output is unchanged; it's absolutely-positioned (inset: 0) so it fills
+ * whatever box it's given — .achievement-tile-medal just gives it a small
+ * one instead of a full-width one.
+ */
+function achievementTileHtml(a, info) {
   const date = formatShortDate(info.unlockedAt);
   return `
-    <div class="achievement-card media-card">
-      ${challengeHeroForId(a.id, getMedalForChallenge(a.id, info.monthKey))}
-      <div class="media-card-scrim">
-        <div class="media-card-title">${a.title}</div>
-        <div class="media-card-meta">Получено ${date}</div>
+    <button type="button" class="achievement-tile" data-challenge-id="${a.id}">
+      <div class="achievement-tile-medal">${challengeHeroForId(a.id, getMedalForChallenge(a.id, info.monthKey))}</div>
+      <div class="achievement-tile-body">
+        <div class="settings-row-title">${a.title}</div>
+        <div class="settings-row-desc">Получено ${date}</div>
       </div>
-    </div>`;
+    </button>`;
+}
+
+/** Detail popup for a completed achievement tile — the challenge's own
+ * description, its difficulty (see incompleteCardHtml() below for the same
+ * DIFFICULTY_META lookup), and the date it was earned. Mirrors
+ * challengesView.js's openChallengeDetail() for an active challenge card,
+ * just fed unlockedAt/monthKey from the completed-challenges map instead
+ * of live monthStats. */
+function openAchievementDetail(challenge, info) {
+  const diff = DIFFICULTY_META[challenge.difficulty];
+  openModal({
+    title: challenge.title,
+    bodyHtml: `
+      <div class="achievement-detail-medal">${challengeHeroForId(challenge.id, getMedalForChallenge(challenge.id, info.monthKey))}</div>
+      <p class="modal-message">${challenge.description}</p>
+      <div class="achievement-detail-meta">
+        <span class="challenge-difficulty-badge challenge-difficulty-badge--standalone ${diff.className}">
+          <span class="challenge-difficulty-dot"></span>${diff.label}
+        </span>
+        <span class="summary-value">Получено ${formatShortDate(info.unlockedAt)}</span>
+      </div>
+    `,
+  });
 }
 
 /** A challenge whose active month ended without completing — same illustration, desaturated (see .achievement-card--incomplete), same corner badges as the active challenge card (progress donut left, difficulty right), frozen at however far it got. */

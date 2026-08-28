@@ -387,6 +387,27 @@
   margin-top: var(--space-2);
 }
 
+/* ---------- Achievement-detail modal (achievementsView.js's
+ * openAchievementDetail(), opened from an .achievement-tile click) ---------- */
+.achievement-detail-medal {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  margin: 0 auto var(--space-4);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-surface-alt);
+  box-shadow: var(--shadow-sm);
+}
+
+.achievement-detail-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
 .month-recap-pct {
   font-family: var(--font-display);
   font-size: 40px;
@@ -683,6 +704,11 @@
 }
 
 /* ---------- Achievements ---------- */
+/* "Незавершённые попытки" only (achievementsView.js's incompleteCardHtml())
+ * — the big full-bleed .media-card treatment still earns its size there:
+ * the photo carries a progress ring + difficulty badge that need room.
+ * Completed achievements use the compact .achievements-list below
+ * instead. */
 .achievements-grid {
   display: flex;
   flex-direction: column;
@@ -698,6 +724,61 @@
  * glance next to a full-color completed card. */
 .achievement-card--incomplete .habit-hero-svg {
   filter: grayscale(0.55) brightness(0.82);
+}
+
+/* Compact list of completed achievements (achievementsView.js's
+ * achievementTileHtml()) — a small medal thumbnail + title/date row
+ * instead of a full-width photo card, so the section stays legible
+ * whether there's one achievement or a dozen. */
+.achievements-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.achievement-tile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  background: var(--color-surface);
+  border: none;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-3);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.achievement-tile:active {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .achievement-tile:hover {
+    transform: scale(1.01);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+/* Fixed small frame for the medal photo/SVG fallback — challengeHeroForId()'s
+ * output is absolutely positioned (inset: 0) so it fills whatever box it's
+ * given, same trick as the full-size hero cards use at a much smaller
+ * size here. */
+.achievement-tile-medal {
+  position: relative;
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-surface-alt);
+}
+
+.achievement-tile-body {
+  flex: 1;
+  min-width: 0;
 }
 
 /* ---------- Achievement toast ----------
@@ -1048,6 +1129,22 @@
 
 .challenge-difficulty-badge.is-hard .challenge-difficulty-dot {
   background: var(--color-danger);
+}
+
+/* Standalone variant for contexts with no photo underneath (the
+ * achievement-detail modal, achievementsView.js's openAchievementDetail())
+ * — the photo-tuned translucent white pill above is intentionally
+ * theme-independent (it needs to read against an arbitrary photo behind
+ * it), but its text color (--color-ink) does flip with the theme, so on a
+ * flat modal surface it would go low-contrast in dark mode. Swap in the
+ * app's usual chip surface instead, which — unlike the photo pill — is
+ * itself theme-aware and keeps --color-ink readable in both themes. Dot
+ * colors are untouched: the is-easy/-medium/-hard modifiers above target
+ * .challenge-difficulty-dot, not the pill's own background. */
+.challenge-difficulty-badge--standalone {
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  box-shadow: none;
 }
 
 /* ---------- Settings ---------- */
