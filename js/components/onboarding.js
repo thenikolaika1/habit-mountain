@@ -1,9 +1,8 @@
-// Interactive first-run tutorial: a spotlight overlay that dims everything
-// except one real UI element per step, advancing only when the user
-// actually performs that element's real action (a real tap on a real tab,
-// a real habit getting created, a real "done" entry) — never a synthetic
-// "Next" button. See PROGRESS.md for the full design writeup; the short
-// version of the two trickiest constraints:
+// First-run tour: a fullscreen welcome screen, then a spotlight on the tab
+// bar inviting a tap on ANY tab (no forced order), then a short popup the
+// first time each tab is visited, until all 5 have been seen. See
+// PROGRESS.md for the full design writeup; the two constraints carried
+// over from the previous step-sequence tour still apply:
 //
 // 1. js/app.js's render() rebuilds #tabbar-container and the current
 //    view's whole DOM subtree from scratch on every state change AND every
@@ -19,165 +18,62 @@
 //    over it, so a real click reaches the real target natively, no
 //    pointer-events trickery needed.
 import { loadState, saveState } from "../state/storage.js";
-import { getHabits } from "../state/habits.js";
-import { getEntry } from "../state/entries.js";
-import { isDayComplete } from "../logic/completion.js";
-import { todayKey } from "../logic/dateUtils.js";
+import { openModal } from "./modal.js";
 
 const SPOTLIGHT_PADDING = 8;
-const MARK_DONE_ALREADY_TRUE_DELAY_MS = 900;
-const MOUNTAIN_STEP_TIMER_MS = 2500;
-const TARGET_RETRY_LIMIT = 15; // ~1.5s of retrying (100ms apart) before giving up on a step's target
+const TARGET_RETRY_LIMIT = 15; // ~1.5s of retrying (100ms apart) before giving up on finding the tab bar
 
-// Cached refs to the overlay's own DOM, valid only while a tour is active
-// (rebuilt fresh by mountRoot() every startOnboarding() call) — unlike
-// #view-container, this module fully owns #onboarding-root's lifecycle
-// itself, so holding refs across ticks here is safe.
-const dom = { bands: null, ring: null, tooltip: null, tooltipStep: null, tooltipText: null };
+// One entry per tab-bar tab (js/components/tabBar.js's own TABS list) — a
+// small parallel copy rather than importing that list, since this only
+// needs the route + label + explainer text, not tabBar.js's icon
+// renderers. `hash` doubles as the match key: a route "starts with" it the
+// same way tabBar.js's own isActive() treats "#/habits/hb_123" as the
+// "Привычки" tab, not a different one.
+const TAB_INTROS = [
+  {
+    hash: "#/challenges",
+    label: "Испытания",
+    text: "Здесь — короткие цели на месяц. Выполни условие испытания (например, стрик по привычке) — и получишь медаль. Нажми на карточку испытания, чтобы посмотреть подробности.",
+  },
+  {
+    hash: "#/habits",
+    label: "Привычки",
+    text: "Здесь живут твои привычки. Нажми «+», чтобы добавить новую, а на самой привычке — чтобы отметить её выполненной или открыть календарь.",
+  },
+  {
+    hash: "#/progress",
+    label: "Прогресс",
+    text: "Это твоя гора — она растёт по мере того, как ты стабильно выполняешь привычки. Ниже — календарь месяца и список привычек на сегодня.",
+  },
+  {
+    hash: "#/achievements",
+    label: "Достижения",
+    text: "Здесь хранятся твои награды: пройденные испытания и особые достижения за стабильность. Нажми на карточку, чтобы увидеть подробности.",
+  },
+  {
+    hash: "#/settings",
+    label: "Настройки",
+    text: "Здесь можно настроить тему оформления, единицу измерения по умолчанию, уведомления и другие параметры приложения.",
+  },
+];
+
+// Cached refs to the spotlight overlay's own DOM, valid only while the
+// "spotlight" phase is on screen (rebuilt fresh by mountSpotlight() every
+// time that phase starts) — unlike #view-container, this module fully owns
+// #onboarding-root's lifecycle itself, so holding refs across ticks here is
+// safe.
+const dom = { bands: null, ring: null, tooltip: null };
 
 // The single run currently in progress, or null when no tour is active.
+// `phase` is one of "welcome" | "spotlight" | "roam" | "completion".
 let active = null;
-
-function buildSteps(startedWithHabits) {
-  const steps = [];
-
-  steps.push({
-    id: "tabbar",
-    route: null,
-    findTarget: () => document.querySelector(".tabbar-inner"),
-    radius: "var(--radius-lg)",
-    text: "Внизу — главное меню приложения: Испытания, Привычки, Прогресс, Достижения и Настройки.",
-    isComplete: () => location.hash === "#/habits",
-  });
-
-  // A user who already has habits (a replay via "Показать обучение
-  // заново") doesn't need to be told to create one — skip this step
-  // entirely rather than requiring a throwaway extra habit just to move
-  // the tour along.
-  if (!startedWithHabits) {
-    steps.push({
-      id: "add-habit",
-      route: "#/habits",
-      findTarget: () => document.getElementById("add-habit-fab"),
-      radius: "var(--radius-round)",
-      text: "Нажми сюда, чтобы добавить новую привычку.",
-      onActivate: (ctx) => {
-        ctx.habitsCountAtStepStart = getHabits().length;
-      },
-      isComplete: (ctx) => {
-        const habits = getHabits();
-        if (habits.length <= ctx.habitsCountAtStepStart) return false;
-        // addHabit() always pushes -- the most recently created habit is
-        // always the last element, regardless of which path created it
-        // (the form, or a one-tap "Популярные привычки" preset).
-        ctx.targetHabit = habits[habits.length - 1];
-        return true;
-      },
-    });
-  }
-
-  steps.push({
-    id: "mark-done",
-    route: "#/progress",
-    findTarget: (ctx) => {
-      if (!ctx.targetHabit) return null;
-      const base = `.today-item[data-habit-id="${ctx.targetHabit.id}"] `;
-      const sel = ctx.targetHabit.type === "boolean" ? base + '[data-action="toggle"]' : base + '[data-action="number"]';
-      return document.querySelector(sel);
-    },
-    radius: "var(--radius-round)",
-    text: (ctx) =>
-      ctx.targetHabit && ctx.targetHabit.type === "numeric"
-        ? "Введи число и нажми Enter (или убери фокус с поля), чтобы отметить прогресс за сегодня."
-        : "Нажми на галочку, чтобы отметить привычку выполненной сегодня.",
-    onActivate: (ctx) => {
-      // For the fresh-habit path, ctx.targetHabit was already set by step
-      // "add-habit"'s isComplete() above. Replaying with existing habits
-      // skips that step entirely, so it's set here instead.
-      if (startedWithHabits) ctx.targetHabit = getHabits()[0] || null;
-    },
-    // A brief pause before advancing (not instant) -- gives the user a
-    // moment to see the checkmark actually land, and also gracefully
-    // covers the replay case where the target habit is already marked
-    // done today: the condition reads true immediately on activation, and
-    // this delay reads as "confirmed, moving on" rather than requiring a
-    // pointless re-tap of something already checked.
-    advanceDelayMs: MARK_DONE_ALREADY_TRUE_DELAY_MS,
-    isComplete: (ctx) => {
-      if (!ctx.targetHabit) return false;
-      return isDayComplete(ctx.targetHabit, getEntry(ctx.targetHabit.id, todayKey()));
-    },
-  });
-
-  steps.push({
-    id: "mountain",
-    route: "#/progress",
-    findTarget: () => document.querySelector(".mountain-wrap"),
-    radius: "var(--radius-lg)",
-    text: "Это твоя гора 🏔️ Она растёт по мере того, как ты выполняешь привычки — чем стабильнее, тем выше подъём.",
-    // The mountain has no click action of its own to wait for (unlike
-    // every other step) -- reads for a couple seconds, then continues on
-    // its own; tapping the spotlighted mountain just skips the wait early
-    // rather than adding a separate "Next" button elsewhere on screen.
-    onActivate: (ctx) => {
-      ctx.mountainReady = false;
-      // Neither this timer nor wireTap()'s click below goes through a real
-      // state mutation or route change (every other step's completion
-      // does), so nothing else would ever re-run checkAdvance() for them —
-      // each calls runTick() itself right after flipping the flag.
-      ctx.mountainTimer = setTimeout(() => {
-        ctx.mountainReady = true;
-        runTick();
-      }, MOUNTAIN_STEP_TIMER_MS);
-    },
-    wireTap: (target, ctx) => {
-      target.addEventListener(
-        "click",
-        () => {
-          ctx.mountainReady = true;
-          runTick();
-        },
-        { once: true }
-      );
-    },
-    isComplete: (ctx) => ctx.mountainReady === true,
-  });
-
-  steps.push({
-    id: "challenges-tab",
-    route: null,
-    findTarget: () => document.querySelector('.tab-item[href="#/challenges"]'),
-    radius: "var(--radius-md)",
-    text: "Вкладка «Испытания» — короткие цели на месяц. Выполнил — получил медаль 🏅",
-    isComplete: () => location.hash === "#/challenges",
-  });
-
-  steps.push({
-    id: "achievements-tab",
-    route: null,
-    findTarget: () => document.querySelector('.tab-item[href="#/achievements"]'),
-    radius: "var(--radius-md)",
-    text: "А здесь хранятся твои достижения — все награды в одном месте.",
-    isComplete: () => location.hash === "#/achievements",
-  });
-
-  return steps;
-}
 
 export function startOnboarding({ force = false } = {}) {
   if (active) return; // already running
   if (!force && loadState().meta.onboardingCompleted) return;
 
-  const startedWithHabits = getHabits().length > 0;
-  active = {
-    steps: buildSteps(startedWithHabits),
-    index: 0,
-    ctx: {},
-    retryCount: 0,
-    pendingAdvanceTimer: null,
-  };
-  mountRoot();
-  activateStep(0);
+  active = { phase: "welcome", visitedTabs: new Set(), retryCount: 0 };
+  mountWelcome();
 }
 
 export function skipOnboarding() {
@@ -190,25 +86,13 @@ export function skipOnboarding() {
  * the tab bar and the current view have already been fully rebuilt for
  * this pass, so everything this function looks at (DOM, location.hash,
  * loadState()) is guaranteed current. A cheap no-op whenever no tour is
- * running.
+ * running or the current phase doesn't need a tick (welcome/completion are
+ * fully driven by their own button clicks, not renders).
  */
 export function onOnboardingTick() {
-  runTick();
-}
-
-/**
- * Every step's completion is normally detected this way: a real state
- * mutation or route change elsewhere in the app triggers render(), which
- * calls onOnboardingTick() above. The one exception is the "mountain" step
- * (no state/route change of its own — just a timer or a direct tap on the
- * spotlighted element) — those two callbacks call this shared tick
- * function themselves, since nothing else in the app would ever re-check
- * onboarding's own step condition for them otherwise.
- */
-function runTick() {
   if (!active) return;
-  checkAdvance();
-  if (active) positionStep(); // checkAdvance() may have ended the tour (skip mid-check is not possible today, but stay defensive)
+  if (active.phase === "spotlight") positionSpotlight();
+  else if (active.phase === "roam") checkRoamArrival();
 }
 
 function markCompleted() {
@@ -219,7 +103,36 @@ function markCompleted() {
   }
 }
 
-function mountRoot() {
+function currentTabIntro() {
+  const hash = location.hash || "#/progress";
+  return TAB_INTROS.find((t) => hash === t.hash || hash.startsWith(`${t.hash}/`)) || TAB_INTROS.find((t) => t.hash === "#/progress");
+}
+
+// ---------- Phase 1: fullscreen welcome ----------
+
+function mountWelcome() {
+  const root = document.getElementById("onboarding-root");
+  if (!root) return;
+  root.innerHTML = `
+    <div class="onboarding-welcome">
+      <p class="onboarding-welcome-emoji">🏔️</p>
+      <h1 class="onboarding-welcome-title">Готов покорить вершину?</h1>
+      <p class="onboarding-welcome-subtitle">Habit Mountain превращает привычки в настоящее восхождение: выполняй испытания, собирай награды и наблюдай, как растёт твоя гора.</p>
+      <button type="button" class="onboarding-welcome-cta" id="onboarding-start-btn">Начать восхождение 🚀</button>
+      <button type="button" class="onboarding-welcome-skip" id="onboarding-welcome-skip-btn">Пропустить обучение</button>
+    </div>
+  `;
+  root.querySelector("#onboarding-start-btn").addEventListener("click", () => {
+    if (!active) return;
+    active.phase = "spotlight";
+    mountSpotlight();
+  });
+  root.querySelector("#onboarding-welcome-skip-btn").addEventListener("click", skipOnboarding);
+}
+
+// ---------- Phase 2: spotlight the tab bar, wait for any tap ----------
+
+function mountSpotlight() {
   const root = document.getElementById("onboarding-root");
   if (!root) return;
   root.innerHTML = `
@@ -229,8 +142,7 @@ function mountRoot() {
     <div class="onboarding-scrim-band" data-band="right"></div>
     <div class="onboarding-spotlight-ring"></div>
     <div class="onboarding-tooltip">
-      <p class="onboarding-tooltip-step"></p>
-      <p class="onboarding-tooltip-text"></p>
+      <p class="onboarding-tooltip-text">Нажми на любую вкладку внизу — необязательно по порядку, выбирай сам.</p>
     </div>
     <button type="button" class="onboarding-skip-btn">Пропустить</button>
   `;
@@ -242,82 +154,125 @@ function mountRoot() {
   };
   dom.ring = root.querySelector(".onboarding-spotlight-ring");
   dom.tooltip = root.querySelector(".onboarding-tooltip");
-  dom.tooltipStep = root.querySelector(".onboarding-tooltip-step");
-  dom.tooltipText = root.querySelector(".onboarding-tooltip-text");
   root.querySelector(".onboarding-skip-btn").addEventListener("click", skipOnboarding);
-}
-
-function activateStep(index) {
-  if (!active) return;
-  const step = active.steps[index];
-  if (!step) {
-    showCompletion();
-    return;
-  }
-  active.index = index;
   active.retryCount = 0;
-  if (step.onActivate) step.onActivate(active.ctx);
-  // hashchange fires asynchronously -- positionStep() below may not find
-  // the new route's target yet on this same synchronous pass, which is
-  // fine, it just retries (see positionStep()'s own retry loop) until the
-  // resulting render() call rebuilds the new screen.
-  if (step.route && location.hash !== step.route) location.hash = step.route;
-  positionStep();
+  positionSpotlight();
 }
 
-function checkAdvance() {
-  if (!active) return;
-  const step = active.steps[active.index];
-  if (!step || !step.isComplete) return;
-  const satisfied = step.isComplete(active.ctx);
-  if (satisfied && active.pendingAdvanceTimer === null) {
-    active.pendingAdvanceTimer = setTimeout(() => {
-      if (!active) return;
-      active.pendingAdvanceTimer = null;
-      activateStep(active.index + 1);
-    }, step.advanceDelayMs || 0);
-  } else if (!satisfied && active.pendingAdvanceTimer !== null) {
-    // Condition flipped back false before the delay elapsed (e.g. a
-    // numeric entry cleared back to empty) -- don't advance on stale info.
-    clearTimeout(active.pendingAdvanceTimer);
-    active.pendingAdvanceTimer = null;
-  }
-}
-
-function positionStep() {
-  if (!active) return;
-  const step = active.steps[active.index];
-  if (!step) return;
-  const target = step.findTarget(active.ctx);
+function positionSpotlight() {
+  if (!active || active.phase !== "spotlight") return;
+  const target = document.querySelector(".tabbar-inner");
 
   if (!target) {
     active.retryCount += 1;
     if (active.retryCount > TARGET_RETRY_LIMIT) {
-      // Genuinely can't find this step's target (e.g. the user deleted
-      // the habit this step was about to point at) -- skip it gracefully
-      // rather than leaving the tour stuck forever.
-      activateStep(active.index + 1);
+      // Genuinely can't find the tab bar -- don't leave the tour stuck
+      // dimming the whole screen forever.
+      skipOnboarding();
     } else {
-      setTimeout(positionStep, 100);
+      setTimeout(positionSpotlight, 100);
     }
     return;
   }
   active.retryCount = 0;
 
-  if (target.dataset.onboardingScrolled !== "1") {
-    target.scrollIntoView({ block: "center" });
-    target.dataset.onboardingScrolled = "1";
-  }
-  if (step.wireTap && target.dataset.onboardingTapWired !== "1") {
-    step.wireTap(target, active.ctx);
+  // Wired once (not re-wired every tick) -- a click here is a real user
+  // action, not something a state/route change re-triggers on its own, so
+  // it needs its own listener rather than relying on onOnboardingTick()'s
+  // diffing. That diffing alone wouldn't catch a tap on the tab that's
+  // already active (no hashchange fires when the hash doesn't change),
+  // e.g. the tour starting on "Прогресс" and the user tapping "Прогресс"
+  // itself as their first pick.
+  if (target.dataset.onboardingTapWired !== "1") {
+    target.querySelectorAll(".tab-item").forEach((tabEl) => {
+      tabEl.addEventListener(
+        "click",
+        () => {
+          if (!active || active.phase !== "spotlight") return;
+          active.phase = "roam";
+          teardownSpotlightDom();
+          visitTab(currentTabFromHash(tabEl.getAttribute("href")));
+        },
+        { once: true }
+      );
+    });
     target.dataset.onboardingTapWired = "1";
   }
 
   const rect = target.getBoundingClientRect();
   applyBands(rect);
-  applyRing(rect, step.radius);
-  applyTooltip(rect, step, active.ctx);
+  applyRing(rect, "var(--radius-lg)");
+  applyTooltip(rect);
 }
+
+function currentTabFromHash(hash) {
+  return TAB_INTROS.find((t) => hash === t.hash) || TAB_INTROS.find((t) => t.hash === "#/progress");
+}
+
+// ---------- Phase 3: free roam -- pop up each tab's intro once ----------
+
+function checkRoamArrival() {
+  if (!active || active.phase !== "roam") return;
+  const tab = currentTabIntro();
+  if (active.visitedTabs.has(tab.hash)) return;
+  visitTab(tab);
+}
+
+function visitTab(tab) {
+  if (!active) return;
+  active.visitedTabs.add(tab.hash);
+  showTabIntro(tab);
+}
+
+function showTabIntro(tab) {
+  const isLast = active && active.visitedTabs.size >= TAB_INTROS.length;
+  openModal({
+    title: tab.label,
+    bodyHtml: `
+      <p class="modal-message">${tab.text}</p>
+      <div class="modal-actions">
+        <button type="button" class="btn" id="onboarding-tab-skip">Пропустить обучение</button>
+        <button type="button" class="btn btn-primary" id="onboarding-tab-ok">Понятно</button>
+      </div>
+    `,
+    onMount: (sheet, close) => {
+      sheet.querySelector("#onboarding-tab-skip").addEventListener("click", () => {
+        close();
+        skipOnboarding();
+      });
+      sheet.querySelector("#onboarding-tab-ok").addEventListener("click", () => {
+        close();
+        if (!active) return;
+        if (isLast) showCompletion();
+      });
+    },
+  });
+}
+
+// ---------- Phase 4: completion ----------
+
+function showCompletion() {
+  if (!active) return;
+  active.phase = "completion";
+  const root = document.getElementById("onboarding-root");
+  if (!root) return;
+  root.innerHTML = `
+    <div class="onboarding-completion-backdrop"></div>
+    <div class="onboarding-completion">
+      <p class="onboarding-completion-emoji">🎉</p>
+      <h2 class="onboarding-completion-title">Готово!</h2>
+      <p class="onboarding-completion-text">Теперь ты знаешь, где что искать — все разделы открыты. Гора уже ждёт восхождения 🏔️</p>
+      <p class="onboarding-completion-hint">Если захочешь пройти тур ещё раз — Настройки → «Показать обучение заново».</p>
+      <button type="button" class="btn btn-primary btn-block" id="onboarding-finish-btn">Отлично!</button>
+    </div>
+  `;
+  root.querySelector("#onboarding-finish-btn").addEventListener("click", () => {
+    markCompleted();
+    teardown();
+  });
+}
+
+// ---------- Shared spotlight geometry (welcome/completion don't need it) ----------
 
 function applyBands(rect) {
   const vw = window.innerWidth;
@@ -348,20 +303,18 @@ function applyRing(rect, radius) {
   dom.ring.style.borderRadius = radius;
 }
 
-function applyTooltip(rect, step, ctx) {
-  dom.tooltipText.textContent = typeof step.text === "function" ? step.text(ctx) : step.text;
-  dom.tooltipStep.textContent = `${active.index + 1} из ${active.steps.length}`;
-
+function applyTooltip(rect) {
   const vh = window.innerHeight;
   const vw = window.innerWidth;
   const tw = dom.tooltip.offsetWidth;
   const th = dom.tooltip.offsetHeight;
-  const spaceBelow = vh - rect.bottom;
   const spaceAbove = rect.top;
-  const placeBelow = spaceBelow >= th + 24 || spaceBelow >= spaceAbove;
 
-  let top = placeBelow ? rect.bottom + SPOTLIGHT_PADDING + 12 : rect.top - SPOTLIGHT_PADDING - 12 - th;
-  top = Math.max(12, Math.min(top, vh - th - 12));
+  // The tab bar sits at the very bottom of the screen -- there's rarely
+  // room below it, so the tooltip always goes above it (unlike the old
+  // per-step tour, which could point at a target anywhere on screen).
+  let top = rect.top - SPOTLIGHT_PADDING - 12 - th;
+  top = Math.max(12, Math.min(top, spaceAbove - 12));
 
   let left = rect.left + rect.width / 2 - tw / 2;
   left = Math.max(12, Math.min(left, vw - tw - 12));
@@ -370,38 +323,26 @@ function applyTooltip(rect, step, ctx) {
   dom.tooltip.style.left = `${left}px`;
 }
 
-function showCompletion() {
-  if (!active) return;
-  clearTimeout(active.pendingAdvanceTimer);
+function teardownSpotlightDom() {
   const root = document.getElementById("onboarding-root");
-  if (!root) return;
-  root.innerHTML = `
-    <div class="onboarding-completion-backdrop"></div>
-    <div class="onboarding-completion">
-      <p class="onboarding-completion-emoji">🎉</p>
-      <h2 class="onboarding-completion-title">Готово!</h2>
-      <p class="onboarding-completion-text">Ты знаешь, где искать всё самое важное. Начинай своё восхождение — гора уже ждёт 🏔️</p>
-      <p class="onboarding-completion-hint">Если захочешь пройти тур ещё раз — Настройки → «Показать обучение заново».</p>
-      <button type="button" class="btn btn-primary btn-block" id="onboarding-finish-btn">Отлично!</button>
-    </div>
-  `;
-  root.querySelector("#onboarding-finish-btn").addEventListener("click", () => {
-    markCompleted();
-    teardown();
-  });
+  if (root) root.innerHTML = "";
+  dom.bands = null;
+  dom.ring = null;
+  dom.tooltip = null;
 }
 
 function teardown() {
   if (!active) return;
-  clearTimeout(active.pendingAdvanceTimer);
-  clearTimeout(active.ctx.mountainTimer);
   const root = document.getElementById("onboarding-root");
   if (root) root.innerHTML = "";
+  dom.bands = null;
+  dom.ring = null;
+  dom.tooltip = null;
   active = null;
 }
 
 // Registered once at module load, not per-run -- harmless/no-op via the
-// `active` guard whenever no tour is in progress.
+// `active` guard whenever the spotlight phase isn't showing.
 window.addEventListener("resize", () => {
-  if (active) positionStep();
+  if (active && active.phase === "spotlight") positionSpotlight();
 });

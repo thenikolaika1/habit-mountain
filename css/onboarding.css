@@ -1,8 +1,10 @@
-/* Interactive first-run tutorial overlay (js/components/onboarding.js).
- * #onboarding-root lives as a sibling of #app in index.html — never
- * touched by #view-container/#tabbar-container's frequent full rebuilds,
- * and never at risk of landing inside a transformed ancestor the way a
- * position:fixed element nested inside #app could (see the warning
+/* First-run tour overlay (js/components/onboarding.js): fullscreen welcome
+ * -> spotlight on the tab bar (tap any tab, any order) -> a short popup per
+ * tab (js/components/modal.js's openModal(), not styled here) -> fullscreen
+ * completion. #onboarding-root lives as a sibling of #app in index.html —
+ * never touched by #view-container/#tabbar-container's frequent full
+ * rebuilds, and never at risk of landing inside a transformed ancestor the
+ * way a position:fixed element nested inside #app could (see the warning
  * comment on #app in base.css).
  *
  * The spotlight cutout is 4 independent bands, not a clip-path hole — the
@@ -14,6 +16,83 @@
   pointer-events: none;
 }
 
+/* ---------- Welcome screen ---------- */
+/* Same accent gradient .btn-primary/.fab/.settings-row-icon already use
+ * elsewhere, at full-bleed scale, for a "big adventure" opening moment. */
+.onboarding-welcome {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-onboarding);
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-6) var(--space-5);
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
+}
+
+.onboarding-welcome-emoji {
+  font-size: 64px;
+  margin-bottom: var(--space-3);
+}
+
+.onboarding-welcome-title {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.2;
+  max-width: 320px;
+  margin-bottom: var(--space-3);
+}
+
+.onboarding-welcome-subtitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+  max-width: 320px;
+  margin-bottom: var(--space-6);
+}
+
+/* Not .btn-primary — that's the same green gradient as this screen's own
+ * background and would nearly disappear against it. A solid white pill
+ * with dark-green text is the actual high-contrast CTA here. */
+.onboarding-welcome-cta {
+  border: none;
+  border-radius: var(--radius-round);
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-accent-dark);
+  background: #ffffff;
+  box-shadow: var(--shadow-md);
+  margin-bottom: var(--space-4);
+  transition: transform 180ms ease;
+}
+
+.onboarding-welcome-cta:active {
+  transform: scale(0.96);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .onboarding-welcome-cta:hover {
+    transform: scale(1.03);
+  }
+}
+
+.onboarding-welcome-skip {
+  border: none;
+  background: none;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ---------- Spotlight (tab bar, phase 2) ---------- */
 .onboarding-scrim-band {
   position: fixed;
   background: rgba(15, 25, 20, 0.55);
@@ -41,15 +120,6 @@
   background: var(--color-surface);
   box-shadow: var(--shadow-md);
   transition: top 220ms ease, left 220ms ease;
-}
-
-.onboarding-tooltip-step {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--color-accent-dark);
-  margin-bottom: 2px;
 }
 
 .onboarding-tooltip-text {
