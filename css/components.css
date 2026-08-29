@@ -578,6 +578,43 @@
   color: var(--color-accent-dark);
 }
 
+/* ---------- All-habits month summary (Прогресс, under the calendar) ---------- */
+.month-habits-summary-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.month-habits-summary-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.month-habits-summary-row:last-child {
+  border-bottom: none;
+}
+
+.month-habits-summary-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.month-habits-summary-value {
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-accent-dark);
+  white-space: nowrap;
+}
+
 /* ---------- Section heading ---------- */
 .section-heading {
   font-size: 15px;

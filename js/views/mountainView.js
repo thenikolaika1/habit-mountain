@@ -9,6 +9,7 @@ import { stageForProgress, computeMonthMountainProgress, computeMonthStats } fro
 import { CHALLENGE_POOL } from "../logic/challenges.js";
 import { showToast } from "../components/toast.js";
 import { openDaySummary } from "./daySummaryView.js";
+import { renderAllHabitsMonthSummary } from "../components/monthSummary.js";
 import { todayAvatarIcon, dayProgressRing, iconChevronLeft, iconChevronRight } from "../illustrations.js";
 
 // The mountain screen is re-rendered on every state change (subscribe in
@@ -143,6 +144,8 @@ function renderFreshMountainView(container, stats, tKey, vm, viewedData) {
 
       <div id="progress-calendar-section">${progressCalendarHtml(viewedData.monthStats, vm.year, vm.month, stats.activeHabits.length)}</div>
 
+      <div id="progress-habits-summary-section">${renderAllHabitsMonthSummary(stats.perHabit, vm.year, vm.month)}</div>
+
       <h3 class="section-heading">Сегодня</h3>
       <div id="today-section">
         ${stats.activeHabits.length === 0 ? emptyTodayHtml() : todayListHtml(stats, tKey)}
@@ -193,6 +196,8 @@ function patchMountainView(container, stats, tKey, vm, viewedData) {
   const calendarSection = container.querySelector("#progress-calendar-section");
   calendarSection.innerHTML = progressCalendarHtml(viewedData.monthStats, vm.year, vm.month, stats.activeHabits.length);
   wireProgressCalendar(container, stats);
+
+  container.querySelector("#progress-habits-summary-section").innerHTML = renderAllHabitsMonthSummary(stats.perHabit, vm.year, vm.month);
 
   const todaySection = container.querySelector("#today-section");
   todaySection.innerHTML = stats.activeHabits.length === 0 ? emptyTodayHtml() : todayListHtml(stats, tKey);
