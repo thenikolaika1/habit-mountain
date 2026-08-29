@@ -1,10 +1,11 @@
-// Bumped again: a "Итоги месяца" card (js/components/monthSummary.js's
-// renderAllHabitsMonthSummary()) now lists every active habit's month
-// total on the Прогресс screen, under the calendar. Fetch handler below is
-// cache-first (a hit never re-checks the network), so a new cache name
-// is the only way to make the "activate" handler pick up the change
-// instead of leaving the old app shell cached indefinitely.
-const CACHE_NAME = "habit-mountain-v34";
+// Bumped again: the app icons (icons/icon-192.png, icons/icon-512.png,
+// icons/icon-512-maskable.png, icons/apple-touch-icon-180.png) were
+// regenerated from the new mountain-with-flag artwork (assets/app_icon.png)
+// via scripts/generate-icons-from-source.py -- same filenames, new bytes.
+// Fetch handler below is cache-first (a hit never re-checks the network),
+// so a new cache name is the only way to make the "activate" handler pick
+// up the change instead of leaving the old icons cached indefinitely.
+const CACHE_NAME = "habit-mountain-v35";
 
 const APP_SHELL = [
   "./",
