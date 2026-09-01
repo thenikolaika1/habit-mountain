@@ -47,6 +47,27 @@
    * the sky's linear-gradient. */
   --stage-sky-glow: rgba(255, 205, 138, 0.55);
 
+  /* Прогресс mountain illustration (css/mountain.css) ONLY — same values
+   * as the --stage-*/--stage-sky-* tokens above, split into their own
+   * names on purpose: the big mountain should look identical in both
+   * themes (only the surrounding chrome — background, text, cards — is
+   * meant to adapt), so these are declared ONLY here in :root and are
+   * never redefined in either dark-theme block below. The smaller
+   * decorative illustrations (medal disc, habit hero scenes, calendar
+   * hero fallback) keep using the theme-aware --stage-*/--stage-sky-*
+   * tokens above, unaffected by this split. */
+  --mountain-sky-top: #ffd9a0;
+  --mountain-sky-mid: #fff3dc;
+  --mountain-sky-bottom: #e3f4ee;
+  --mountain-sky-glow: rgba(255, 205, 138, 0.55);
+  --mountain-base: #aee8bd;
+  --mountain-base-dark: #74cd93;
+  --mountain-forest: #1f6b42;
+  --mountain-forest-dark: #123322;
+  --mountain-rocks: #7c8f92;
+  --mountain-summit: #ffffff;
+  --mountain-summit-dark: #e8f2fb;
+
   /* spacing scale */
   --space-1: 4px;
   --space-2: 8px;

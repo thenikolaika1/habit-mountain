@@ -7,8 +7,8 @@
    * layer so it sits on top) over a 3-stop gradient — mint/blue-green at
    * the foot warming to a golden-peach haze near the top. */
   background:
-    radial-gradient(ellipse 70% 35% at 50% 6%, var(--stage-sky-glow), transparent 70%),
-    linear-gradient(to top, var(--stage-sky-bottom), var(--stage-sky-mid) 55%, var(--stage-sky-top));
+    radial-gradient(ellipse 70% 35% at 50% 6%, var(--mountain-sky-glow), transparent 70%),
+    linear-gradient(to top, var(--mountain-sky-bottom), var(--mountain-sky-mid) 55%, var(--mountain-sky-top));
 }
 
 .mountain-svg {
@@ -21,31 +21,31 @@
  * (js/mountainSvg.js) — kept in CSS rather than inlined on the <stop>
  * elements, same convention as every other fill in this file. */
 .mountain-gradient-stop--grass {
-  stop-color: var(--stage-base);
+  stop-color: var(--mountain-base);
 }
 
 .mountain-gradient-stop--forest {
-  stop-color: var(--stage-forest);
+  stop-color: var(--mountain-forest);
 }
 
 .mountain-gradient-stop--rock {
-  stop-color: var(--stage-rocks);
+  stop-color: var(--mountain-rocks);
 }
 
 .mountain-gradient-stop--snow-tint {
-  stop-color: var(--stage-summit-dark);
+  stop-color: var(--mountain-summit-dark);
 }
 
 .mountain-gradient-stop--snow {
-  stop-color: var(--stage-summit);
+  stop-color: var(--mountain-summit);
 }
 
 .mountain-gradient-stop--tree-base {
-  stop-color: var(--stage-forest-dark);
+  stop-color: var(--mountain-forest-dark);
 }
 
 .mountain-gradient-stop--tree-tip {
-  stop-color: var(--stage-forest);
+  stop-color: var(--mountain-forest);
 }
 
 /* The whole silhouette, one smooth fill (grass -> forest -> rock -> snow)
@@ -262,7 +262,7 @@
 }
 
 .mountain-grass {
-  fill: var(--stage-base-dark);
+  fill: var(--mountain-base-dark);
   opacity: 0.85;
 }
 
@@ -353,7 +353,7 @@
 
 .milestone-dot {
   fill: #fff8e6;
-  stroke: var(--stage-forest-dark);
+  stroke: var(--mountain-forest-dark);
   stroke-width: 1;
 }
 

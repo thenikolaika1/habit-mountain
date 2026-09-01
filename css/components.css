@@ -1169,7 +1169,13 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  color: var(--color-ink);
+  /* Fixed dark ink, NOT var(--color-ink) -- this pill's white background
+   * above is deliberately theme-independent (it needs to read against an
+   * arbitrary photo behind it, see comment above), but --color-ink flips
+   * to near-white in dark mode, which made the label nearly invisible
+   * against this same white pill. --standalone below still uses
+   * --color-ink, correctly, since its own background flips with it too. */
+  color: #0c1710;
 }
 
 .challenge-difficulty-dot {
@@ -1194,17 +1200,18 @@
 /* Standalone variant for contexts with no photo underneath (the
  * achievement-detail modal, achievementsView.js's openAchievementDetail())
  * — the photo-tuned translucent white pill above is intentionally
- * theme-independent (it needs to read against an arbitrary photo behind
- * it), but its text color (--color-ink) does flip with the theme, so on a
- * flat modal surface it would go low-contrast in dark mode. Swap in the
- * app's usual chip surface instead, which — unlike the photo pill — is
- * itself theme-aware and keeps --color-ink readable in both themes. Dot
- * colors are untouched: the is-easy/-medium/-hard modifiers above target
+ * theme-independent (fixed dark text on a fixed white background, see
+ * comment above), but a flat modal surface should look like the rest of
+ * the app instead. Swap in the app's usual chip surface AND switch the
+ * text back to the theme-aware --color-ink, since this background now
+ * flips with the theme too and needs matching text. Dot colors are
+ * untouched: the is-easy/-medium/-hard modifiers above target
  * .challenge-difficulty-dot, not the pill's own background. */
 .challenge-difficulty-badge--standalone {
   background: var(--color-surface-alt);
   border: 1px solid var(--color-border);
   box-shadow: none;
+  color: var(--color-ink);
 }
 
 /* ---------- Settings ---------- */
