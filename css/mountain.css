@@ -88,7 +88,11 @@
 
 /* Slow-drifting sky clouds (js/mountainSvg.js's cloudsMarkup()) — plain
  * white at low opacity so they read as soft haze rather than solid
- * shapes, blending into the warm sky gradient behind the SVG. */
+ * shapes, blending into the warm sky gradient behind the SVG. Opacity is
+ * deliberately fixed, NOT dimmed for dark mode any more — the whole
+ * mountain illustration (sky, slopes, trees, trail, clouds, birds, fog,
+ * snow) now looks identical in both themes, per the request; only the
+ * chrome around it still adapts. */
 @keyframes cloud-drift {
   0%,
   100% {
@@ -106,19 +110,6 @@
   animation: cloud-drift 28s ease-in-out infinite;
 }
 
-/* Dimmer in dark mode — full-opacity white clouds would read as far too
- * bright against the night sky; same media-query + [data-theme] pairing
- * already used below for .mountain-progress-caption. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .mountain-cloud {
-    opacity: 0.22;
-  }
-}
-
-:root[data-theme="dark"] .mountain-cloud {
-  opacity: 0.22;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .mountain-cloud {
     animation: none;
@@ -129,12 +120,12 @@
  * silhouette drifting along one of two looping arcs (bird-fly-a/-b below),
  * per-bird duration/delay (set inline, same deterministic idiom as every
  * other decoration in this file) so three birds never move in lockstep.
- * --color-ink itself flips light/dark with the theme (see variables.css),
- * so this stays a dark silhouette against a pale sky in light mode and a
- * pale one against the night sky in dark mode without any extra rule here. */
+ * --mountain-ink (fixed, NOT the theme-flipping --color-ink) so the birds
+ * stay dark silhouettes against the always-pale sky in both themes, same
+ * as the rest of this illustration. */
 .mountain-bird {
   fill: none;
-  stroke: var(--color-ink);
+  stroke: var(--mountain-ink);
   stroke-width: 1.6;
   stroke-linecap: round;
   opacity: 0.75;
@@ -214,18 +205,6 @@
   fill: #f5f7f6;
   opacity: 0.22;
   animation: fog-drift 46s ease-in-out infinite;
-}
-
-/* Dimmer in dark mode, same reasoning/pairing as .mountain-cloud above --
- * fog should look fainter in the dark, not brighter. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .mountain-fog {
-    opacity: 0.12;
-  }
-}
-
-:root[data-theme="dark"] .mountain-fog {
-  opacity: 0.12;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -328,14 +307,14 @@
   font-size: 9px;
   font-weight: 700;
   text-anchor: middle;
-  fill: var(--color-text);
+  fill: var(--mountain-label-fill);
   paint-order: stroke;
-  /* The halo needs to contrast with the label's OWN fill color, not just
-   * the mountain artwork behind it — using the page background (which
-   * flips light/dark with the theme, unlike a fixed white) keeps the
-   * label legible in dark mode too, where --color-text is itself pale and
-   * a fixed white halo would blur into it instead of framing it. */
-  stroke: var(--color-bg);
+  /* Fixed dark fill + fixed pale halo (--mountain-label-fill/-halo, NOT
+   * the theme-flipping --color-text/--color-bg) -- the mountain behind
+   * these labels is now always the light-mode sky/slopes regardless of
+   * theme, so the labels stay the same fixed pair that already reads
+   * clearly against it, instead of following the surrounding UI's theme. */
+  stroke: var(--mountain-label-halo);
   stroke-width: 2.5px;
   stroke-linejoin: round;
   /* Extra soft shadow under the halo-stroked text itself — most
@@ -377,7 +356,7 @@
   font-size: 12px;
   text-anchor: end;
   paint-order: stroke;
-  stroke: var(--color-bg);
+  stroke: var(--mountain-label-halo);
   stroke-width: 2px;
   stroke-linejoin: round;
   filter: drop-shadow(0 1px 1.5px rgba(12, 20, 15, 0.3));

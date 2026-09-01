@@ -1,14 +1,19 @@
-// Bumped again: two dark-theme CSS fixes -- css/components.css's
-// .challenge-difficulty-badge text is now a fixed dark color instead of
-// the theme-flipping --color-ink (was unreadable against its always-white
-// pill in dark mode), and css/mountain.css now reads from new
-// --mountain-* tokens (css/variables.css) that are never redefined for
-// dark mode, so the big Прогресс mountain illustration looks identical in
-// both themes. Fetch handler below is cache-first (a hit never re-checks
-// the network), so a new cache name is the only way to make the
-// "activate" handler pick up the change instead of leaving the old CSS
-// cached indefinitely.
-const CACHE_NAME = "habit-mountain-v36";
+// Bumped again: the Прогресс mountain illustration's clouds, birds, fog,
+// and milestone captions no longer dim/recolor for dark mode either (they
+// used to, even after the previous sky/slopes fix) -- css/mountain.css's
+// .mountain-cloud/.mountain-fog opacity and .mountain-bird/.milestone-label
+// colors now read fixed --mountain-* tokens (css/variables.css) instead of
+// the theme-flipping --color-ink/--color-text/--color-bg, so the whole
+// mountain scene is finally identical in both themes, not just its sky.
+// (Also fixed a real bug along the way: a code comment containing a
+// literal "*/" inside "--stage-*/--stage-sky-*" was closing its own CSS
+// comment early, which silently dropped the --mountain-sky-top
+// declaration entirely -- that's why the sky still looked broken in dark
+// mode even after the previous "fix".) Fetch handler below is cache-first
+// (a hit never re-checks the network), so a new cache name is the only
+// way to make the "activate" handler pick up the change instead of
+// leaving the old CSS cached indefinitely.
+const CACHE_NAME = "habit-mountain-v37";
 
 const APP_SHELL = [
   "./",
